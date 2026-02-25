@@ -1,16 +1,8 @@
-/*
-
-For this page I want to implement infinite scrolling which is basically
-where the user can continue to scroll through all information
-until they have reached the end of the page.
-
-*/
-
 import { Text, View, StyleSheet } from 'react-native';
 import { FlatList } from 'react-native-reanimated/lib/typescript/Animated';
 import { Link } from 'expo-router';
 
-export default function ProfileScreen() {
+export default function StudioScreen() {
   return (
 
     <View style={styles.container}>

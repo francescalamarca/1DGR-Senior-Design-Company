@@ -17,7 +17,7 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: '#ffd33d',
+        tabBarActiveTintColor: '#efefed',
         headerStyle: {
             backgroundColor: '#25292e', //applies to the header label
         },
@@ -47,14 +47,42 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="settings"
+        name="studio"
         options={{
-            title: "Company Profile Settings",
-            tabBarIcon: ({color, focused }) => (
-                <Ionicons name={focused ? 'cog' : 'cog-outline'} color = {color} size = {24} />
-            ),
+            title: 'Studio',
+            tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'person-circle' : 'person-circle-outline'} color={color} size={24}/>
+          ),
+        }}
+      />
+        <Tabs.Screen
+        name = "candidates"
+        options = {{
+          title: "Candidate Page",
+          tabBarIcon: ({color, focused}) =>(
+            <Ionicons name={focused ? 'people':'people-outline'} color = {color} size = {24} />
+          )
+        }}
+        />
+        <Tabs.Screen
+        name = "message-inbox"
+        options = {{
+          title: "Message Page",
+          tabBarIcon: ({color, focused}) =>(
+            <Ionicons name={focused ? 'people':'people-outline'} color = {color} size = {24} />
+          )
+        }}
+        />
+        <Tabs.Screen
+        name = "settings"
+        options = {{
+          title: "Settings",
+          href: null, //this makes it so that you can't see the settings page
+          tabBarIcon: ({color, focused}) =>(
+            <Ionicons name={focused ? 'cog':'cog-outline'} color = {color} size = {24} />
+          )
         }}
         />
     </Tabs>
   );
-}
+};
