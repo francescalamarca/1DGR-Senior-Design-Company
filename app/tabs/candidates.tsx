@@ -1,11 +1,9 @@
 import { Text, View, StyleSheet } from "react-native";
 
-export default function SettingsScreen() {
+export default function CandidateScreen() {
     return (
         <View>
-            <text style = {styles.text}>
-              Company Profile Settings
-              </text>
+            <text style = {styles.text}>Candidate Search</text>
         </View>
 
     )
@@ -19,7 +17,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   text: {
-    color: '#1b1616',
+    color: 'black',
     fontSize: 30,
   },
 });
