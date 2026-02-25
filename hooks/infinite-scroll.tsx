@@ -28,7 +28,7 @@ export const useInfiniteScroll = (fetchData: () => void, hasMore: boolean, isLoa
     useEffect(() => {
         const observer = new IntersectionObserver(handleIntersection);
         if (loadMoreRef.current) observer.observe(loadMoreRef.current);
-        return () => observer.disconnect;
+        return () => observer.disconnect();
     }, [handleIntersection]); //function being passed in
     return {loadMoreRef};
 };
