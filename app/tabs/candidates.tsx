@@ -3,7 +3,7 @@ import { Text, View, StyleSheet } from "react-native";
 export default function CandidateScreen() {
     return (
         <View>
-            <h1 style = {styles.text}>Candidate Search</h1>
+            <text style = {styles.text}>Candidate Search</text>
         </View>
 
     )
@@ -18,5 +18,6 @@ const styles = StyleSheet.create({
   },
   text: {
     color: 'black',
+    fontSize: 30,
   },
 });

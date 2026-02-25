@@ -3,7 +3,9 @@ import { Text, View, StyleSheet } from "react-native";
 export default function SettingsScreen() {
     return (
         <View>
-            <h1 style = {styles.text}>Company Profile Settings</h1>
+            <text style = {styles.text}>
+              Company Profile Settings
+              </text>
         </View>
 
     )
@@ -17,6 +19,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   text: {
-    color: '#fff',
+    color: '#1b1616',
+    fontSize: 30,
   },
 });
