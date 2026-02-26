@@ -1,11 +1,25 @@
+/*
+This page will be dropdown heavy and look like the settings figma that we have set up
+for the companies to be able to edit their profile theme and details
+
+*/
+
+
 import { Text, View, StyleSheet } from "react-native";
 
+import { useThemeColor } from '@/hooks/use-theme-color';
+
 export default function SettingsScreen() {
+
+  //need to call these in the function
+  const backgroundColor = useThemeColor({}, 'background');
+  const textColor = useThemeColor({}, 'text'); 
+
     return (
-        <View>
-            <text style = {styles.text}>
+        <View style = {[styles.container, {backgroundColor}]}>
+            <Text style = {[styles.text, {color: textColor}]}>
               Company Profile Settings
-              </text>
+            </Text>
         </View>
 
     )
