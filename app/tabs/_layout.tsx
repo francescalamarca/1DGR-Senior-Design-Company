@@ -83,6 +83,16 @@ export default function TabLayout() {
           )
         }}
         />
+        <Tabs.Screen
+        name = "camera"
+        options = {{
+          title: "Camera",
+          href: null, //this makes it so that you can't see the settings page
+          tabBarIcon: ({color, focused}) =>(
+            <Ionicons name={focused ? 'camera':'camera-outline'} color = {color} size = {24} />
+          )
+        }}
+        />
     </Tabs>
   );
 };

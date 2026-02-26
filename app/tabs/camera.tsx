@@ -1,6 +1,14 @@
 /*
-This page will be dropdown heavy and look like the settings figma that we have set up
-for the companies to be able to edit their profile theme and details
+This is camera functionality and will be more complex, we will have to
+figure out how to get access to device camera, approve it, and save it to the
+database/profile once it is taken and saved
+
+features: 
+- record button
+- save button
+- retake/delete button
+- ability to replay it over again to watch it back
+- next step should be able to choose the cover for the video, maybe this is in profile settings?
 
 */
 
@@ -9,7 +17,7 @@ import { Text, View, StyleSheet } from "react-native";
 
 import { useThemeColor } from '@/hooks/use-theme-color';
 
-export default function SettingsScreen() {
+export default function Camera() {
 
   //need to call these in the function
   const backgroundColor = useThemeColor({}, 'background');
@@ -18,7 +26,7 @@ export default function SettingsScreen() {
     return (
         <View style = {[styles.container, {backgroundColor}]}>
             <Text style = {[styles.text, {color: textColor}]}>
-              Company Profile Settings
+              Camera Shooting Studio
             </Text>
         </View>
 
