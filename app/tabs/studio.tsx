@@ -15,8 +15,8 @@ export default function StudioScreen() {
   return (
     <View style={[styles.container, { backgroundColor }]}>
       <Text style={[styles.text, { color: textColor }]}>Company Profile</Text>
-      <Link href="/tabs/settings" style={styles.button}>
-        Go to Settings
+      <Link href="/tabs/camera" style={styles.button}>
+        Go to Camera
       </Link>
     </View>
   );
