@@ -15,10 +15,15 @@ It is a React component that renders a <Text> with a given href prop.
 import { Text, View, StyleSheet } from "react-native";
 import { Link } from 'expo-router';
 
+import { useThemeColor } from '@/hooks/use-theme-color';
+
 export default function Index() {
+  const backgroundColor = useThemeColor({}, 'background');
+  const textColor = useThemeColor({}, 'text');
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.text}>Home Screen</Text>
+    <View style={[styles.container, {backgroundColor}]}>
+      <Text style={[styles.text, { color:textColor }]}>Home Screen</Text>
       <Link href="/tabs/profile" style={styles.button}>
         Go to Company Profile
       </Link>
