@@ -18,9 +18,10 @@ only need the backslash before a route on Redirect href = "" or router.replace
 import { Stack } from "expo-router";
 
 export default function RootLayout() {
+  //should go auto to the index screen
   return ( 
   <Stack>
-    <Stack.Screen name="tabs" options={{headerShown: false}}/>
+    <Stack.Screen name="companyUser" options={{headerShown: false}}/>
   </Stack>
   );
 }
