@@ -25,7 +25,7 @@ export default function RootLayout() {
     <SessionProvider>
       <ProfileProvider> 
         <Stack>
-          <Stack.Screen name="companyUser" options={{headerShown: false}}/>
+          <Stack.Screen name="(companyUser)" options={{headerShown: false}}/>
         </Stack>
       </ProfileProvider>
     </SessionProvider>
