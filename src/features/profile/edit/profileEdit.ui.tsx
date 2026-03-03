@@ -1,0 +1,1119 @@
+// src/features/profile/edit/profileEdit.ui.tsx
+import React from "react";
+import {
+  View,
+  Pressable,
+  ActivityIndicator,
+  Image,
+  TextInput,
+  Modal,
+  FlatList,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+} from "react-native";
+
+import { styles, UI } from "./profileEdit.styles";
+import { LLightText, BtnText } from "./profileEdit.components";
+import type { HigherEdEntry } from "@/src/features/profile/profile.types";
+
+// ---------- Types the screen expects ----------
+export type IndustryRow =
+  | { type: "header"; title: string }
+  | { type: "option"; category: string; label: string; key: string };
+
+export type CityRow = {
+  id: string;
+  city: string;
+  state: string;
+  population: number;
+  label: string;
+  labelLower: string;
+  cityLower: string;
+};
+
+type DegreeDetail = { degree: string; fieldOfStudy?: string };
+
+export type HigherEdEntryDraft = HigherEdEntry & {
+  estimatedGraduation?: string;
+  degreeDetails?: DegreeDetail[];
+  fieldOfStudy?: string; // back-compat
+};
+
+// ---------- Modal layout constants ----------
+const MODAL_KB_OFFSET_IOS = 12;
+const MODAL_LIST_BOTTOM_PADDING = Platform.OS === "ios" ? 280 : 320;
+
+// ---------- Shared UI helpers ----------
+function GroupCard({ children, style }: { children: React.ReactNode; style?: any }) {
+  return <View style={[styles.card, style]}>{children}</View>;
+}
+
+function PickerRow({
+  title,
+  subtitle,
+  onPress,
+  disabled,
+  showDivider,
+}: {
+  title: string;
+  subtitle?: string;
+  onPress: () => void;
+  disabled?: boolean;
+  showDivider?: boolean;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      disabled={disabled}
+      style={[styles.rowPressable, { opacity: disabled ? 0.5 : 1 }]}
+      hitSlop={8}
+    >
+      <View style={{ flexDirection: "row", alignItems: "center" }}>
+        <View style={{ flex: 1, paddingRight: 10 }}>
+          <LLightText style={styles.rowTitle}>{title}</LLightText>
+          {subtitle ? (
+            <LLightText style={styles.rowSub} numberOfLines={2}>
+              {subtitle}
+            </LLightText>
+          ) : null}
+        </View>
+        <LLightText style={styles.chevron}>›</LLightText>
+      </View>
+
+      {showDivider ? <View style={styles.rowDivider} /> : null}
+    </Pressable>
+  );
+}
+
+// ---------- Sections ----------
+export function AvatarSection(props: {
+  avatarPreviewUri: string;
+  pickingAvatarImage: boolean;
+  isSaving: boolean;
+  hasAvatar: boolean;
+  onPickAvatarImage: () => void;
+  onRemoveAvatarImage: () => void;
+}) {
+  const { avatarPreviewUri, pickingAvatarImage, isSaving, hasAvatar, onPickAvatarImage, onRemoveAvatarImage } = props;
+
+  return (
+    <>
+      <LLightText style={[styles.sectionTitle, { marginTop: 17 }]}>Avatar</LLightText>
+      <LLightText style={styles.sectionHelper}>Add a profile image.</LLightText>
+
+      <View style={[styles.inlineCard, { marginTop: 14, flexDirection: "row", alignItems: "center", gap: 14 }]}>
+        <View
+          style={{
+            width: 60,
+            height: 60,
+            borderRadius: 30,
+            borderWidth: 1,
+            borderColor: UI.border,
+            overflow: "hidden",
+            backgroundColor: "#f3f3f3",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {avatarPreviewUri ? (
+            <Image source={{ uri: avatarPreviewUri }} style={{ width: "100%", height: "100%" }} />
+          ) : (
+            <LLightText style={{ opacity: 0.5 }}>—</LLightText>
+          )}
+        </View>
+
+        <View style={{ flex: 1, gap: 10 }}>
+          <LLightText style={{ fontSize: 12, opacity: 0.6 }}>Displays over video thumbnail</LLightText>
+
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <Pressable
+              onPress={onPickAvatarImage}
+              disabled={pickingAvatarImage || isSaving}
+              style={[styles.pill, { flex: 1 }, pickingAvatarImage || isSaving ? { opacity: 0.5 } : null]}
+            >
+              {pickingAvatarImage ? <ActivityIndicator size="small" color="black" /> : null}
+              <BtnText>Choose</BtnText>
+            </Pressable>
+
+            <Pressable
+              onPress={onRemoveAvatarImage}
+              disabled={!hasAvatar || isSaving}
+              style={[
+                styles.pill,
+                { flex: 1, borderColor: UI.borderStrong },
+                !hasAvatar || isSaving ? { opacity: 0.5 } : null,
+              ]}
+            >
+              <BtnText>Remove</BtnText>
+            </Pressable>
+          </View>
+        </View>
+      </View>
+    </>
+  );
+}
+
+export function NameSection(props: {
+  preferredName: string;
+  legalFirstName: string;
+  legalMiddleName: string;
+  legalLastName: string;
+  onChangePreferredName: (v: string) => void;
+  onChangeLegalFirst: (v: string) => void;
+  onChangeLegalMiddle: (v: string) => void;
+  onChangeLegalLast: (v: string) => void;
+}) {
+  const {
+    preferredName,
+    legalFirstName,
+    legalMiddleName,
+    legalLastName,
+    onChangePreferredName,
+    onChangeLegalFirst,
+    onChangeLegalMiddle,
+    onChangeLegalLast,
+  } = props;
+
+  return (
+    <>
+      <LLightText style={styles.sectionTitle}>Name</LLightText>
+      <LLightText style={styles.sectionHelper}>Preferred name is shown publicly. Legal name is optional.</LLightText>
+
+      <View style={styles.fieldStack}>
+        <LLightText style={styles.label}>Preferred Name</LLightText>
+        <TextInput
+          value={preferredName}
+          onChangeText={onChangePreferredName}
+          placeholder="Preferred name"
+          placeholderTextColor={UI.hint}
+          style={styles.input}
+        />
+      </View>
+
+      <View style={styles.twoColRow}>
+        <View style={styles.col}>
+          <LLightText style={styles.label}>Legal First</LLightText>
+          <TextInput
+            value={legalFirstName}
+            onChangeText={onChangeLegalFirst}
+            placeholder="First"
+            placeholderTextColor={UI.hint}
+            style={styles.input}
+          />
+        </View>
+
+        <View style={styles.col}>
+          <LLightText style={styles.label}>Legal Middle</LLightText>
+          <TextInput
+            value={legalMiddleName}
+            onChangeText={onChangeLegalMiddle}
+            placeholder="Middle"
+            placeholderTextColor={UI.hint}
+            style={styles.input}
+          />
+        </View>
+      </View>
+
+      <View style={styles.full}>
+        <LLightText style={styles.label}>Legal Last</LLightText>
+        <TextInput
+          value={legalLastName}
+          onChangeText={onChangeLegalLast}
+          placeholder="Last"
+          placeholderTextColor={UI.hint}
+          style={styles.input}
+        />
+      </View>
+    </>
+  );
+}
+
+export function HookSection(props: { bio: string; onChangeBio: (v: string) => void }) {
+  const { bio, onChangeBio } = props;
+
+  return (
+    <>
+      <LLightText style={styles.sectionTitle}>Hook</LLightText>
+      <LLightText style={styles.sectionHelper}>A short, compelling headline for your profile.</LLightText>
+
+      <View style={styles.fieldStack}>
+        <TextInput
+          value={bio?.trim().length ? bio : ""}
+          onChangeText={onChangeBio}
+          placeholder="Write something about yourself…"
+          placeholderTextColor={UI.hint}
+          style={styles.inputMultiline}
+          multiline
+        />
+      </View>
+    </>
+  );
+}
+
+export function ValuesSection(props: { valuesText: string; onChangeValuesText: (v: string) => void }) {
+  const { valuesText, onChangeValuesText } = props;
+
+  return (
+    <>
+      <LLightText style={[styles.sectionTitle, { marginTop: 14 }]}>Values</LLightText>
+      <LLightText style={[styles.sectionHelper, { marginTop: 4 }]}>Add one value per line. Optional format: Label: Value.</LLightText>
+
+      <View style={styles.fieldStack}>
+        <TextInput
+          value={valuesText}
+          onChangeText={onChangeValuesText}
+          placeholder={"Product-minded software engineer"}
+          placeholderTextColor={UI.hint}
+          style={styles.inputMultiline}
+          multiline
+        />
+      </View>
+    </>
+  );
+}
+
+export function IndustryStatusSection(props: {
+  workTypeSubtitle: string;
+  residencySubtitle: string;
+  experienceSubtitle: string;
+  industrySubtitle: string;
+  citySubtitle: string;
+  hasCity: boolean;
+  onPressWorkType: () => void;
+  onPressResidency: () => void;
+  onPressExperience: () => void;
+  onPressIndustry: () => void;
+  onPressCity: () => void;
+  onClearCity: () => void;
+}) {
+  const {
+    workTypeSubtitle,
+    residencySubtitle,
+    experienceSubtitle,
+    industrySubtitle,
+    citySubtitle,
+    hasCity,
+    onPressWorkType,
+    onPressResidency,
+    onPressExperience,
+    onPressIndustry,
+    onPressCity,
+    onClearCity,
+  } = props;
+
+  return (
+    <>
+      <LLightText style={styles.sectionTitle}>Industry & Status</LLightText>
+      <LLightText style={styles.sectionHelper}>Residency, experience, interests, and location.</LLightText>
+
+      <GroupCard>
+        <PickerRow title="Work Type" subtitle={workTypeSubtitle} onPress={onPressWorkType} showDivider />
+        <PickerRow title="Residency Status" subtitle={residencySubtitle} onPress={onPressResidency} showDivider />
+        <PickerRow
+          title="Industry Experience (years)"
+          subtitle={experienceSubtitle}
+          onPress={onPressExperience}
+          showDivider
+        />
+        <PickerRow title="Industry Interests" subtitle={industrySubtitle} onPress={onPressIndustry} showDivider />
+        <PickerRow title="City" subtitle={citySubtitle} onPress={onPressCity} showDivider={hasCity} />
+        {hasCity ? (
+          <Pressable onPress={onClearCity} style={[styles.rowPressable, { paddingVertical: 14 }]}>
+            <LLightText style={[styles.rowTitle, { color: UI.danger }]}>Clear City</LLightText>
+          </Pressable>
+        ) : null}
+      </GroupCard>
+    </>
+  );
+}
+
+export function HigherEducationSection(props: {
+  max: number;
+  entries: HigherEdEntryDraft[];
+  onOpenPicker: () => void;
+  onEdit: (unitid: string, label: string) => void;
+  onRemove: (unitid: string) => void;
+  onClearAll: () => void;
+}) {
+  const { max, entries, onOpenPicker, onEdit, onRemove, onClearAll } = props;
+
+  return (
+    <>
+      <LLightText style={styles.sectionTitle}>Higher Education</LLightText>
+      <LLightText style={styles.sectionHelper}>Add up to {max} universities and select degrees.</LLightText>
+
+      <GroupCard>
+        <PickerRow
+          title="Add / Edit Universities"
+          subtitle={`${entries.length} selected`}
+          onPress={onOpenPicker}
+          showDivider={entries.length > 0}
+        />
+
+        {entries.length > 0 ? (
+          <View style={{ padding: 14, gap: 10 }}>
+            {entries.map((e) => {
+              const degrees = (e.degrees ?? []).slice().sort((a, b) => a.localeCompare(b));
+
+              const detailsMap = new Map<string, string>();
+              (e.degreeDetails ?? []).forEach((d) => {
+                if (d.degree) detailsMap.set(d.degree, String(d.fieldOfStudy ?? "").trim());
+              });
+
+              return (
+                <View
+                  key={String(e.unitid)}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: UI.border,
+                    borderRadius: 12,
+                    padding: 12,
+                    backgroundColor: UI.card,
+                    gap: 6,
+                  }}
+                >
+                  <LLightText style={{ fontSize: 14, fontWeight: "800" }}>{String(e.label)}</LLightText>
+
+                  {degrees.length ? (
+                    <View style={{ gap: 4 }}>
+                      {degrees.map((deg) => {
+                        const fs = detailsMap.get(deg);
+                        return (
+                          <LLightText key={deg} style={{ fontSize: 12, opacity: 0.65 }}>
+                            {deg}
+                            {fs ? ` — ${fs}` : ""}
+                          </LLightText>
+                        );
+                      })}
+                    </View>
+                  ) : (
+                    <LLightText style={{ fontSize: 12, opacity: 0.65 }}>Degrees: —</LLightText>
+                  )}
+
+                  {e.estimatedGraduation ? (
+                    <LLightText style={{ fontSize: 12, opacity: 0.65 }}>
+                      Graduation: {String(e.estimatedGraduation)}
+                    </LLightText>
+                  ) : null}
+
+                  <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
+                    <Pressable onPress={() => onEdit(String(e.unitid), String(e.label))} style={[styles.pill, { flex: 1 }]}>
+                      <BtnText>Edit</BtnText>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => onRemove(String(e.unitid))}
+                      style={[styles.pill, { flex: 1, borderColor: UI.danger }]}
+                    >
+                      <BtnText style={{ color: UI.danger }}>Remove</BtnText>
+                    </Pressable>
+                  </View>
+                </View>
+              );
+            })}
+
+            <Pressable onPress={onClearAll} style={[styles.pill, { borderColor: UI.danger }]}>
+              <BtnText style={{ color: UI.danger }}>Clear All</BtnText>
+            </Pressable>
+          </View>
+        ) : null}
+      </GroupCard>
+    </>
+  );
+}
+
+/**
+ * ✅ VideoLibrarySection (UPDATED)
+ * - Always allow picking a custom thumbnail from Photos
+ * - When a custom photo is picked, it shows as a tile alongside generated thumbnails
+ * - The selected thumbnail is indicated with the same border treatment
+ * - Custom tile gets a "Custom" badge
+ */
+export function VideoLibrarySection(props: {
+  mediaVideoUri: string | null;
+  mediaThumbUri: string | null;
+  mediaCaption: string;
+  generatingThumbs: boolean;
+  thumbOptions: string[];
+  canUpload: boolean;
+  adding: boolean;
+  onPickVideo: () => void;
+  onPickThumb: () => void;
+  onSelectThumb: (uri: string) => void;
+  onChangeCaption: (v: string) => void;
+  onUpload: () => void;
+}) {
+  const {
+    mediaVideoUri,
+    mediaThumbUri,
+    mediaCaption,
+    generatingThumbs,
+    thumbOptions,
+    canUpload,
+    adding,
+    onPickVideo,
+    onPickThumb,
+    onSelectThumb,
+    onChangeCaption,
+    onUpload,
+  } = props;
+
+  // ✅ Prepend custom thumb (if it's not already in generated options)
+  const thumbStrip = React.useMemo(() => {
+    const list = [...(thumbOptions ?? [])];
+    if (mediaThumbUri && !list.includes(mediaThumbUri)) return [mediaThumbUri, ...list];
+    return list;
+  }, [thumbOptions, mediaThumbUri]);
+
+  const hasAnyThumbChoices = thumbStrip.length > 0;
+
+  return (
+    <>
+      <LLightText style={styles.sectionTitle}>Video Library</LLightText>
+      <LLightText style={styles.sectionHelper}>Upload a new video + thumbnail + caption into your library.</LLightText>
+
+      <View style={[styles.inlineCard, { marginTop: 14 }]}>
+        <LLightText style={{ fontSize: 13, opacity: 0.7 }}>Step 1 — Pick a video</LLightText>
+        <Pressable onPress={onPickVideo} style={[styles.pill, { marginTop: 10 }]}>
+          <BtnText>{mediaVideoUri ? "Replace Video" : "Pick Video"}</BtnText>
+        </Pressable>
+        {mediaVideoUri ? <LLightText style={{ marginTop: 8, fontSize: 12, opacity: 0.6 }}>Selected ✓</LLightText> : null}
+
+        <View style={{ height: 18 }} />
+
+        {/* Step 2 — Choose a thumbnail */}
+        <LLightText style={{ fontSize: 13, opacity: 0.7 }}>Step 2 — Choose a thumbnail</LLightText>
+
+        {generatingThumbs ? (
+          <View style={{ marginTop: 10, flexDirection: "row", alignItems: "center", gap: 10 }}>
+            <ActivityIndicator size="small" color="black" />
+            <LLightText style={{ opacity: 0.65 }}>Generating thumbnails…</LLightText>
+          </View>
+        ) : null}
+
+        {/* ✅ Manual pick always available (before or after choosing a video) */}
+        <Pressable onPress={onPickThumb} style={[styles.pill, { marginTop: 10 }]}>
+          <BtnText>{mediaThumbUri ? "Choose a different photo" : "Choose from Photos"}</BtnText>
+        </Pressable>
+
+        {hasAnyThumbChoices ? (
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 10 }}>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              {thumbStrip.map((uri, idx) => {
+                const selected = uri === mediaThumbUri;
+
+                // "custom" means: currently selected thumbnail is not one of the generated ones
+                const isCustomTile = uri === mediaThumbUri && !(thumbOptions ?? []).includes(uri);
+
+                return (
+                  <Pressable
+                    key={`${uri}_${idx}`}
+                    onPress={() => onSelectThumb(uri)}
+                    style={{
+                      width: 84,
+                      height: 84,
+                      borderRadius: 14,
+                      overflow: "hidden",
+                      borderWidth: 2,
+                      borderColor: selected ? UI.text : UI.border,
+                      position: "relative",
+                    }}
+                  >
+                    <Image source={{ uri }} style={{ width: "100%", height: "100%" }} />
+
+                    {isCustomTile ? (
+                      <View
+                        style={{
+                          position: "absolute",
+                          bottom: 6,
+                          left: 6,
+                          paddingHorizontal: 8,
+                          paddingVertical: 4,
+                          borderRadius: 999,
+                          backgroundColor: "rgba(0,0,0,0.55)",
+                        }}
+                      >
+                        <LLightText style={{ color: "#fff", fontSize: 11, fontWeight: "800" }}>Custom</LLightText>
+                      </View>
+                    ) : null}
+                  </Pressable>
+                );
+              })}
+            </View>
+          </ScrollView>
+        ) : null}
+
+        {mediaThumbUri ? (
+          <LLightText style={{ marginTop: 8, fontSize: 12, opacity: 0.6 }}>Thumbnail ✓</LLightText>
+        ) : (
+          <LLightText style={{ marginTop: 8, fontSize: 12, opacity: 0.6 }}>
+            Pick a photo or tap a generated frame.
+          </LLightText>
+        )}
+
+        <View style={{ height: 18 }} />
+
+        <LLightText style={{ fontSize: 13, opacity: 0.7 }}>Step 3 — Caption</LLightText>
+        <TextInput
+          value={mediaCaption}
+          onChangeText={onChangeCaption}
+          placeholder="Add a caption/title…"
+          placeholderTextColor={UI.hint}
+          style={[styles.input, { marginTop: 10 }]}
+        />
+
+        <Pressable
+          onPress={onUpload}
+          disabled={!canUpload}
+          style={[styles.pill, { marginTop: 14 }, !canUpload ? { opacity: 0.5 } : null]}
+        >
+          {adding ? <ActivityIndicator size="small" color="black" /> : null}
+          <BtnText>{adding ? "Uploading…" : "Upload to Library"}</BtnText>
+        </Pressable>
+
+        <LLightText style={{ marginTop: 10, fontSize: 12, opacity: 0.6 }}>
+          You must have video + thumbnail + caption to upload.
+        </LLightText>
+      </View>
+    </>
+  );
+}
+
+export function ProfileMediaResetSection(props: { isSaving: boolean; onReset: () => void }) {
+  const { isSaving, onReset } = props;
+
+  return (
+    <>
+      <LLightText style={styles.sectionTitle}>Profile Media</LLightText>
+      <LLightText style={styles.sectionHelper}>Clears slots only. Does not delete library items.</LLightText>
+
+      <Pressable
+        onPress={onReset}
+        disabled={isSaving}
+        style={[styles.pill, { marginTop: 14, borderColor: UI.danger }, isSaving ? { opacity: 0.5 } : null]}
+      >
+        <BtnText style={{ color: UI.danger }}>Reset profile videos</BtnText>
+      </Pressable>
+    </>
+  );
+}
+
+// ---------- Modals ----------
+export function IndustryPickerModal(props: {
+  visible: boolean;
+  industrySearch: string;
+  setIndustrySearch: (v: string) => void;
+  industryRows: IndustryRow[];
+  industryCustomOptions: string[];
+  industryCustomInput: string;
+  setIndustryCustomInput: (v: string) => void;
+  onAddCustomIndustry: () => void;
+
+  industryTempSelected: Set<string>;
+  toggleIndustry: (label: string) => void;
+
+  predefinedIndustrySet: Set<string>;
+
+  onClose: () => void;
+  onApply: () => void;
+}) {
+  const {
+    visible,
+    industrySearch,
+    setIndustrySearch,
+    industryRows,
+    industryCustomOptions,
+    industryCustomInput,
+    setIndustryCustomInput,
+    onAddCustomIndustry,
+    industryTempSelected,
+    toggleIndustry,
+    predefinedIndustrySet,
+    onClose,
+    onApply,
+  } = props;
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1, justifyContent: "flex-end" }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={MODAL_KB_OFFSET_IOS}
+        >
+          <View
+            style={{
+              backgroundColor: UI.card,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              paddingHorizontal: 16,
+              paddingTop: 16,
+              paddingBottom: 24,
+              maxHeight: "85%",
+            }}
+          >
+            <LLightText style={{ fontSize: 18, fontWeight: "800" }}>Industry Interests</LLightText>
+
+            <TextInput
+              value={industrySearch}
+              onChangeText={setIndustrySearch}
+              placeholder='Search industries (e.g. "software", "health")'
+              placeholderTextColor={UI.hint}
+              style={[styles.input, { borderRadius: 12, marginTop: 12 }]}
+              autoCorrect={false}
+              autoCapitalize="none"
+              clearButtonMode="while-editing"
+            />
+
+            <FlatList
+              data={[
+                ...industryRows,
+                ...(industryCustomOptions.length
+                  ? ([{ type: "header", title: "Custom" }] as IndustryRow[]).concat(
+                      industryCustomOptions
+                        .filter(
+                          (c) =>
+                            !industrySearch.trim() ||
+                            c.toLowerCase().includes(industrySearch.trim().toLowerCase())
+                        )
+                        .map(
+                          (label) =>
+                            ({ type: "option", category: "Custom", label, key: `Custom__${label}` } as IndustryRow)
+                        )
+                    )
+                  : []),
+              ]}
+              keyExtractor={(item: any) => (item.type === "header" ? `h_${item.title}` : item.key)}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+              contentContainerStyle={{ paddingBottom: MODAL_LIST_BOTTOM_PADDING }}
+              style={{ marginTop: 12, marginBottom: 12 }}
+              renderItem={({ item }: { item: IndustryRow }) => {
+                if (item.type === "header") {
+                  return (
+                    <LLightText style={{ marginTop: 14, marginBottom: 8, opacity: 0.65, fontSize: 12 }}>
+                      {item.title}
+                    </LLightText>
+                  );
+                }
+
+                const checked = industryTempSelected.has(item.label);
+                const isPredefined = predefinedIndustrySet.has(item.label);
+
+                return (
+                  <Pressable
+                    onPress={() => toggleIndustry(item.label)}
+                    style={{
+                      paddingVertical: 12,
+                      paddingHorizontal: 12,
+                      borderWidth: 1,
+                      borderColor: checked ? UI.text : UI.border,
+                      borderRadius: 12,
+                      marginBottom: 8,
+                      backgroundColor: UI.card,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <View style={{ flex: 1, paddingRight: 10 }}>
+                      <LLightText style={{ fontSize: 14, fontWeight: checked ? "800" : "500" }}>{item.label}</LLightText>
+                      {!isPredefined ? (
+                        <LLightText style={{ marginTop: 4, fontSize: 12, opacity: 0.55 }}>Custom</LLightText>
+                      ) : null}
+                    </View>
+                    <LLightText style={{ opacity: 0.6 }}>{checked ? "✓" : ""}</LLightText>
+                  </Pressable>
+                );
+              }}
+            />
+
+            <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
+              <TextInput
+                value={industryCustomInput}
+                onChangeText={setIndustryCustomInput}
+                placeholder="Add custom industry…"
+                placeholderTextColor={UI.hint}
+                style={[styles.input, { flex: 1, borderRadius: 12 }]}
+              />
+              <Pressable onPress={onAddCustomIndustry} style={[styles.pill]}>
+                <BtnText>Add</BtnText>
+              </Pressable>
+            </View>
+
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Pressable
+                onPress={onClose}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: UI.borderStrong,
+                  borderRadius: 12,
+                  alignItems: "center",
+                }}
+              >
+                <LLightText style={{ fontWeight: "800" }}>Close</LLightText>
+              </Pressable>
+
+              <Pressable
+                onPress={onApply}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: UI.text,
+                  borderRadius: 12,
+                  alignItems: "center",
+                }}
+              >
+                <LLightText style={{ fontWeight: "800" }}>Apply</LLightText>
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </View>
+    </Modal>
+  );
+}
+
+export function CityPickerModal(props: {
+  visible: boolean;
+  title?: string;
+
+  citySearch: string;
+  setCitySearch: (v: string) => void;
+
+  data: CityRow[];
+  selectedLabel: string;
+  onSelect: (label: string) => void;
+
+  canApply: boolean;
+  onClose: () => void;
+  onApply: () => void;
+}) {
+  const { visible, title = "Select City", citySearch, setCitySearch, data, selectedLabel, onSelect, canApply, onClose, onApply } =
+    props;
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1, justifyContent: "flex-end" }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={MODAL_KB_OFFSET_IOS}
+        >
+          <View
+            style={{
+              backgroundColor: UI.card,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              paddingHorizontal: 16,
+              paddingTop: 16,
+              paddingBottom: 24,
+              maxHeight: "85%",
+            }}
+          >
+            <LLightText style={{ fontSize: 18, fontWeight: "800" }}>{title}</LLightText>
+
+            <TextInput
+              value={citySearch}
+              onChangeText={setCitySearch}
+              placeholder='Search (e.g. "san", "austin")'
+              placeholderTextColor={UI.hint}
+              style={[styles.input, { borderRadius: 12, marginTop: 12 }]}
+              autoCorrect={false}
+              autoCapitalize="none"
+              clearButtonMode="while-editing"
+            />
+
+            <FlatList
+              data={data}
+              keyExtractor={(item) => item.id}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+              contentContainerStyle={{ paddingBottom: MODAL_LIST_BOTTOM_PADDING }}
+              style={{ marginTop: 12, marginBottom: 12 }}
+              initialNumToRender={18}
+              maxToRenderPerBatch={24}
+              windowSize={10}
+              removeClippedSubviews={Platform.OS === "android"}
+              renderItem={({ item }) => {
+                const selected = item.label === selectedLabel;
+                return (
+                  <Pressable
+                    onPress={() => onSelect(item.label)}
+                    style={{
+                      paddingVertical: 12,
+                      paddingHorizontal: 12,
+                      borderWidth: 1,
+                      borderColor: selected ? UI.text : UI.border,
+                      borderRadius: 12,
+                      marginBottom: 8,
+                      backgroundColor: UI.card,
+                    }}
+                  >
+                    <LLightText style={{ fontSize: 14, fontWeight: selected ? "800" : "700" }}>{item.label}</LLightText>
+                  </Pressable>
+                );
+              }}
+              ListEmptyComponent={<LLightText style={{ paddingVertical: 16, opacity: 0.6 }}>No matches.</LLightText>}
+            />
+
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Pressable
+                onPress={onClose}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: UI.borderStrong,
+                  borderRadius: 12,
+                  alignItems: "center",
+                }}
+              >
+                <LLightText style={{ fontWeight: "800" }}>Close</LLightText>
+              </Pressable>
+
+              <Pressable
+                onPress={onApply}
+                disabled={!canApply}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: UI.text,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  opacity: canApply ? 1 : 0.4,
+                }}
+              >
+                <LLightText style={{ fontWeight: "800" }}>Apply</LLightText>
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </View>
+    </Modal>
+  );
+}
+
+export function SinglePickerModal(props: {
+  visible: boolean;
+  title: string;
+  options: string[];
+  tempValue: string;
+  setTempValue: (v: string) => void;
+  canApply: boolean;
+  onClose: () => void;
+  onApply: () => void;
+}) {
+  const { visible, title, options, tempValue, setTempValue, canApply, onClose, onApply } = props;
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <View style={{ flex: 1, justifyContent: "flex-end" }}>
+          <View
+            style={{
+              backgroundColor: UI.card,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              paddingHorizontal: 16,
+              paddingTop: 16,
+              paddingBottom: 24,
+              maxHeight: "80%",
+            }}
+          >
+            <LLightText style={{ fontSize: 18, fontWeight: "800" }}>{title}</LLightText>
+
+            <ScrollView style={{ marginTop: 12 }} contentContainerStyle={{ paddingBottom: 20 }}>
+              {options.map((opt) => {
+                const selected = opt === tempValue;
+                return (
+                  <Pressable
+                    key={opt}
+                    onPress={() => setTempValue(opt)}
+                    style={{
+                      paddingVertical: 12,
+                      paddingHorizontal: 12,
+                      borderWidth: 1,
+                      borderColor: selected ? UI.text : UI.border,
+                      borderRadius: 12,
+                      marginBottom: 8,
+                      backgroundColor: UI.card,
+                      flexDirection: "row",
+                      justifyContent: "space-between",
+                      alignItems: "center",
+                    }}
+                  >
+                    <LLightText style={{ fontWeight: selected ? "800" : "500" }}>{opt}</LLightText>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Pressable
+                onPress={onClose}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: UI.borderStrong,
+                  borderRadius: 12,
+                  alignItems: "center",
+                }}
+              >
+                <LLightText style={{ fontWeight: "800" }}>Close</LLightText>
+              </Pressable>
+
+              <Pressable
+                onPress={onApply}
+                disabled={!canApply}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: UI.text,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  opacity: canApply ? 1 : 0.4,
+                }}
+              >
+                <LLightText style={{ fontWeight: "800" }}>Apply</LLightText>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+export function WorkTypePickerModal(props: {
+  visible: boolean;
+  typeOptions: string[];
+  preferenceOptions: string[];
+  selectedType: string;
+  selectedPreference: string;
+  onSelectType: (v: string) => void;
+  onSelectPreference: (v: string) => void;
+  onClose: () => void;
+  onApply: () => void;
+}) {
+  const {
+    visible,
+    typeOptions,
+    preferenceOptions,
+    selectedType,
+    selectedPreference,
+    onSelectType,
+    onSelectPreference,
+    onClose,
+    onApply,
+  } = props;
+
+  const canApply = !!selectedType.trim() || !!selectedPreference.trim();
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <View style={{ flex: 1, justifyContent: "flex-end" }}>
+          <View
+            style={{
+              backgroundColor: UI.card,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              paddingHorizontal: 16,
+              paddingTop: 16,
+              paddingBottom: 24,
+              maxHeight: "85%",
+            }}
+          >
+            <LLightText style={{ fontSize: 18, fontWeight: "800" }}>Work Type</LLightText>
+
+            <ScrollView style={{ marginTop: 12 }} contentContainerStyle={{ paddingBottom: 20 }}>
+              <LLightText style={{ fontSize: 12, opacity: 0.6, marginBottom: 8 }}>Employment Type</LLightText>
+              {typeOptions.map((opt) => {
+                const selected = opt === selectedType;
+                return (
+                  <Pressable
+                    key={`type_${opt}`}
+                    onPress={() => onSelectType(opt)}
+                    style={{
+                      paddingVertical: 12,
+                      paddingHorizontal: 12,
+                      borderWidth: 1,
+                      borderColor: selected ? UI.text : UI.border,
+                      borderRadius: 12,
+                      marginBottom: 8,
+                      backgroundColor: UI.card,
+                    }}
+                  >
+                    <LLightText style={{ fontWeight: selected ? "800" : "500" }}>{opt}</LLightText>
+                  </Pressable>
+                );
+              })}
+
+              <View style={{ height: 8 }} />
+              <LLightText style={{ fontSize: 12, opacity: 0.6, marginBottom: 8 }}>Work Preference</LLightText>
+              {preferenceOptions.map((opt) => {
+                const selected = opt === selectedPreference;
+                return (
+                  <Pressable
+                    key={`pref_${opt}`}
+                    onPress={() => onSelectPreference(opt)}
+                    style={{
+                      paddingVertical: 12,
+                      paddingHorizontal: 12,
+                      borderWidth: 1,
+                      borderColor: selected ? UI.text : UI.border,
+                      borderRadius: 12,
+                      marginBottom: 8,
+                      backgroundColor: UI.card,
+                    }}
+                  >
+                    <LLightText style={{ fontWeight: selected ? "800" : "500" }}>{opt}</LLightText>
+                  </Pressable>
+                );
+              })}
+            </ScrollView>
+
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Pressable
+                onPress={onClose}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: UI.borderStrong,
+                  borderRadius: 12,
+                  alignItems: "center",
+                }}
+              >
+                <LLightText style={{ fontWeight: "800" }}>Close</LLightText>
+              </Pressable>
+
+              <Pressable
+                onPress={onApply}
+                disabled={!canApply}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: UI.text,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  opacity: canApply ? 1 : 0.4,
+                }}
+              >
+                <LLightText style={{ fontWeight: "800" }}>Apply</LLightText>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </View>
+    </Modal>
+  );
+}
