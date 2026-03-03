@@ -6,7 +6,7 @@
 
 */
 
-import { View, Text, Pressable } from "react-native";
+import { View, Text, Pressable } from "react-native"; //will use this on login functionality and possibly on flow
 import { router } from "expo-router";
 import { useSession } from "@/src/state/session";
 import { RequireUserType } from "@/src/components/RequireUserType";
