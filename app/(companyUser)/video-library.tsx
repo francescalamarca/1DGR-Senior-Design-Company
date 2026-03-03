@@ -205,7 +205,7 @@ function useKeyboardHeight() {
 
 export default function VideoLibraryScreen() {
   const params = useLocalSearchParams<{ returnTo?: string }>();
-  const returnTo = typeof params.returnTo === "string" ? params.returnTo : "/(homeUser)/record";
+  const returnTo = typeof params.returnTo === "string" ? params.returnTo : "/(companyUser)/record";
 
   const { profile, setProfile } = useProfile();
   const { accessToken } = useSession();
@@ -771,7 +771,7 @@ export default function VideoLibraryScreen() {
           disabled={saving || refreshing}
           onPress={() => {
             if (saving || refreshing) return;
-            router.push("/(homeUser)/video-recovery");
+            router.push("/(companyUser)/video-recovery");
           }}
           style={{
             paddingVertical: 8,
