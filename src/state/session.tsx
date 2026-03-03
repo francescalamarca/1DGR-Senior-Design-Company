@@ -44,7 +44,7 @@ const SessionContext = createContext<SessionContextValue | null>(null);
  * a centralized logout method that clears both.
  */
 export function SessionProvider({ children }: { children: React.ReactNode }) {
-    const [userType, setUserType] = useState<UserType>(null);
+    const [userType, setUserType] = useState<UserType>("company"); //hardcoding this here to work for our side
     const [accessToken, setAccessToken] = useState<string | null>(null);
 
      /**
