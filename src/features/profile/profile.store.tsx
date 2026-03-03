@@ -27,7 +27,6 @@ import type {
   Profile,
   ValueSummaryItem,
 } from "./profile.types";
-import {useMemo, useCallback} from "react";
 
 /** ======================
  *  AsyncStorage keys
@@ -366,7 +365,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         contactSettings,
         videoLibrary,
         deletedVideoLibrary,
-        shareLinks,
       } = await loadPersistedSettings();
 
       _setProfile((prev) => {
