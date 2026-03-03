@@ -284,17 +284,6 @@ async function saveVideoLibraries(
   }
 }
 
-async function saveShareLinks(shareLinks: any[] | undefined) {
-  try {
-    await AsyncStorage.setItem(
-      STORAGE_KEYS.SHARE_LINKS,
-      JSON.stringify(shareLinks || []),
-    );
-  } catch (error) {
-    console.error("[saveShareLinks] Error:", error);
-  }
-}
-
 const initialProfile: Profile = {
   name: "Your Name",
   ...initialProfileBase,
@@ -338,7 +327,6 @@ const initialProfile: Profile = {
     showUrl2: false,
   },
 
-  shareLinks: [],
 };
 
 initialProfile.name = getDisplayName(initialProfile);
@@ -411,13 +399,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
           };
         }
 
-        if (shareLinks) {
-          updated = {
-            ...updated,
-            shareLinks,
-          };
-        }
-
         // Ensure higherEducation exists (backwards compatibility)
         if (!Array.isArray((updated as any).higherEducation)) {
           (updated as any).higherEducation = prev.higherEducation ?? [];
@@ -456,7 +437,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         contactDisplaySettings: normalizeContactToggles(
           dobLocked.contactDisplaySettings ?? prev.contactDisplaySettings,
         ),
-        shareLinks: dobLocked.shareLinks ?? prev.shareLinks ?? [],
 
         // ✅ ensure both libraries always exist
         videoLibrary: dobLocked.videoLibrary ?? prev.videoLibrary ?? [],
@@ -498,13 +478,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
           finalProfile.videoLibrary,
           finalProfile.deletedVideoLibrary,
         );
-      }
-
-      if (
-        JSON.stringify(prev.shareLinks) !==
-        JSON.stringify(finalProfile.shareLinks)
-      ) {
-        saveShareLinks(finalProfile.shareLinks);
       }
 
       return finalProfile;
@@ -760,7 +733,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         videoLibrary: mappedLibrary,
         deletedVideoLibrary: mappedDeletedLibrary,
 
-        shareLinks: data.shareLinks || [],
       };
 
       console.log("MAPPED HIGHER EDUCATION:", mappedHigherEducation);
@@ -824,7 +796,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
             ? serverAvatarImage
             : prev.avatarImageUri,
 
-          shareLinks: mappedProfile.shareLinks || prev.shareLinks,
 
           higherEducation: mergedHigherEducation,
         };
