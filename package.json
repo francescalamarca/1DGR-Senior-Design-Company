@@ -17,6 +17,7 @@
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
+    "amazon-cognito-identity-js": "^6.3.16",
     "expo": "~54.0.33",
     "expo-av": "~16.0.8",
     "expo-camera": "~17.0.10",
@@ -43,10 +44,7 @@
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "~5.6.0",
     "react-native-screens": "~4.16.0",
-<<<<<<< HEAD
-=======
     "react-native-svg": "15.12.1",
->>>>>>> 5b15d079ff3dae451514c4bbc4bfbbda7f4702f2
     "react-native-web": "~0.21.0",
     "react-native-worklets": "0.5.1"
   },
