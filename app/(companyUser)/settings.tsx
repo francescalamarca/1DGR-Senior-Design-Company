@@ -889,7 +889,7 @@ export default function SettingsScreen() {
 
   return (
     <>
-      <RequireUserType type="home" />
+      <RequireUserType type="company" />
 
       <KeyboardScreen
         header={Header}

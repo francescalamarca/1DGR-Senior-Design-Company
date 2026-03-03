@@ -11,14 +11,19 @@
  * - Networks tab requires: app/(homeUser)/networks.tsx
  * - Camera tab requires: app/(homeUser)/record.tsx
  * - camera-ui stays hidden (utility route)
+ * 
+ * 
+ * The rule is: you can only call useProfile() inside a component that 
+ * is a child of ProfileProvider, not in the same component that renders it.
  */
+import AntDesign from "@expo/vector-icons/AntDesign";
+
 
 import { useEffect, useRef } from "react";
 import { View } from "react-native";
 import { Tabs } from "expo-router";
 import { Feather } from "@expo/vector-icons";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
-import AntDesign from '@expo/vector-icons/AntDesign';
 import { RequireUserType } from "@/src/components/RequireUserType";
 import { useProfile } from "@/src/features/profile/profile.store";
 import { getCurrentSessionToken } from "@/src/utils/auth";
@@ -97,10 +102,10 @@ export default function CompanyUserLayout() {
             tabBarIcon: ({ color, size }) => {
               const iconSize = Math.max(18, size);
               switch (route.name) {
-                case "companies":
+                case "candidates":
                   return <Feather name="briefcase" size={iconSize} color={color} />;
                 case "message-inbox":
-                  return <AntDesign name="message" size={iconSize} color={color} />; //altered to work for this tab on company side
+                  return <AntDesign name="message" size={iconSize} color={color} />;
                 case "explore":
                   return <MaterialCommunityIcons name="earth" size={iconSize} color={color} />;
                 case "record":
@@ -129,7 +134,7 @@ export default function CompanyUserLayout() {
 
           {/* ───────────── Visible bottom tabs ───────────── */}
           <Tabs.Screen name="candidates" options={{ title: "Companies" }} />
-          <Tabs.Screen name="message-inbox" options={{ title: "Messaging" }} />
+          <Tabs.Screen name="message-inbox" options={{ title: "Networks" }} />
           <Tabs.Screen name="explore" options={{ title: "Explore" }} />
           <Tabs.Screen name="record" options={{ title: "Record" }} />
           <Tabs.Screen name="profile" options={{ title: "Profile" }} />
