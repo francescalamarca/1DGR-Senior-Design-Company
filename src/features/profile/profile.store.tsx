@@ -27,6 +27,7 @@ import type {
   Profile,
   ValueSummaryItem,
 } from "./profile.types";
+import {useMemo, useCallback} from "react";
 
 /** ======================
  *  AsyncStorage keys
