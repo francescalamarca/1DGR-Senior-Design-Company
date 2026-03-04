@@ -8,27 +8,27 @@
  * - UI: sticky header + bottom slot bar via KeyboardScreen; hides bottom bar when keyboard is open; caption editor
  *   floats above the keyboard using a local keyboard-height hook.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  FlatList,
-  Dimensions,
-  ActivityIndicator,
-  Platform,
-  Image,
-  Alert,
-  TextInput,
-  RefreshControl,
-  Keyboard,
-} from "react-native";
+import { aws_config } from "@/constants/aws-config";
+import { useProfile } from "@/src/features/profile/profile.store";
+import type { LibraryVideo } from "@/src/features/profile/profile.types";
+import { useSession } from "@/src/state/session";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import * as VideoThumbnails from "expo-video-thumbnails";
-import { useProfile } from "@/src/features/profile/profile.store";
-import { useSession } from "@/src/state/session";
-import { aws_config } from "@/constants/aws-config";
-import type { LibraryVideo } from "@/src/features/profile/profile.types";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Dimensions,
+  FlatList,
+  Image,
+  Keyboard,
+  Platform,
+  Pressable,
+  RefreshControl,
+  Text,
+  TextInput,
+  View,
+} from "react-native";
 
 // ✅ IMPORTANT: Update this import path to match YOUR project
 import KeyboardScreen from "@/src/components/KeyboardScreen";
@@ -386,26 +386,29 @@ export default function VideoLibraryScreen() {
     [setProfile]
   );
 
-  useFocusEffect(
-    useCallback(() => {
-      let cancelled = false;
+  const libraryItemsRef = useRef(libraryItems);
+libraryItemsRef.current = libraryItems;
 
-      (async () => {
-        for (const item of libraryItems.slice(0, 30)) {
-          if (cancelled) return;
-          await getThumbIfNeeded(item);
-        }
-      })();
+useFocusEffect(
+  useCallback(() => {
+    let cancelled = false;
 
-      return () => {
-        cancelled = true;
-        setSelectedVideoUrl(null);
-        setSelectedSlot(null);
-        setSelectedCaption("");
-        setSaving(false);
-      };
-    }, [libraryItems, getThumbIfNeeded])
-  );
+    (async () => {
+      for (const item of libraryItemsRef.current.slice(0, 30)) {
+        if (cancelled) return;
+        await getThumbIfNeeded(item);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      setSelectedVideoUrl(null);
+      setSelectedSlot(null);
+      setSelectedCaption("");
+      setSaving(false);
+    };
+  }, [getThumbIfNeeded]) // ✅ removed libraryItems, reads via ref instead
+);
 
   const canSave = !!selectedVideoUrl && selectedSlot !== null && !saving;
   const canDelete = !!selectedVideoUrl && !saving;
