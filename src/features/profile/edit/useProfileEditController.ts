@@ -1,20 +1,20 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, FlatList, ScrollView } from "react-native";
 import { router, useFocusEffect } from "expo-router";
 import * as VideoThumbnails from "expo-video-thumbnails";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Alert, FlatList, ScrollView } from "react-native";
 
+import { aws_config } from "@/constants/aws-config";
 import { useProfile } from "@/src/features/profile/profile.store";
 import { useSession } from "@/src/state/session";
 import { updateUserProfile } from "@/src/utils/update_api";
-import { aws_config } from "@/constants/aws-config";
 
-import { buildCdnUrlFromKey, pickImageFromLibrary, pickVideoFromLibrary, uploadToS3 } from "./profileEdit.media";
 import { hasProfileChanged, normalizeFieldOfStudy, type DraftProfile } from "./profileEdit.compare";
+import { INDUSTRIES } from "./profileEdit.constants";
 import { mapDraftToApiPayload } from "./profileEdit.data";
 import { sanitizeHigherEdEntry, type DegreeDetail, type HigherEdEntryDraftStrict } from "./profileEdit.higherEd";
-import { INDUSTRIES } from "./profileEdit.constants";
-import { type UniversityRow } from "./profileEdit.search";
 import { filterCitiesByQuery, filterUniversitiesByQuery, mapCitiesFromJson, mapUniversitiesFromJson } from "./profileEdit.mappers";
+import { buildCdnUrlFromKey, pickImageFromLibrary, pickVideoFromLibrary, uploadToS3 } from "./profileEdit.media";
+import { type UniversityRow } from "./profileEdit.search";
 import { type CityRow, type IndustryRow } from "./profileEdit.ui";
 
 const MAX_HIGHER_ED = 8;
@@ -193,29 +193,29 @@ export function useProfileEditController() {
     });
   }, [higherEdSearch]);
 
+  const profileRef = useRef(profile);
+  profileRef.current = profile;
+  
   useFocusEffect(
     useCallback(() => {
-      setDraft((profile as any) as DraftProfile);
+      const p = profileRef.current;
+      setDraft((p as any) as DraftProfile);
       setAvatarLocalUri(null);
-
       setMediaVideoUri(null);
       setMediaThumbUri(null);
       setMediaCaption("");
       setThumbOptions([]);
       setGeneratingThumbs(false);
       setAddingLibraryVideo(false);
-
       setHigherEdPickerVisible(false);
       setDegreePickerVisible(false);
       setHigherEdSearch("");
-      setValuesInputText(formatValuesSummaryForInput((profile as any).valuesSummary));
-
+      setValuesInputText(formatValuesSummaryForInput((p as any).valuesSummary));
       requestAnimationFrame(() => {
         scrollRef.current?.scrollTo?.({ y: 0, animated: false });
       });
-    }, [profile])
+    }, []) // ✅ empty deps - safe because we read profile via ref
   );
-
   function handleCancel() {
     if (!changed) {
       router.replace("/(homeUser)/profile");

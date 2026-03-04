@@ -21,29 +21,26 @@
  *   (replaces Crimson + DM Mono ONLY in those sections)
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  Alert,
-  ActionSheetIOS,
-  Platform,
-  TextInput,
-  StyleSheet,
-  Animated,
-  Easing,
-  UIManager,
-} from "react-native";
-import { router, useFocusEffect } from "expo-router";
+import KeyboardScreen from "@/src/components/KeyboardScreen";
 import { RequireUserType } from "@/src/components/RequireUserType";
 import { useProfile } from "@/src/features/profile/profile.store";
-import * as Clipboard from "expo-clipboard";
-import type { Profile} from "@/src/features/profile/profile.types";
-import { aws_config } from "@/constants/aws-config";
 import { useSession } from "@/src/state/session";
-import KeyboardScreen from "@/src/components/KeyboardScreen";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActionSheetIOS,
+  Alert,
+  Animated,
+  Easing,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  UIManager,
+  View,
+} from "react-native";
 
 const FONTS = {
   LEXEND_REGULAR: "Lexend-Regular",
@@ -654,22 +651,55 @@ export default function SettingsScreen() {
   const [draftContactUrl1Label, setDraftContactUrl1Label] = useState(profileContactUrl1Label);
   const [draftContactUrl2Label, setDraftContactUrl2Label] = useState(profileContactUrl2Label);
 
+  const profileNameSettingsRef = useRef(profile.nameDisplaySettings);
+  const profileContactSettingsRef = useRef(profile.contactDisplaySettings);
+  profileNameSettingsRef.current = profile.nameDisplaySettings;
+  profileContactSettingsRef.current = profile.contactDisplaySettings;
+  
   useFocusEffect(
     useCallback(() => {
       setDraftSettings({
-        nameDisplaySettings: profile.nameDisplaySettings,
-        contactDisplaySettings: profile.contactDisplaySettings ?? {
+        nameDisplaySettings: profileNameSettingsRef.current,
+        contactDisplaySettings: profileContactSettingsRef.current ?? {
           showEmail: false,
           showPhoneNumber: false,
           showUrl1: false,
           showUrl2: false,
         },
       });
-
       requestAnimationFrame(() => {
         scrollRef.current?.scrollTo({ y: 0, animated: false });
       });
-    }, [profile.nameDisplaySettings, profile.contactDisplaySettings])
+    }, []) // ✅ empty deps - reads latest values via refs
+  );
+  
+  const profileContactRef = useRef({
+    email: profile.email,
+    phoneNumber: profile.phoneNumber,
+    contactUrl1: profileContactUrl1,
+    contactUrl2: profileContactUrl2,
+    contactUrl1Label: profileContactUrl1Label,
+    contactUrl2Label: profileContactUrl2Label,
+  });
+  profileContactRef.current = {
+    email: profile.email,
+    phoneNumber: profile.phoneNumber,
+    contactUrl1: profileContactUrl1,
+    contactUrl2: profileContactUrl2,
+    contactUrl1Label: profileContactUrl1Label,
+    contactUrl2Label: profileContactUrl2Label,
+  };
+  
+  useFocusEffect(
+    useCallback(() => {
+      const c = profileContactRef.current;
+      setDraftEmail(c.email ?? "");
+      setDraftPhone(formatPhone(c.phoneNumber ?? ""));
+      setDraftContactUrl1(c.contactUrl1);
+      setDraftContactUrl2(c.contactUrl2);
+      setDraftContactUrl1Label(c.contactUrl1Label);
+      setDraftContactUrl2Label(c.contactUrl2Label);
+    }, []) // ✅ empty deps - reads latest values via refs
   );
 
   useFocusEffect(
