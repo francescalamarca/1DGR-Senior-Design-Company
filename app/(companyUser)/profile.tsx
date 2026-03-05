@@ -10,33 +10,33 @@
  * Block D (white): Horizontal snap videos w/ caption inside card
  */
 
+import { aws_config } from "@/constants/aws-config";
+import { RequireUserType } from "@/src/components/RequireUserType";
+import { useProfile } from "@/src/features/profile/profile.store";
+import { useSession } from "@/src/state/session";
+import { Feather } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
+import { router, useFocusEffect, usePathname } from "expo-router";
+import * as VideoThumbnails from "expo-video-thumbnails";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  View,
-  Text,
-  Pressable,
-  Image,
-  Dimensions,
-  Animated,
-  Easing,
-  LayoutAnimation,
-  Platform,
-  UIManager,
-  RefreshControl,
-  Alert,
   ActionSheetIOS,
+  Alert,
+  Animated,
+  Dimensions,
+  Easing,
   FlatList,
+  Image,
+  LayoutAnimation,
   PanResponder,
+  Platform,
+  Pressable,
+  RefreshControl,
+  Text,
+  UIManager,
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useFocusEffect, usePathname } from "expo-router";
-import { RequireUserType } from "@/src/components/RequireUserType";
-import { useSession } from "@/src/state/session";
-import { useProfile } from "@/src/features/profile/profile.store";
-import { aws_config } from "@/constants/aws-config";
-import * as VideoThumbnails from "expo-video-thumbnails";
-import * as Clipboard from "expo-clipboard";
-import { Feather } from "@expo/vector-icons";
 
 // ✅ MUST match EXACT keys from your useFonts(...)
 const FONTS = {
@@ -424,171 +424,169 @@ export default function ProfileScreen() {
     }
   }
 
-  // ===== Fix missing thumbs (preserved) =====
-  useEffect(() => {
-    const fixMissingThumbs = async () => {
-      if (!profile.media || profile.media.length === 0) return;
+// ===== Fix missing thumbs =====
+const profileMediaRef = useRef(profile.media);
+profileMediaRef.current = profile.media;
 
-      const updates = await Promise.all(
-        profile.media.map(async (m: any) => {
-          if (m.videoUri && (!m.imageUri || m.imageUri.trim() === "")) {
-            try {
-              const res = await VideoThumbnails.getThumbnailAsync(m.videoUri, { time: 1000 });
-              if (res.uri) return { ...m, imageUri: res.uri };
-            } catch {
-              // ignore
-            }
+useEffect(() => {
+  const fixMissingThumbs = async () => {
+    const media = profileMediaRef.current;
+    if (!media || media.length === 0) return;
+
+    const updates = await Promise.all(
+      media.map(async (m: any) => {
+        if (m.videoUri && (!m.imageUri || m.imageUri.trim() === "")) {
+          try {
+            const res = await VideoThumbnails.getThumbnailAsync(m.videoUri, { time: 1000 });
+            if (res.uri) return { ...m, imageUri: res.uri };
+          } catch {
+            // ignore
           }
-          return m;
-        })
-      );
+        }
+        return m;
+      })
+    );
 
-      const hasChanges = updates.some((u, i) => u.imageUri !== profile.media[i].imageUri);
-      if (hasChanges) setProfile((prev: any) => ({ ...prev, media: updates }));
+    const hasChanges = updates.some((u, i) => u.imageUri !== media[i].imageUri);
+    if (hasChanges) setProfile((prev: any) => ({ ...prev, media: updates }));
+  };
+
+  fixMissingThumbs();
+}, []); // ✅ runs once on mount only — uses ref to read latest media
+
+// ===== Fetch latest =====
+const fetchLatestProfile = useCallback(async () => {
+  try {
+    if (!accessToken) return;
+    if (fetchingRef.current) return;
+
+    fetchingRef.current = true;
+    setRefreshing(true);
+
+    const url = `${aws_config.apiBaseUrl}/profile`;
+
+    const doFetch = async (authHeader: string) => {
+      const res = await fetch(url, { headers: { Authorization: authHeader } });
+      const text = await res.text().catch(() => "");
+      return { res, text };
     };
 
-    fixMissingThumbs();
-  }, [profile.media, setProfile]);
+    let { res, text } = await doFetch(`Bearer ${accessToken}`);
 
-  // ===== Fetch latest (preserved) =====
-  const fetchLatestProfile = useCallback(async () => {
-    try {
-      if (!accessToken) return;
-      if (fetchingRef.current) return;
+    if (res.status === 401) {
+      ({ res, text } = await doFetch(accessToken));
+    }
 
-      fetchingRef.current = true;
-      setRefreshing(true);
+    if (!res.ok) {
+      console.error("Failed to fetch profile:", res.status, text);
+      return;
+    }
 
-      const url = `${aws_config.apiBaseUrl}/profile`;
+    const data = text ? JSON.parse(text) : {};
+    const user = data?.user ?? data?.users?.[0] ?? null;
+    const videoLibrary = data?.videoLibrary ?? data?.videos ?? [];
 
-      const doFetch = async (authHeader: string) => {
-        const res = await fetch(url, { headers: { Authorization: authHeader } });
-        const text = await res.text().catch(() => "");
-        return { res, text };
-      };
+    const higherEducation = Array.isArray(data?.higher_education)
+      ? data.higher_education.map((e: any) => ({
+          ...e,
+          degreeDetails: Array.isArray(e?.degreeDetails)
+            ? e.degreeDetails
+            : Array.isArray(e?.degree_details)
+              ? e.degree_details
+              : [],
+          estimatedGraduation: String(e?.estimatedGraduation ?? e?.estimated_graduation ?? "").trim(),
+        }))
+      : [];
 
-      let { res, text } = await doFetch(`Bearer ${accessToken}`);
+    setProfile((prev: any) => {
+      const prevByUnit = new Map<string, any>(
+        (Array.isArray(prev?.higherEducation) ? prev.higherEducation : []).map((e: any) => [String(e?.unitid ?? ""), e])
+      );
 
-      if (res.status === 401) {
-        ({ res, text } = await doFetch(accessToken));
-      }
-
-      if (!res.ok) {
-        console.error("Failed to fetch profile:", res.status, text);
-        return;
-      }
-
-      const data = text ? JSON.parse(text) : {};
-      const user = data?.user ?? data?.users?.[0] ?? null;
-      const videoLibrary = data?.videoLibrary ?? data?.videos ?? [];
-
-      const higherEducation = Array.isArray(data?.higher_education)
-        ? data.higher_education.map((e: any) => ({
-            ...e,
-            degreeDetails: Array.isArray(e?.degreeDetails)
-              ? e.degreeDetails
-              : Array.isArray(e?.degree_details)
-                ? e.degree_details
-                : [],
-            estimatedGraduation: String(e?.estimatedGraduation ?? e?.estimated_graduation ?? "").trim(),
-          }))
-        : [];
-
-      setProfile((prev: any) => {
-        const prevByUnit = new Map<string, any>(
-          (Array.isArray(prev?.higherEducation) ? prev.higherEducation : []).map((e: any) => [String(e?.unitid ?? ""), e])
-        );
-
-        const mergedHigherEducation = higherEducation.map((e: any) => {
-          const prevE = prevByUnit.get(String(e?.unitid ?? ""));
-          return {
-            ...(prevE ?? {}),
-            ...e,
-            degreeDetails:
-              Array.isArray(e?.degreeDetails) && e.degreeDetails.length > 0
-                ? e.degreeDetails
-                : Array.isArray(prevE?.degreeDetails)
-                  ? prevE.degreeDetails
-                  : [],
-            estimatedGraduation:
-              String(e?.estimatedGraduation ?? "").trim() || String(prevE?.estimatedGraduation ?? "").trim(),
-          };
-        });
-
+      const mergedHigherEducation = higherEducation.map((e: any) => {
+        const prevE = prevByUnit.get(String(e?.unitid ?? ""));
         return {
-          ...prev,
-
-          legalFirstName: user?.legal_first_name ?? "",
-          legalLastName: user?.legal_last_name ?? "",
-          legalMiddleName: user?.legal_middle_name ?? "",
-          email: user?.email ?? "",
-          phoneNumber: user?.phone_number ?? "",
-          contactUrl1: user?.contact_url_1 ?? user?.contactUrl1 ?? user?.website_url_1 ?? "",
-          contactUrl2: user?.contact_url_2 ?? user?.contactUrl2 ?? user?.website_url_2 ?? "",
-          contactUrl1Label: user?.contact_url_1_label ?? user?.contactUrl1Label ?? (prev as any)?.contactUrl1Label ?? "URL 1",
-          contactUrl2Label: user?.contact_url_2_label ?? user?.contactUrl2Label ?? (prev as any)?.contactUrl2Label ?? "URL 2",
-          preferredName: user?.preferred_name ?? "",
-          bio: user?.bio ?? "",
-
-          workType: user?.work_type ?? user?.workType ?? user?.employment_type ?? "",
-          workPreference: user?.work_preference ?? user?.workPreference ?? user?.work_location_preference ?? "",
-          residencyStatus: user?.residency ?? "",
-          geographicLocation: user?.location ?? "",
-          industryExperience: user?.experience ?? "",
-          highestEducationCompleted: user?.highest_education ?? "",
-          industryInterests: user?.industry_interests ?? [],
-          higherEducation: mergedHigherEducation,
-
-          valuesSummary: Array.isArray((user as any)?.values_summary)
-            ? (user as any).values_summary
-                .map((item: any, idx: number) => {
-                  const label = String(item?.label ?? "").trim();
-                  const value = String(item?.value ?? "").trim();
-                  if (!label && !value) return null;
-                  return {
-                    key: String(item?.key ?? `value_${idx + 1}`).trim() || `value_${idx + 1}`,
-                    label,
-                    value: value || label,
-                  };
-                })
-                .filter(Boolean)
-            : (prev as any)?.valuesSummary ?? [],
-
-          avatarImageUri: toCloudFrontUrl(user?.avatar_image_url ?? user?.avatar_image_key),
-          avatarVideoUri: toCloudFrontUrl(user?.avatar_video_url ?? user?.avatar_video_key),
-
-          media: (Array.isArray(videoLibrary) ? videoLibrary : [])
-            .filter((v: any) => v.slot !== null && v.slot !== undefined)
-            .sort((a: any, b: any) => (a.slot ?? 0) - (b.slot ?? 0))
-            .map((v: any, index: number) => {
-              const rawUrl = v.thumbnailUrl || v.thumbnail_key || "";
-              const finalThumb = toCloudFrontUrl(rawUrl);
-
-              return {
-                id: v.id || `vid_${index}`,
-                videoUri: toCloudFrontUrl(v.url || v.s3_key),
-                imageUri: finalThumb,
-                caption: (v.caption ?? v.title ?? "").trim?.() ? (v.caption ?? v.title).trim() : "Untitled",
-                slot: v.slot,
-              };
-            }),
+          ...(prevE ?? {}),
+          ...e,
+          degreeDetails:
+            Array.isArray(e?.degreeDetails) && e.degreeDetails.length > 0
+              ? e.degreeDetails
+              : Array.isArray(prevE?.degreeDetails)
+                ? prevE.degreeDetails
+                : [],
+          estimatedGraduation:
+            String(e?.estimatedGraduation ?? "").trim() || String(prevE?.estimatedGraduation ?? "").trim(),
         };
       });
-    } catch (error) {
-      console.error("Error fetching profile:", error);
-    } finally {
-      fetchingRef.current = false;
-      setRefreshing(false);
-    }
-  }, [accessToken, setProfile]);
 
-  useFocusEffect(
-    useCallback(() => {
-      if (didFetchOnceRef.current) return;
-      didFetchOnceRef.current = true;
-      fetchLatestProfile();
-    }, [fetchLatestProfile])
-  );
+      return {
+        ...prev,
+        legalFirstName: user?.legal_first_name ?? "",
+        legalLastName: user?.legal_last_name ?? "",
+        legalMiddleName: user?.legal_middle_name ?? "",
+        email: user?.email ?? "",
+        phoneNumber: user?.phone_number ?? "",
+        contactUrl1: user?.contact_url_1 ?? user?.contactUrl1 ?? user?.website_url_1 ?? "",
+        contactUrl2: user?.contact_url_2 ?? user?.contactUrl2 ?? user?.website_url_2 ?? "",
+        contactUrl1Label: user?.contact_url_1_label ?? user?.contactUrl1Label ?? (prev as any)?.contactUrl1Label ?? "URL 1",
+        contactUrl2Label: user?.contact_url_2_label ?? user?.contactUrl2Label ?? (prev as any)?.contactUrl2Label ?? "URL 2",
+        preferredName: user?.preferred_name ?? "",
+        bio: user?.bio ?? "",
+        workType: user?.work_type ?? user?.workType ?? user?.employment_type ?? "",
+        workPreference: user?.work_preference ?? user?.workPreference ?? user?.work_location_preference ?? "",
+        residencyStatus: user?.residency ?? "",
+        geographicLocation: user?.location ?? "",
+        industryExperience: user?.experience ?? "",
+        highestEducationCompleted: user?.highest_education ?? "",
+        industryInterests: user?.industry_interests ?? [],
+        higherEducation: mergedHigherEducation,
+        valuesSummary: Array.isArray((user as any)?.values_summary)
+          ? (user as any).values_summary
+              .map((item: any, idx: number) => {
+                const label = String(item?.label ?? "").trim();
+                const value = String(item?.value ?? "").trim();
+                if (!label && !value) return null;
+                return {
+                  key: String(item?.key ?? `value_${idx + 1}`).trim() || `value_${idx + 1}`,
+                  label,
+                  value: value || label,
+                };
+              })
+              .filter(Boolean)
+          : (prev as any)?.valuesSummary ?? [],
+        avatarImageUri: toCloudFrontUrl(user?.avatar_image_url ?? user?.avatar_image_key),
+        avatarVideoUri: toCloudFrontUrl(user?.avatar_video_url ?? user?.avatar_video_key),
+        media: (Array.isArray(videoLibrary) ? videoLibrary : [])
+          .filter((v: any) => v.slot !== null && v.slot !== undefined)
+          .sort((a: any, b: any) => (a.slot ?? 0) - (b.slot ?? 0))
+          .map((v: any, index: number) => {
+            const rawUrl = v.thumbnailUrl || v.thumbnail_key || "";
+            const finalThumb = toCloudFrontUrl(rawUrl);
+            return {
+              id: v.id || `vid_${index}`,
+              videoUri: toCloudFrontUrl(v.url || v.s3_key),
+              imageUri: finalThumb,
+              caption: (v.caption ?? v.title ?? "").trim?.() ? (v.caption ?? v.title).trim() : "Untitled",
+              slot: v.slot,
+            };
+          }),
+      };
+    });
+  } catch (error) {
+    console.error("Error fetching profile:", error);
+  } finally {
+    fetchingRef.current = false;
+    setRefreshing(false);
+  }
+}, [accessToken]); // ✅ removed setProfile — it's a stable setter, not needed here
+
+useFocusEffect(
+  useCallback(() => {
+    if (didFetchOnceRef.current) return;
+    didFetchOnceRef.current = true;
+    fetchLatestProfile();
+  }, [fetchLatestProfile])
+);
 
   // ===== Layout constants =====
   const screenW = Dimensions.get("window").width;
