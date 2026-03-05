@@ -5,7 +5,7 @@
  *
  * New layout:
  * Block A (bg): ShareLive + edit(pencil) + settings, avatar, name, headline, Values list
- * Block B (white): Hook
+ * Block B (white): mission
  * Block C (bg): Qualifications dropdown (2-page pull-in) + premium open/close animation
  * Block D (white): Horizontal snap videos w/ caption inside card
  */
@@ -322,7 +322,7 @@ export default function ProfileScreen() {
         marginTop: 6,
       } as const,
 
-      hook: {
+      mission: { //renamed to be specific for company side
         ...crimson,
         textAlign: "center" as const,
         opacity: 1,
@@ -365,29 +365,6 @@ export default function ProfileScreen() {
     };
   }, []);
 
-  // ===== LIVE LINK (preserved) =====
-  const liveProfileUrl = useMemo(() => {
-    const base =
-      (aws_config as any).liveProfileBaseUrl ||
-      (aws_config as any).webBaseUrl ||
-      (aws_config as any).publicBaseUrl ||
-      (aws_config as any).apiBaseUrl;
-
-    const handle = (profile as any).liveHandle || (profile as any).handle || (profile as any).username || "me";
-
-    return `${String(base).replace(/\/$/, "")}/u/${encodeURIComponent(String(handle))}`;
-  }, [profile]);
-
-  async function copyLiveAsUrl() {
-    await Clipboard.setStringAsync(liveProfileUrl);
-    Alert.alert("Copied", "Live profile URL copied to clipboard.");
-  }
-
-  async function copyLiveAsQrData() {
-    await Clipboard.setStringAsync(liveProfileUrl);
-    Alert.alert("Copied", "QR data copied to clipboard.");
-  }
-
   async function copyEmail() {
     if (!contactEmail) return;
     await Clipboard.setStringAsync(contactEmail);
@@ -404,24 +381,6 @@ export default function ProfileScreen() {
     if (!url) return;
     await Clipboard.setStringAsync(url);
     Alert.alert("Copied", "URL copied to clipboard.");
-  }
-
-  function openLiveShareSheet() {
-    const options = ["Copy as URL", "Copy as QR code", "Cancel"];
-    const cancelButtonIndex = 2;
-
-    if (Platform.OS === "ios") {
-      ActionSheetIOS.showActionSheetWithOptions({ options, cancelButtonIndex }, async (buttonIndex) => {
-        if (buttonIndex === 0) copyLiveAsUrl();
-        if (buttonIndex === 1) copyLiveAsQrData();
-      });
-    } else {
-      Alert.alert("Share live profile", "Choose an option", [
-        { text: "Copy as URL", onPress: copyLiveAsUrl },
-        { text: "Copy as QR code", onPress: copyLiveAsQrData },
-        { text: "Cancel", style: "cancel" },
-      ]);
-    }
   }
 
 // ===== Fix missing thumbs =====
@@ -486,38 +445,10 @@ const fetchLatestProfile = useCallback(async () => {
     const user = data?.user ?? data?.users?.[0] ?? null;
     const videoLibrary = data?.videoLibrary ?? data?.videos ?? [];
 
-    const higherEducation = Array.isArray(data?.higher_education)
-      ? data.higher_education.map((e: any) => ({
-          ...e,
-          degreeDetails: Array.isArray(e?.degreeDetails)
-            ? e.degreeDetails
-            : Array.isArray(e?.degree_details)
-              ? e.degree_details
-              : [],
-          estimatedGraduation: String(e?.estimatedGraduation ?? e?.estimated_graduation ?? "").trim(),
-        }))
-      : [];
-
     setProfile((prev: any) => {
       const prevByUnit = new Map<string, any>(
         (Array.isArray(prev?.higherEducation) ? prev.higherEducation : []).map((e: any) => [String(e?.unitid ?? ""), e])
       );
-
-      const mergedHigherEducation = higherEducation.map((e: any) => {
-        const prevE = prevByUnit.get(String(e?.unitid ?? ""));
-        return {
-          ...(prevE ?? {}),
-          ...e,
-          degreeDetails:
-            Array.isArray(e?.degreeDetails) && e.degreeDetails.length > 0
-              ? e.degreeDetails
-              : Array.isArray(prevE?.degreeDetails)
-                ? prevE.degreeDetails
-                : [],
-          estimatedGraduation:
-            String(e?.estimatedGraduation ?? "").trim() || String(prevE?.estimatedGraduation ?? "").trim(),
-        };
-      });
 
       return {
         ...prev,
@@ -539,7 +470,6 @@ const fetchLatestProfile = useCallback(async () => {
         industryExperience: user?.experience ?? "",
         highestEducationCompleted: user?.highest_education ?? "",
         industryInterests: user?.industry_interests ?? [],
-        higherEducation: mergedHigherEducation,
         valuesSummary: Array.isArray((user as any)?.values_summary)
           ? (user as any).values_summary
               .map((item: any, idx: number) => {
@@ -603,8 +533,8 @@ useFocusEffect(
     extrapolate: "clamp",
   });
 
-  // ===== Hook + headline mapping =====
-  const hookText = (profile.bio ?? "").trim();
+  // ===== mission + headline mapping =====
+  const missionText = (profile.bio ?? "").trim();
   const headlineText =
     String((profile as any).headline ?? (profile as any).title ?? (profile as any).tagline ?? "").trim() || "";
 
@@ -836,8 +766,6 @@ useFocusEffect(
     [pageX, qualOpen, qualPage]
   );
 
-  const higherEd = Array.isArray((profile as any).higherEducation) ? ((profile as any).higherEducation as any[]) : [];
-
   const qualCol1: QualRow[] = useMemo(() => {
     const workTypePrimary = String(
       (profile as any).workType ?? (profile as any).work_type ?? (profile as any).employmentType ?? ""
@@ -848,19 +776,12 @@ useFocusEffect(
     const workType = dashIfEmpty([workTypePrimary, workTypeSecondary].filter(Boolean).join(" · "));
     const location = dashIfEmpty(profile.geographicLocation);
 
-    const higherEdItems =
-      higherEd.length > 0
-        ? higherEd
-            .map((e: any) => formatHigherEdMultiline(e))
-            .filter((s: string) => String(s ?? "").trim() && String(s ?? "").trim() !== "—")
-        : [];
 
     return [
       { label: "Work type", value: workType },
       { label: "Location", value: location },
-      { label: "Higher education", value: higherEdItems.length ? higherEdItems : "—" },
     ];
-  }, [higherEd, profile]);
+  }, [profile]);
 
   const qualCol2: QualRow[] = useMemo(() => {
     const residency = dashIfEmpty(profile.residencyStatus);
@@ -915,7 +836,7 @@ useFocusEffect(
 
   return (
     <>
-      <RequireUserType type="home" />
+      <RequireUserType type="company" />
 
       <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: BG }}>
         <Animated.ScrollView
@@ -928,9 +849,6 @@ useFocusEffect(
           {/* Block A */}
           <View style={{ backgroundColor: BG, padding: BLOCK_PAD }}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              <Pressable onPress={openLiveShareSheet} hitSlop={10}>
-                <Text style={s.topLink}>Share Live</Text>
-              </Pressable>
 
               <View style={{ flexDirection: "row", alignItems: "center", gap: 22 }}>
                 <Pressable
@@ -1006,9 +924,16 @@ useFocusEffect(
 
           <View style={{ height: 1, backgroundColor: BORDER }} />
 
-          {/* Block B */}
+          {/* Block B for company mission */}
           <View style={{ backgroundColor: WHITE, padding: BLOCK_PAD }}>
-            {!!hookText ? <Text style={s.hook}>{hookText}</Text> : <Text style={[s.hook, { opacity: 1 }]}>—</Text>}
+            {!!missionText ? <Text style={s.mission}>{missionText}</Text> : <Text style={[s.mission, { opacity: 1 }]}>—</Text>}
+          </View>
+
+          <View style={{ height: 1, backgroundColor: BORDER }} />
+
+          {/* Block BA for company values */}
+          <View style={{ backgroundColor: WHITE, padding: BLOCK_PAD }}>
+            {!!missionText ? <Text style={s.mission}>{missionText}</Text> : <Text style={[s.mission, { opacity: 1 }]}>—</Text>}
           </View>
 
           <View style={{ height: 1, backgroundColor: BORDER }} />
@@ -1025,7 +950,7 @@ useFocusEffect(
                 paddingVertical: 2,
               }}
             >
-              <Text style={s.qualHeader}>QUALIFICATIONS</Text>
+              <Text style={s.qualHeader}>BENEFITS SUMMARY - management style, PTO</Text>
 
               <Animated.View style={{ transform: [{ rotate: qualChevronRotate }], marginRight: 6 }}>
                 <Feather name="chevron-down" size={24} color={HINT} />
@@ -1090,6 +1015,8 @@ useFocusEffect(
                   </View>
                 </View>
               </View>
+
+              
 
               {/* Visible animated content */}
               {qualOpen ? (
@@ -1164,9 +1091,67 @@ useFocusEffect(
                 </Animated.View>
               ) : null}
             </Animated.View>
-          </View>
+          </View> 
 
           <View style={{ height: 1, backgroundColor: BORDER }} />
+
+          {/* Company Location Block */}
+          <View style={{ backgroundColor: BG, padding: BLOCK_PAD }}>
+            <Pressable
+              onPress={toggleQual}
+              hitSlop={10}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingVertical: 2,
+              }}
+            >
+              <Text style={s.qualHeader}>COMPANY LOCATION</Text>
+
+              <Animated.View style={{ transform: [{ rotate: qualChevronRotate }], marginRight: 6 }}>
+                <Feather name="chevron-down" size={24} color={HINT} />
+              </Animated.View>
+            </Pressable>
+
+            {/* ✅ Premium animated reveal container */}
+            <Animated.View style={{ height: qualHeight, overflow: "hidden" }}>
+              {/* ✅ Hidden measurer */}
+              <View
+                pointerEvents="none"
+                style={{ opacity: 0, position: "absolute", left: 0, right: 0 }}
+                onLayout={(e) => {
+                  const h = e.nativeEvent.layout.height;
+                  if (h > 0 && Math.abs(h - qualContentH) > 2) setQualContentH(h);
+                }}
+              >
+                <View style={{ marginTop: 14 }}>
+                  <View style={{ overflow: "hidden" }}>
+                    <View style={{ width: panelW * 2, flexDirection: "row" }}>
+                      <View style={{ width: panelW }}>
+                        <View style={{ gap: 14 }}>
+                          {qualCol1.map((row) => (
+                            <View key={row.label} style={{ gap: 4, paddingRight: QUAL_RIGHT_GUTTER }}>
+                              <Text style={s.qualLabel}>{row.label}</Text>
+                              <QualValue value={row.value} textStyle={s.qualValue} />
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+
+                      <View style={{ width: panelW }}>
+                        <View style={{ gap: 14 }}>
+                          {qualCol2.map((row) => (
+                            <View key={row.label} style={{ gap: 4, paddingRight: QUAL_RIGHT_GUTTER }}>
+                              <Text style={s.qualLabel}>{row.label}</Text>
+                              <QualValue value={row.value} textStyle={s.qualValue} />
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+          </View>
 
           {/* Block D */}
           <View style={{ backgroundColor: WHITE, paddingVertical: BLOCK_PAD, paddingLeft: BLOCK_PAD }}>

@@ -218,12 +218,12 @@ export function useProfileEditController() {
   );
   function handleCancel() {
     if (!changed) {
-      router.replace("/(homeUser)/profile");
+      router.replace("/(companyUser)/profile");
       return;
     }
     Alert.alert("Discard changes?", "You have unsaved edits.", [
       { text: "Keep editing", style: "cancel" },
-      { text: "Discard", style: "destructive", onPress: () => router.replace("/(homeUser)/profile") },
+      { text: "Discard", style: "destructive", onPress: () => router.replace("/(companyUser)/profile") },
     ]);
   }
 
@@ -244,7 +244,7 @@ export function useProfileEditController() {
 
       await updateUserProfile(apiPayload as any, accessToken);
       setProfile((p: any) => ({ ...p, ...draft }));
-      router.replace("/(homeUser)/profile");
+      router.replace("/(companyUser)/profile");
     } catch (err) {
       console.error(err);
       Alert.alert("Error", "Failed to save profile.");
@@ -699,7 +699,6 @@ export function useProfileEditController() {
     openIndustryPicker,
     openCityPicker,
     clearCity,
-    higherEdEntries,
     openHigherEdPicker,
     openDegreePickerForUniversity,
     removeHigherEducationEntry,
