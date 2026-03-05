@@ -18,7 +18,7 @@
  */
 import { aws_config } from "@/constants/aws-config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import type {
   ContactDisplaySettings,
   HigherEdEntry,
@@ -493,7 +493,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
    *   - share links
    * - Merges backend libraries with local-only items (so locally-created items aren't lost)
    */
-  const refreshProfile = async (token: string) => {
+  const refreshProfile = useCallback(async (token: string) => {
     if (!token) {
       console.log("[refreshProfile] token is missing");
       return;
@@ -804,14 +804,14 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const value = {
+  const value = useMemo(() => ({
     profile,
     setProfile: updateProfileState,
     refreshProfile,
     isLoading,
-  };
+  }), [profile, isLoading]);
 
   return (
     <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>
