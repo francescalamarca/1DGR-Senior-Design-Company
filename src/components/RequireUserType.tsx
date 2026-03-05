@@ -1,30 +1,30 @@
-import { useSession } from "@/src/state/session";
+import { useSession} from "@/src/state/session";
 import { Slot, useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export function RequireUserType({ type }: { type: "home" | "company" }) {
-  const { userType, isLoading } = useSession(); // make sure session exposes isLoading
+  const { userType:_userType} = useSession(); // make sure session exposes isLoading, got rid of it for testing purposes don't need here
   const router = useRouter();
   const hasRedirected = useRef(false);
+  const [mounted, setMounted] = useState(false);
+
+  //DEV OVERRIDE
+  const userType = "company";
 
   useEffect(() => {
-    if (isLoading) return;
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if(!mounted) return; //not ready will return
 
     if (hasRedirected.current) return;
 
-    if (userType === null) {
-      hasRedirected.current = true;
-      router.replace("/(auth)/login");
-      return;
-    }
-
     if (userType !== type) {
       hasRedirected.current = true;
-      router.replace(
-        userType === "company" ? "/(companyUser)" : "/(homeUser)"
-      );
+      router.replace("/(companyUser)");
     }
-  }, [userType, isLoading, type]);
+  }, [mounted, userType, type]);
 
   return null;
 }
