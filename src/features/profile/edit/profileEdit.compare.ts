@@ -1,3 +1,10 @@
+/*
+This file is a profile change-detection utility. Its job is to answer one question: did the user actually edit anything?
+
+
+*/
+
+
 // src/features/profile/edit/profileEdit.compare.ts
 import type { Profile, HigherEdEntry } from "@/src/features/profile/profile.types";
 

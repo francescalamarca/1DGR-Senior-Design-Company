@@ -234,14 +234,14 @@ export function HookSection(props: { bio: string; onChangeBio: (v: string) => vo
 
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Hook</LLightText>
-      <LLightText style={styles.sectionHelper}>A short, compelling headline for your profile.</LLightText>
+      <LLightText style={styles.sectionTitle}>Company Mission</LLightText>
+      <LLightText style={styles.sectionHelper}>The mission of the company.</LLightText>
 
       <View style={styles.fieldStack}>
         <TextInput
           value={bio?.trim().length ? bio : ""}
           onChangeText={onChangeBio}
-          placeholder="Write something about yourself…"
+          placeholder="Write something about the mission…"
           placeholderTextColor={UI.hint}
           style={styles.inputMultiline}
           multiline
@@ -256,14 +256,14 @@ export function ValuesSection(props: { valuesText: string; onChangeValuesText: (
 
   return (
     <>
-      <LLightText style={[styles.sectionTitle, { marginTop: 14 }]}>Values</LLightText>
+      <LLightText style={[styles.sectionTitle, { marginTop: 14 }]}>Company Values</LLightText>
       <LLightText style={[styles.sectionHelper, { marginTop: 4 }]}>Add one value per line. Optional format: Label: Value.</LLightText>
 
       <View style={styles.fieldStack}>
         <TextInput
           value={valuesText}
           onChangeText={onChangeValuesText}
-          placeholder={"Product-minded software engineer"}
+          placeholder={"Worker happiness and support."}
           placeholderTextColor={UI.hint}
           style={styles.inputMultiline}
           multiline
@@ -273,15 +273,13 @@ export function ValuesSection(props: { valuesText: string; onChangeValuesText: (
   );
 }
 
-export function IndustryStatusSection(props: {
-  workTypeSubtitle: string;
-  residencySubtitle: string;
-  experienceSubtitle: string;
+export function IndustryTypeSection(props: { //changed this to type to categorize the company based on industry
+  workTypeSubtitle: string; //for a company this will be what kind of work is being done (tech, hands-on, construction,etc)
+  companyAgeSubtitle: string;
   industrySubtitle: string;
   citySubtitle: string;
   hasCity: boolean;
   onPressWorkType: () => void;
-  onPressResidency: () => void;
   onPressExperience: () => void;
   onPressIndustry: () => void;
   onPressCity: () => void;
@@ -289,13 +287,11 @@ export function IndustryStatusSection(props: {
 }) {
   const {
     workTypeSubtitle,
-    residencySubtitle,
-    experienceSubtitle,
+    companyAgeSubtitle,
     industrySubtitle,
     citySubtitle,
     hasCity,
     onPressWorkType,
-    onPressResidency,
     onPressExperience,
     onPressIndustry,
     onPressCity,
@@ -304,118 +300,23 @@ export function IndustryStatusSection(props: {
 
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Industry & Status</LLightText>
-      <LLightText style={styles.sectionHelper}>Residency, experience, interests, and location.</LLightText>
+      <LLightText style={styles.sectionTitle}>Industry</LLightText>
+      <LLightText style={styles.sectionHelper}>Residency requirements, company age, work, and location.</LLightText>
 
       <GroupCard>
         <PickerRow title="Work Type" subtitle={workTypeSubtitle} onPress={onPressWorkType} showDivider />
-        <PickerRow title="Residency Status" subtitle={residencySubtitle} onPress={onPressResidency} showDivider />
         <PickerRow
-          title="Industry Experience (years)"
-          subtitle={experienceSubtitle}
+          title="Company Age (years)"
+          subtitle={companyAgeSubtitle}
           onPress={onPressExperience}
           showDivider
         />
-        <PickerRow title="Industry Interests" subtitle={industrySubtitle} onPress={onPressIndustry} showDivider />
+        <PickerRow title="Industry Type" subtitle={industrySubtitle} onPress={onPressIndustry} showDivider />
         <PickerRow title="City" subtitle={citySubtitle} onPress={onPressCity} showDivider={hasCity} />
         {hasCity ? (
           <Pressable onPress={onClearCity} style={[styles.rowPressable, { paddingVertical: 14 }]}>
             <LLightText style={[styles.rowTitle, { color: UI.danger }]}>Clear City</LLightText>
           </Pressable>
-        ) : null}
-      </GroupCard>
-    </>
-  );
-}
-
-export function HigherEducationSection(props: {
-  max: number;
-  entries: HigherEdEntryDraft[];
-  onOpenPicker: () => void;
-  onEdit: (unitid: string, label: string) => void;
-  onRemove: (unitid: string) => void;
-  onClearAll: () => void;
-}) {
-  const { max, entries, onOpenPicker, onEdit, onRemove, onClearAll } = props;
-
-  return (
-    <>
-      <LLightText style={styles.sectionTitle}>Higher Education</LLightText>
-      <LLightText style={styles.sectionHelper}>Add up to {max} universities and select degrees.</LLightText>
-
-      <GroupCard>
-        <PickerRow
-          title="Add / Edit Universities"
-          subtitle={`${entries.length} selected`}
-          onPress={onOpenPicker}
-          showDivider={entries.length > 0}
-        />
-
-        {entries.length > 0 ? (
-          <View style={{ padding: 14, gap: 10 }}>
-            {entries.map((e) => {
-              const degrees = (e.degrees ?? []).slice().sort((a, b) => a.localeCompare(b));
-
-              const detailsMap = new Map<string, string>();
-              (e.degreeDetails ?? []).forEach((d) => {
-                if (d.degree) detailsMap.set(d.degree, String(d.fieldOfStudy ?? "").trim());
-              });
-
-              return (
-                <View
-                  key={String(e.unitid)}
-                  style={{
-                    borderWidth: 1,
-                    borderColor: UI.border,
-                    borderRadius: 12,
-                    padding: 12,
-                    backgroundColor: UI.card,
-                    gap: 6,
-                  }}
-                >
-                  <LLightText style={{ fontSize: 14, fontWeight: "800" }}>{String(e.label)}</LLightText>
-
-                  {degrees.length ? (
-                    <View style={{ gap: 4 }}>
-                      {degrees.map((deg) => {
-                        const fs = detailsMap.get(deg);
-                        return (
-                          <LLightText key={deg} style={{ fontSize: 12, opacity: 0.65 }}>
-                            {deg}
-                            {fs ? ` — ${fs}` : ""}
-                          </LLightText>
-                        );
-                      })}
-                    </View>
-                  ) : (
-                    <LLightText style={{ fontSize: 12, opacity: 0.65 }}>Degrees: —</LLightText>
-                  )}
-
-                  {e.estimatedGraduation ? (
-                    <LLightText style={{ fontSize: 12, opacity: 0.65 }}>
-                      Graduation: {String(e.estimatedGraduation)}
-                    </LLightText>
-                  ) : null}
-
-                  <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
-                    <Pressable onPress={() => onEdit(String(e.unitid), String(e.label))} style={[styles.pill, { flex: 1 }]}>
-                      <BtnText>Edit</BtnText>
-                    </Pressable>
-                    <Pressable
-                      onPress={() => onRemove(String(e.unitid))}
-                      style={[styles.pill, { flex: 1, borderColor: UI.danger }]}
-                    >
-                      <BtnText style={{ color: UI.danger }}>Remove</BtnText>
-                    </Pressable>
-                  </View>
-                </View>
-              );
-            })}
-
-            <Pressable onPress={onClearAll} style={[styles.pill, { borderColor: UI.danger }]}>
-              <BtnText style={{ color: UI.danger }}>Clear All</BtnText>
-            </Pressable>
-          </View>
         ) : null}
       </GroupCard>
     </>
