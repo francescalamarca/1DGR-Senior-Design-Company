@@ -134,7 +134,6 @@ export function useProfileEditController() {
     return (preferredOk || legalOk) && changed;
   }, [draft.preferredName, draft.legalFirstName, legalMiddleName, draft.legalLastName, changed]);
 
-  const higherEdEntries = useMemo(() => (draft.higherEducation ?? []) as HigherEdEntryDraftStrict[], [draft.higherEducation]);
 
   const canUploadToLibrary =
     !!mediaVideoUri && !!mediaThumbUri && mediaCaption.trim().length > 0 && !addingLibraryVideo && !isSaving;
@@ -590,10 +589,6 @@ export function useProfileEditController() {
     openIndustryPicker,
     openCityPicker,
     clearCity,
-    openHigherEdPicker,
-    openDegreePickerForUniversity,
-    removeHigherEducationEntry,
-    clearAllHigherEducation,
     mediaVideoUri,
     mediaThumbUri,
     mediaCaption,
@@ -637,21 +632,5 @@ export function useProfileEditController() {
     singlePickerTempValue,
     setSinglePickerTempValue,
     singlePickerOnSelect,
-    higherEdPickerVisible,
-    setHigherEdPickerVisible,
-    higherEdSearch,
-    setHigherEdSearch,
-    higherEdListRef,
-    filteredUniversities,
-    degreePickerVisible,
-    setDegreePickerVisible,
-    degreePickerUniversity,
-    degreeTempSelected,
-    toggleDegree,
-    degreeTempFields,
-    setDegreeField,
-    degreeTempGraduation,
-    setDegreeTempGraduation,
-    applyDegreeSelection,
   };
 }
