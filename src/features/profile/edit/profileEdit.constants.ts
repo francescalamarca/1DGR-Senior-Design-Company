@@ -24,14 +24,6 @@ export const WORK_TYPE_OPTIONS = ["Part-Time", "Full Time", "Contract", "All", "
 
 export const WORK_PREFERENCE_OPTIONS = ["Remote", "Willing to relocate", "Both"];
 
-export const RESIDENCY_STATUS_OPTIONS = [
-  "Lawful Permanent Resident (Green Card holder)",
-  "Authorized to work in the U.S. (no sponsorship required)",
-  "Authorized to work in the U.S. (sponsorship required now or in the future)",
-  "Not authorized to work in the U.S.",
-  "Prefer not to disclose",
-];
-
 export const DEGREE_OPTIONS = [
   "Associates",
   "Bachelors",
