@@ -1,0 +1,546 @@
+This is the code needed for every new dropdown that must have all the changed variables to match
+
+This is gonna make it easier to edit so i don't have to search through the file
+will not upload to github(.gitignore)
+
+//in const s = useMemo()
+//FOR COMPANY LOCATION SHOULD HAVE CLARIFIED
+      rolesHeader: {
+        ...lexLight,
+        fontSize: 13,
+        marginLeft: 5,
+        letterSpacing: 1.4,
+        color: TEXT,
+        opacity: 1,
+      } as const,
+
+      // (kept font + opacity exactly as you had)
+      rolesLabel: {
+        ...lexLight,
+        fontSize: 12.5,
+        color: TEXT,
+        opacity: 1,
+        marginLeft: 5,
+      } as const,
+      rolesValue: {
+        ...lexLight,
+        fontSize: 13,
+        marginLeft: 10,
+        color: TEXT,
+        opacity: 1,
+        lineHeight: 18,
+        flexShrink: 1,
+        flexWrap: "wrap",
+        width: "90%", // ✅ keep as requested
+      } as const,
+
+//starting outside the return
+function rolesValue({
+  value,
+  textStyle,
+}: {
+  value: rolessRowValue;
+  textStyle: any;
+}) {
+  if (Array.isArray(value)) {
+    if (value.length === 0) return <Text style={textStyle}>—</Text>;
+
+    return (
+      <View>
+        {value.map((item, idx) => (
+          <Text
+            key={`${idx}_${item}`}
+            //style={[textStyle, idx === value.length - 1 ? null : { marginBottom: HIGHER_ED_ITEM_GAP }]}
+          >
+            {softWrapLongTokens(item)}
+          </Text>
+        ))}
+      </View>
+    );
+  }
+
+  return <Text style={textStyle}>{softWrapLongTokens(value)}</Text>;
+}
+
+//FOR rolesS SAME THING
+// Right-side page-toggle button takes space; keep text readable without shrinking the whole column.
+const roles_PAGE_BUTTON_W = 38; //this was roles_roles_PAGE_BUTTON_W, making it more general here for all components so it can be used everywhere
+const roles_PAGE_BUTTON_GAP = 8; // breathing room so text never touches the divider
+const roles_RIGHT_GUTTER = roles_PAGE_BUTTON_W + roles_PAGE_BUTTON_GAP;
+
+type rolesRowValue = string | string[];
+type rolesRow = { label: string; value: rolesRowValue };
+
+
+// ===== roles Location dropdown (2-page pull-in) =====
+  //all of these components must be unique to each dropdown in order for them to open individually
+  const [rolesOpen, setrolesOpen] = useState(false);
+  const [rolesPage, setrolesPage] = useState<0 | 1>(0);
+
+  const rolesHeight = useRef(new Animated.Value(0)).current; // non-native
+  const rolesOpacity = useRef(new Animated.Value(0)).current; // native
+  const rolesTranslateY = useRef(new Animated.Value(-6)).current; // native
+  const [rolesContentH, setrolesContentH] = useState(0);
+
+  const rolesRef = useRef(false);
+  const closingrolesRef = useRef(false);
+
+  const rolesChevron = useRef(new Animated.Value(0)).current;
+  const rolesChevronRotate = rolesChevron.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "180deg"],
+  });
+
+
+//=========== roles COLUMN ====================
+  // Keep container height synced if content height changes while open (ex: fetch updates)
+  useEffect(() => {
+    if (!rolesOpen) return;
+    if (!rolesContentH) return; 
+
+    Animated.timing(rolesHeight, {
+      toValue: rolesContentH,
+      duration: 140,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [rolesOpen, rolesContentH, rolesHeight]);
+
+  const runopenrolesAnimation = useCallback(
+    (triesLeft: number) => {
+      // If still no measurement yet, wait a frame (prevents “opens to height=1” bug)
+      if (!rolesContentH && triesLeft > 0) {
+        requestAnimationFrame(() => runopenrolesAnimation(triesLeft - 1));
+        return;
+      }
+
+      const targetH = Math.max(rolesContentH, 1);
+
+      // Make sure values start from closed state (prevents half-open weirdness)
+      rolesOpacity.setValue(0);
+      rolesTranslateY.setValue(-6);
+      rolesHeight.setValue(0);
+
+      Animated.parallel([
+        Animated.timing(rolesChevron, {
+          toValue: 1,
+          duration: 220,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(rolesOpacity, {
+          toValue: 1,
+          duration: 170,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(rolesTranslateY, {
+          toValue: 0,
+          duration: 220,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.spring(rolesHeight, {
+          toValue: targetH,
+          damping: 26,
+          stiffness: 220,
+          mass: 1,
+          overshootClamping: true,
+          useNativeDriver: false,
+        }),
+      ]).start(() => {
+        rolesRef.current = false;
+      });
+    },
+    [
+      rolesChevron,
+      rolesContentH,
+      rolesHeight,
+      rolesOpacity,
+      rolesTranslateY,
+    ],
+  );
+
+  const openroles = useCallback(() => {
+    if (rolesOpen) return;
+    if (rolesRef.current || closingrolesRef.current) return;
+
+    rolesRef.current = true;
+
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setrolesOpen(true);
+
+    // Wait up to ~8 frames for the measurer to report a real height.
+    requestAnimationFrame(() => runopenrolesAnimation(8));
+  }, [rolesOpen, runopenrolesAnimation]);
+
+  const closeroles = useCallback(() => {
+    if (!rolesOpen) return;
+    if (closingrolesRef.current || rolesRef.current) return;
+
+    closingrolesRef.current = true;
+
+    Animated.parallel([
+      Animated.timing(rolesChevron, {
+        toValue: 0,
+        duration: 160,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(rolesOpacity, {
+        toValue: 0,
+        duration: 140,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(rolesTranslateY, {
+        toValue: -6,
+        duration: 160,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(rolesHeight, {
+        toValue: 0,
+        duration: 170,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }),
+      // Reset slider back to page 0 while collapsing
+      Animated.timing(pageX, {
+        toValue: 0,
+        duration: 160,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setrolesPage(0);
+      setrolesOpen(false);
+      closingrolesRef.current = false;
+    });
+  }, [
+    rolesOpen,
+    pageX,
+    rolesChevron,
+    rolesHeight,
+    rolesOpacity,
+    rolesTranslateY,
+  ]);
+
+  const toggleroless = useCallback(() => {
+    if (!rolesOpen) return openroles();
+    return closeroles();
+  }, [rolesOpen, openroles, closeroles]);
+
+  const togglerolesPage = useCallback(() => {
+    if (!rolesOpen) return;
+    if (closingrolesRef.current || rolesRef.current) return;
+
+    const next: 0 | 1 = rolesPage === 0 ? 1 : 0;
+    setrolesPage(next);
+
+    Animated.spring(pageX, {
+      toValue: next === 1 ? -1 : 0,
+      damping: 26,
+      stiffness: 240,
+      mass: 1,
+      overshootClamping: true,
+      useNativeDriver: true,
+    }).start();
+  }, [pageX, rolesPage, rolesOpen]);
+
+  const rolesSwipeResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          if (
+            !rolesOpen ||
+            closingrolesRef.current ||
+            rolesRef.current
+          )
+            return false;
+          const dx = Math.abs(gestureState.dx);
+          const dy = Math.abs(gestureState.dy);
+          return dx > 10 && dx > dy;
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          if (
+            !rolesOpen ||
+            closingrolesRef.current ||
+            rolesRef.current
+          )
+            return;
+          const { dx } = gestureState;
+          if (dx < -35 && rolesPage === 0) {
+            setrolesPage(1);
+            Animated.spring(pageX, {
+              toValue: -1,
+              damping: 26,
+              stiffness: 240,
+              mass: 1,
+              overshootClamping: true,
+              useNativeDriver: true,
+            }).start();
+            return;
+          }
+          if (dx > 35 && rolesPage === 1) {
+            setrolesPage(0);
+            Animated.spring(pageX, {
+              toValue: 0,
+              damping: 26,
+              stiffness: 240,
+              mass: 1,
+              overshootClamping: true,
+              useNativeDriver: true,
+            }).start();
+          }
+        },
+      }),
+    [pageX, rolesOpen, rolesPage],
+  );
+
+  const rolesCol1: rolesRow[] = useMemo(() => {
+    const workTypePrimary = String(
+      (profile as any).workType ??
+        (profile as any).work_type ??
+        (profile as any).employmentType ??
+        "",
+    ).trim();
+    const workTypeSecondary = String(
+      (profile as any).workPreference ??
+        (profile as any).work_preference ??
+        (profile as any).work_location_preference ??
+        "",
+    ).trim();
+    const workType = dashIfEmpty(
+      [workTypePrimary, workTypeSecondary].filter(Boolean).join(" · "),
+    );
+    const location = dashIfEmpty(profile.geographicLocation);
+
+    return [
+      { label: "Work type", value: workType },
+      { label: "Location", value: location },
+    ];
+  }, [profile]);
+
+  const rolesCol2: rolesRow[] = useMemo(() => {
+    const residency = dashIfEmpty(profile.residencyStatus);
+    const experience = dashIfEmpty(profile.industryExperience);
+
+    return [
+      { label: "Residency status", value: residency },
+      { label: "Industry experience", value: experience },
+    ];
+  }, [profile]);
+
+
+  ... Inside the return - after the  
+  <View style={{ height: 1, backgroundColor: BORDER }}
+
+{/* Block roles start */}
+          <View style={{ backgroundColor: BG, padding: BLOCK_PAD }}>
+            <Pressable
+              onPress={toggleroless}
+              hitSlop={10}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingVertical: 2,
+              }}
+            >
+              <Text style={s.Header}>
+                OPEN ROLES
+              </Text>
+
+              <Animated.View
+                style={{
+                  transform: [{ rotate: rolesChevronRotate }],
+                  marginRight: 6,
+                }}
+              >
+                <Feather name="chevron-down" size={24} color={HINT} />
+              </Animated.View>
+            </Pressable>
+
+            {/* ✅ Premium animated reveal container */}
+            <Animated.View
+              style={{ height: rolesHeight, overflow: "hidden" }}
+            >
+              {/* ✅ Hidden measurer */}
+              <View
+                pointerEvents="none"
+                style={{ opacity: 0, position: "absolute", left: 0, right: 0 }}
+                onLayout={(e) => {
+                  const h = e.nativeEvent.layout.height;
+                  if (h > 0 && Math.abs(h - rolesContentH) > 2)
+                    setrolesContentH(h);
+                }}
+              >
+                <View style={{ marginTop: 14 }}>
+                  <View style={{ overflow: "hidden" }}>
+                    <View style={{ width: panelW * 2, flexDirection: "row" }}>
+                      <View style={{ width: panelW }}>
+                        <View style={{ gap: 14 }}>
+                          {rolesCol1.map((row) => (
+                            <View
+                              key={row.label}
+                              style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
+                            >
+                              <Text style={s.rolesLabel}>{row.label}</Text>
+                              <rolesValue
+                                value={row.value}
+                                textStyle={s.rolesValue}
+                              />
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+
+                      <View style={{ width: panelW }}>
+                        <View style={{ gap: 14 }}>
+                          {rolesCol2.map((row) => (
+                            <View
+                              key={row.label}
+                              style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
+                            >
+                              <Text style={s.rolesLabel}>{row.label}</Text>
+                              <rolesValue
+                                value={row.value}
+                                textStyle={s.rolesValue}
+                              />
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View
+                    style={{
+                      marginTop: 14,
+                      flexDirection: "row",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {[0, 1].map((idx) => {
+                      const active = rolesPage === idx;
+                      return (
+                        <View
+                          key={`roles-dot-measure-${idx}`}
+                          style={{
+                            width: 5,
+                            height: 5,
+                            borderRadius: 999,
+                            marginHorizontal: 3.5,
+                            backgroundColor: active ? "#202020" : HINT,
+                            opacity: active ? 1 : 0.95,
+                          }}
+                        />
+                      );
+                    })}
+                  </View>
+                </View>
+              </View>
+
+              {/* Visible animated content */}
+              {rolesOpen ? (
+                <Animated.View
+                  style={{
+                    opacity: rolesOpacity,
+                    transform: [{ translateY: rolesTranslateY }],
+                  }}
+                >
+                  <View style={{ marginTop: 14 }}>
+                    <View
+                      style={{ overflow: "hidden" }}
+                      {...rolesSwipeResponder.panHandlers}
+                    >
+                      <Animated.View
+                        style={{
+                          width: panelW * 2,
+                          flexDirection: "row",
+                          transform: [{ translateX: pageTranslateX }],
+                        }}
+                      >
+                        <View style={{ width: panelW }}>
+                          <View style={{ gap: 14 }}>
+                            {rolesCol1.map((row) => (
+                              <View
+                                key={row.label}
+                                style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
+                              >
+                                <Text style={s.rolesLabel}>{row.label}</Text>
+                                <rolesValue
+                                  value={row.value}
+                                  textStyle={s.rolesValue}
+                                />
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+
+                        <View style={{ width: panelW }}>
+                          <View style={{ gap: 14 }}>
+                            {rolesCol2.map((row) => (
+                              <View
+                                key={row.label}
+                                style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
+                              >
+                                <Text style={s.rolesLabel}>{row.label}</Text>
+                                <rolesValue
+                                  value={row.value}
+                                  textStyle={s.rolesValue}
+                                />
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      </Animated.View>
+
+                      {/* Page toggle button */}
+                      <Pressable
+                        onPress={togglerolesPage}
+                        hitSlop={10}
+                        style={{
+                          position: "absolute",
+                          right: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: roles_PAGE_BUTTON_W,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      />
+                    </View>
+
+                    <View
+                      style={{
+                        marginTop: 14,
+                        flexDirection: "row",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {[0, 1].map((idx) => {
+                        const active = rolesPage === idx;
+                        return (
+                          <View
+                            key={`benefits-dot-${idx}`}
+                            style={{
+                              width: 5,
+                              height: 5,
+                              borderRadius: 999,
+                              marginHorizontal: 3.5,
+                              backgroundColor: active ? "#202020" : HINT,
+                              opacity: active ? 1 : 0.95,
+                            }}
+                          />
+                        );
+                      })}
+                    </View>
+                  </View>
+                </Animated.View>
+              ) : null}
+            </Animated.View>
+          </View>{" "}
+          {/*end roles return block*/}

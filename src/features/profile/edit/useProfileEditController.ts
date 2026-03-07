@@ -8,10 +8,9 @@ import { useProfile } from "@/src/features/profile/profile.store";
 import { useSession } from "@/src/state/session";
 import { updateUserProfile } from "@/src/utils/update_api";
 
-import { hasProfileChanged, normalizeFieldOfStudy, type DraftProfile } from "./profileEdit.compare";
+import { hasProfileChanged, type DraftProfile } from "./profileEdit.compare";
 import { INDUSTRIES } from "./profileEdit.constants";
 import { mapDraftToApiPayload } from "./profileEdit.data";
-import { sanitizeHigherEdEntry, type DegreeDetail, type HigherEdEntryDraftStrict } from "./profileEdit.higherEd";
 import { filterCitiesByQuery, filterUniversitiesByQuery, mapCitiesFromJson, mapUniversitiesFromJson } from "./profileEdit.mappers";
 import { buildCdnUrlFromKey, pickImageFromLibrary, pickVideoFromLibrary, uploadToS3 } from "./profileEdit.media";
 import { type UniversityRow } from "./profileEdit.search";
@@ -218,12 +217,12 @@ export function useProfileEditController() {
   );
   function handleCancel() {
     if (!changed) {
-      router.replace("/(homeUser)/profile");
+      router.replace("/(companyUser)/profile");
       return;
     }
     Alert.alert("Discard changes?", "You have unsaved edits.", [
       { text: "Keep editing", style: "cancel" },
-      { text: "Discard", style: "destructive", onPress: () => router.replace("/(homeUser)/profile") },
+      { text: "Discard", style: "destructive", onPress: () => router.replace("/(companyUser)/profile") },
     ]);
   }
 
@@ -244,7 +243,7 @@ export function useProfileEditController() {
 
       await updateUserProfile(apiPayload as any, accessToken);
       setProfile((p: any) => ({ ...p, ...draft }));
-      router.replace("/(homeUser)/profile");
+      router.replace("/(companyUser)/profile");
     } catch (err) {
       console.error(err);
       Alert.alert("Error", "Failed to save profile.");
@@ -361,115 +360,7 @@ export function useProfileEditController() {
     ]);
   }
 
-  function openHigherEdPicker() {
-    setHigherEdSearch("");
-    setHigherEdPickerVisible(true);
-    requestAnimationFrame(() => higherEdListRef.current?.scrollToOffset?.({ offset: 0, animated: false }));
-  }
-
-  function upsertHigherEducationEntry(entry: Partial<HigherEdEntryDraftStrict>) {
-    const clean = sanitizeHigherEdEntry(entry);
-
-    setDraft((p) => {
-      const current = (p.higherEducation ?? []) as HigherEdEntryDraftStrict[];
-      const idx = current.findIndex((e) => String(e.unitid) === String(clean.unitid));
-      if (idx === -1 && current.length >= MAX_HIGHER_ED) return p;
-
-      const next = [...current];
-      if (idx === -1) next.push(clean);
-      else next[idx] = clean;
-
-      return { ...p, higherEducation: next };
-    });
-  }
-
-  function removeHigherEducationEntry(unitid: string) {
-    setDraft((p: any) => ({
-      ...p,
-      higherEducation: (p.higherEducation ?? []).filter((e: any) => String(e.unitid) !== String(unitid)),
-    }));
-  }
-
-  function clearAllHigherEducation() {
-    setDraft((p: any) => ({ ...p, higherEducation: [] }));
-  }
-
-  function openDegreePickerForUniversity(u: { unitid: string; label: string }) {
-    const existing = higherEdEntries.find((e) => String(e.unitid) === String(u.unitid));
-
-    const selectedDegrees = new Set<string>(existing?.degrees ?? []);
-    setDegreeTempSelected(selectedDegrees);
-
-    const fields: Record<string, string> = {};
-    if (existing?.degreeDetails?.length) {
-      for (const d of existing.degreeDetails) {
-        if (!d?.degree) continue;
-        fields[d.degree] = String(d.fieldOfStudy ?? "").trim();
-      }
-    } else if ((existing as any)?.fieldOfStudy) {
-      for (const deg of selectedDegrees) fields[deg] = String((existing as any).fieldOfStudy ?? "").trim();
-    }
-    setDegreeTempFields(fields);
-
-    setDegreeTempGraduation(String((existing as any)?.estimatedGraduation ?? "").trim());
-
-    setDegreePickerUniversity(u);
-    setHigherEdPickerVisible(false);
-    setDegreePickerVisible(true);
-  }
-
-  function toggleDegree(deg: string) {
-    setDegreeTempSelected((prev) => {
-      const next = new Set(prev);
-      const willAdd = !next.has(deg);
-
-      if (willAdd) {
-        next.add(deg);
-        setDegreeTempFields((m) => (m[deg] !== undefined ? m : { ...m, [deg]: "" }));
-      } else {
-        next.delete(deg);
-        setDegreeTempFields((m) => {
-          const copy = { ...m };
-          delete copy[deg];
-          return copy;
-        });
-      }
-      return next;
-    });
-  }
-
-  function setDegreeField(deg: string, value: string) {
-    // Keep raw typing behavior (including in-progress spaces). Sanitize on apply/save.
-    setDegreeTempFields((m) => ({ ...m, [deg]: value }));
-  }
-
-  function applyDegreeSelection() {
-    if (!degreePickerUniversity) return;
-
-    const degrees = Array.from(degreeTempSelected).sort((a, b) => a.localeCompare(b));
-    if (degrees.length === 0) {
-      Alert.alert("Degree required", "Select at least one degree to save this university.");
-      return;
-    }
-
-    const estimatedGraduation = degreeTempGraduation.trim();
-
-    const degreeDetails: DegreeDetail[] = degrees.map((deg) => {
-      const field = normalizeFieldOfStudy(degreeTempFields[deg] ?? "");
-      return { degree: deg, fieldOfStudy: field || undefined };
-    });
-
-    upsertHigherEducationEntry({
-      unitid: degreePickerUniversity.unitid,
-      label: degreePickerUniversity.label,
-      degrees,
-      degreeDetails,
-      estimatedGraduation: estimatedGraduation || undefined,
-    });
-
-    setDegreePickerVisible(false);
-    setDegreePickerUniversity(null);
-  }
+  
 
   function scrollToBottomSoon() {
     requestAnimationFrame(() => {
@@ -699,7 +590,6 @@ export function useProfileEditController() {
     openIndustryPicker,
     openCityPicker,
     clearCity,
-    higherEdEntries,
     openHigherEdPicker,
     openDegreePickerForUniversity,
     removeHigherEducationEntry,
