@@ -11,56 +11,11 @@ import { updateUserProfile } from "@/src/utils/update_api";
 import { hasProfileChanged, type DraftProfile } from "./profileEdit.compare";
 import { INDUSTRIES } from "./profileEdit.constants";
 import { mapDraftToApiPayload } from "./profileEdit.data";
-import { filterCitiesByQuery, filterUniversitiesByQuery, mapCitiesFromJson, mapUniversitiesFromJson } from "./profileEdit.mappers";
+import { filterCitiesByQuery, mapCitiesFromJson } from "./profileEdit.mappers";
 import { buildCdnUrlFromKey, pickImageFromLibrary, pickVideoFromLibrary, uploadToS3 } from "./profileEdit.media";
-import { type UniversityRow } from "./profileEdit.search";
 import { type CityRow, type IndustryRow } from "./profileEdit.ui";
 
-const MAX_HIGHER_ED = 8;
 
-type ValueSummaryRow = { key?: string; label?: string; value?: string };
-
-function parseValuesSummaryFromInput(input: string): ValueSummaryRow[] {
-  const lines = String(input ?? "").split(/\r?\n/);
-
-  return lines
-    .map((line, idx) => {
-      if (!line.trim()) return null;
-
-      const colonIdx = line.indexOf(":");
-      if (colonIdx >= 0) {
-        const label = line.slice(0, colonIdx).trim();
-        const value = line.slice(colonIdx + 1);
-        if (!label && !value) return null;
-        return {
-          key: `value_${idx + 1}`,
-          label,
-          value: value || label,
-        };
-      }
-
-      return {
-        key: `value_${idx + 1}`,
-        label: "",
-        value: line,
-      };
-    })
-    .filter(Boolean) as ValueSummaryRow[];
-}
-
-function formatValuesSummaryForInput(valuesSummary: unknown): string {
-  if (!Array.isArray(valuesSummary)) return "";
-
-  return valuesSummary
-    .map((item) => {
-      const label = String((item as any)?.label ?? "").trim();
-      const value = String((item as any)?.value ?? "").trim();
-      if (!label && !value) return "";
-      return value || label;
-    })
-    .filter(Boolean)
-    .join("\n");
-}
 
 export function useProfileEditController() {
   const { profile, setProfile, refreshProfile } = useProfile();
@@ -97,17 +52,6 @@ export function useProfileEditController() {
   const [thumbOptions, setThumbOptions] = useState<string[]>([]);
   const [addingLibraryVideo, setAddingLibraryVideo] = useState(false);
 
-  const [higherEdPickerVisible, setHigherEdPickerVisible] = useState(false);
-  const [higherEdSearch, setHigherEdSearch] = useState("");
-  const higherEdListRef = useRef<FlatList<UniversityRow> | null>(null);
-
-  const [degreePickerVisible, setDegreePickerVisible] = useState(false);
-  const [degreePickerUniversity, setDegreePickerUniversity] = useState<{ unitid: string; label: string } | null>(null);
-
-  const [degreeTempSelected, setDegreeTempSelected] = useState<Set<string>>(new Set());
-  const [degreeTempFields, setDegreeTempFields] = useState<Record<string, string>>({});
-  const [degreeTempGraduation, setDegreeTempGraduation] = useState("");
-  const [valuesInputText, setValuesInputText] = useState("");
 
   const avatarPreviewUri = useMemo(() => {
     if (avatarLocalUri) return avatarLocalUri;
@@ -138,7 +82,6 @@ export function useProfileEditController() {
   const canUploadToLibrary =
     !!mediaVideoUri && !!mediaThumbUri && mediaCaption.trim().length > 0 && !addingLibraryVideo && !isSaving;
 
-  const valuesText = valuesInputText;
 
   const predefinedIndustrySet = useMemo(() => {
     const s = new Set<string>();
@@ -175,22 +118,7 @@ export function useProfileEditController() {
 
   const filteredCities = useMemo(() => filterCitiesByQuery(cities, citySearch), [cities, citySearch]);
 
-  const universities: UniversityRow[] = useMemo(() => {
-    const raw = require("@/src/data/usuniversities.json");
-    return mapUniversitiesFromJson(raw);
-  }, []);
-
-  const filteredUniversities: UniversityRow[] = useMemo(
-    () => filterUniversitiesByQuery(universities, higherEdSearch),
-    [universities, higherEdSearch]
-  );
-
-  useEffect(() => {
-    requestAnimationFrame(() => {
-      higherEdListRef.current?.scrollToOffset?.({ offset: 0, animated: false });
-    });
-  }, [higherEdSearch]);
-
+  
   const profileRef = useRef(profile);
   profileRef.current = profile;
   
@@ -205,10 +133,6 @@ export function useProfileEditController() {
       setThumbOptions([]);
       setGeneratingThumbs(false);
       setAddingLibraryVideo(false);
-      setHigherEdPickerVisible(false);
-      setDegreePickerVisible(false);
-      setHigherEdSearch("");
-      setValuesInputText(formatValuesSummaryForInput((p as any).valuesSummary));
       requestAnimationFrame(() => {
         scrollRef.current?.scrollTo?.({ y: 0, animated: false });
       });
@@ -230,12 +154,12 @@ export function useProfileEditController() {
 
     setIsSaving(true);
     try {
-      const apiPayload = mapDraftToApiPayload(draft);
+      const apiPayload = mapDraftToApiPayload(draft); //this is where that functionn I just changed the variables to match company db is being called
       const json = JSON.stringify(apiPayload);
       if (json.length > 200_000) {
         Alert.alert(
           "Error",
-          "Payload too large. Higher Ed data may be saving the full university row object instead of just {unitid,label,degrees,...}."
+          "Payload too large."
         );
         return;
       }
@@ -313,14 +237,6 @@ export function useProfileEditController() {
     setDraft((p) => ({ ...p, geographicLocation: "" }));
   }
 
-  function onChangeValuesText(input: string) {
-    setValuesInputText(input);
-    setDraft((p: any) => ({
-      ...p,
-      valuesSummary: parseValuesSummaryFromInput(input),
-    }));
-  }
-
   async function onPickAvatarImage() {
     try {
       setPickingAvatarImage(true);
@@ -358,8 +274,6 @@ export function useProfileEditController() {
       },
     ]);
   }
-
-  
 
   function scrollToBottomSoon() {
     requestAnimationFrame(() => {
@@ -570,7 +484,6 @@ export function useProfileEditController() {
   }
 
   return {
-    MAX_HIGHER_ED,
     scrollRef,
     draft,
     setDraft,
@@ -596,8 +509,6 @@ export function useProfileEditController() {
     generatingThumbs,
     thumbOptions,
     canUploadToLibrary,
-    valuesText,
-    onChangeValuesText,
     addingLibraryVideo,
     onPickMediaVideo,
     onPickMediaThumb,
