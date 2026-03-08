@@ -5,19 +5,22 @@ form state (DraftProfile) → mapDraftToApiPayload() → API payload
 
 */
 
+import type { DraftProfile } from "@/src/features/profile/edit/profileEdit.compare";
 
+//the draft.__ values match the names in compare.ts, will pass to api call on backend
 
 export function mapDraftToApiPayload(draft: DraftProfile) {
 
+  //THESE KEYS BEFORE THE : HIT THE DATABASE, LETS MAKE SURE COLUMNS MATCH ON BOTH SIDES
   return {
     company_name: draft.legalFirstName ?? "",
     industry: draft.industry ?? "",
-    business_age: draft.business_age ?? "",
-    work_type: draft.work_type ?? "",
+    business_age: draft.businessAge ?? "",
+    work_type: draft.workType ?? "",
     mission_statement: draft.missionStatement ?? "",
     core_values: Array.isArray(draft.coreValues) ? draft.coreValues: [], //this is an array bc list of values (up to 5)
     benefits_summary: draft.benefitsSummary ?? "",
     custom_background_color: draft.customBackgroundColor ?? "",
-    logo_image_key: String(draft.logoImageUri ?? "").includes("://") ? null : (draft.logoImageUri ?? ""), //unsure if this still works for companuy logo, will hold here for now
+    logo_image_key: String(draft.logoImageURI ?? "").includes("://") ? null : (draft.logoImageURI ?? ""), //unsure if this still works for companuy logo, will hold here for now
   };
 }
