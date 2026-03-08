@@ -1,50 +1,22 @@
 /*
 This file is a profile change-detection utility. Its job is to answer one question: did the user actually edit anything?
 
-
+these need to match the right variables for company named in data.ts
 */
 
 
 // src/features/profile/edit/profileEdit.compare.ts
-import type { Profile, HigherEdEntry } from "@/src/features/profile/profile.types";
+import type { Profile} from "@/src/features/profile/profile.types";
 
-export type DegreeDetail = { degree: string; fieldOfStudy?: string };
-
-export type HigherEdEntryDraft = HigherEdEntry & {
-  estimatedGraduation?: string;
-  degreeDetails?: DegreeDetail[];
-  fieldOfStudy?: string; // back-compat
-};
-
+//altered to fit company needs and pass ins
 export type DraftProfile = Profile & {
-  legalMiddleName?: string;
-  higherEducation?: HigherEdEntryDraft[];
+  company_name?: string;
+  industry?: string;
   valuesSummary?: { key?: string; label?: string; value?: string }[];
 };
 
-export function normalizeFieldOfStudy(input: string) {
-  return input.replace(/\s+/g, " ").trim().slice(0, 60);
-}
 
 export function normalizeForCompare(p: DraftProfile) {
-  const higherEducation = ((p.higherEducation ?? []) as HigherEdEntryDraft[])
-    .map((e) => ({
-      unitid: String(e.unitid ?? "").trim(),
-      label: String(e.label ?? "").trim(),
-      degrees: Array.isArray(e.degrees) ? e.degrees.map((d) => String(d).trim()).filter(Boolean).sort() : [],
-      estimatedGraduation: String(e.estimatedGraduation ?? "").trim(),
-      degreeDetails: Array.isArray(e.degreeDetails)
-        ? e.degreeDetails
-            .map((d) => ({
-              degree: String(d.degree ?? "").trim(),
-              fieldOfStudy: String(d.fieldOfStudy ?? "").trim(),
-            }))
-            .filter((d) => d.degree)
-            .sort((a, b) => a.degree.localeCompare(b.degree))
-        : [],
-    }))
-    .filter((e) => e.unitid && e.label)
-    .sort((a, b) => a.unitid.localeCompare(b.unitid));
 
   return {
     preferredName: (p.preferredName ?? "").trim(),
@@ -69,7 +41,6 @@ export function normalizeForCompare(p: DraftProfile) {
           }))
           .filter((item: any) => item.label || item.value)
       : [],
-    higherEducation,
   };
 }
 

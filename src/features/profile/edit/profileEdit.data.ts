@@ -1,76 +1,23 @@
-import { type DraftProfile, normalizeFieldOfStudy } from "./profileEdit.compare";
-import type { DegreeDetail } from "./profileEdit.higherEd";
+/*
+The .data.ts file's job is to be the translator between your app's internal form state and what the API expects. It takes your draft object (what the user has been editing in the form) and shapes it into the exact payload structure your backend wants when you hit save.
+So the pattern is always:
+form state (DraftProfile) → mapDraftToApiPayload() → API payload
+
+*/
+
+
 
 export function mapDraftToApiPayload(draft: DraftProfile) {
-  const he = Array.isArray(draft.higherEducation) ? (draft.higherEducation as any[]) : [];
-  const valuesSummary = Array.isArray((draft as any).valuesSummary) ? (draft as any).valuesSummary : [];
-
-  const higher_education = he
-    .map((e) => {
-      const unitid = String(e?.unitid ?? "").trim();
-      const label = String(e?.label ?? "").trim();
-      if (!unitid || !label) return null;
-
-      const rawDegrees = Array.isArray(e?.degrees) ? e.degrees : [];
-      const degrees: string[] = Array.from(
-        new Set(
-          rawDegrees
-            .map((d: any) => (typeof d === "string" ? d.trim() : String(d ?? "").trim()))
-            .filter((d: string) => d.length > 0)
-        )
-      );
-
-      let degreeDetails: DegreeDetail[] =
-        Array.isArray(e?.degreeDetails)
-          ? e.degreeDetails
-              .map((d: any) => ({
-                degree: String(d?.degree ?? "").trim(),
-                fieldOfStudy: normalizeFieldOfStudy(String(d?.fieldOfStudy ?? "")) || undefined,
-              }))
-              .filter((d: any) => d.degree && degrees.includes(d.degree))
-          : [];
-
-      if (!degreeDetails.length && e?.fieldOfStudy) {
-        const legacy = normalizeFieldOfStudy(String(e.fieldOfStudy));
-        if (legacy) degreeDetails = degrees.map((deg) => ({ degree: deg, fieldOfStudy: legacy }));
-      }
-
-      return {
-        unitid,
-        label,
-        degrees,
-        estimatedGraduation: String(e?.estimatedGraduation ?? "").trim(),
-        degreeDetails,
-      };
-    })
-    .filter(Boolean);
 
   return {
-    legal_first_name: draft.legalFirstName ?? "",
-    legal_middle_name: (draft as any).legalMiddleName ?? "",
-    legal_last_name: draft.legalLastName ?? "",
-    preferred_name: draft.preferredName ?? "",
-    bio: draft.bio ?? "",
-    work_type: String((draft as any).workType ?? "").trim(),
-    work_preference: String((draft as any).workPreference ?? "").trim(),
-    work_location_preference: String((draft as any).workPreference ?? "").trim(),
-    residency: draft.residencyStatus ?? "",
-    location: draft.geographicLocation ?? "",
-    experience: draft.industryExperience ?? "",
-    industry_interests: Array.isArray(draft.industryInterests) ? draft.industryInterests : [],
-    values_summary: valuesSummary
-      .map((item: any, idx: number) => {
-        const label = String(item?.label ?? "").trim();
-        const value = String(item?.value ?? "").trim();
-        if (!label && !value) return null;
-        return {
-          key: String(item?.key ?? `value_${idx + 1}`).trim() || `value_${idx + 1}`,
-          label,
-          value: value || label,
-        };
-      })
-      .filter(Boolean),
-    higher_education,
-    avatar_image_key: String(draft.avatarImageUri ?? "").includes("://") ? null : (draft.avatarImageUri ?? ""),
+    company_name: draft.legalFirstName ?? "",
+    industry: draft.industry ?? "",
+    business_age: draft.business_age ?? "",
+    work_type: draft.work_type ?? "",
+    mission_statement: draft.missionStatement ?? "",
+    core_values: Array.isArray(draft.coreValues) ? draft.coreValues: [], //this is an array bc list of values (up to 5)
+    benefits_summary: draft.benefitsSummary ?? "",
+    custom_background_color: draft.customBackgroundColor ?? "",
+    logo_image_key: String(draft.logoImageUri ?? "").includes("://") ? null : (draft.logoImageUri ?? ""), //unsure if this still works for companuy logo, will hold here for now
   };
 }
