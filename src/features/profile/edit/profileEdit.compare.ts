@@ -2,6 +2,25 @@
 This file is a profile change-detection utility. Its job is to answer one question: did the user actually edit anything?
 
 these need to match the right variables for company named in data.ts
+oompany name
+logo
+industry type
+business
+work type
+mission statment
+core values
+benefits summary
+custom background color
+logo-image
+
+for future: this is what is happening
+The ?? (nullish coalescing) is just defensive — if companyName is null or undefined, use "" instead so .trim() doesn't crash.
+Then hasProfileChanged is where the actual comparison happens:
+
+a is the original saved profile, b is the current saved profile
+flow: clean both - stringify both - are they different? - if yes user has made changes worth saving
+
+.trim() gets rid of leading and trailing white space we know this, cleans
 */
 
 
@@ -9,38 +28,33 @@ these need to match the right variables for company named in data.ts
 import type { Profile} from "@/src/features/profile/profile.types";
 
 //altered to fit company needs and pass ins
+//*****  NOTE THESE ARE IN CAMEL CASE
+//these values will match the draft.___ variables in the profileEdit.data file
 export type DraftProfile = Profile & {
-  company_name?: string;
+  companyName?: string;
   industry?: string;
-  valuesSummary?: { key?: string; label?: string; value?: string }[];
+  businessAge?: string;
+  workType?: string;
+  missionStatement?: string;
+  coreValues?: string[];
+  benefitsSummary?: string;
+  customBackgroundColor?: string;
+  logoImageURI?: string;
 };
 
 
 export function normalizeForCompare(p: DraftProfile) {
 
   return {
-    preferredName: (p.preferredName ?? "").trim(),
-    legalFirstName: (p.legalFirstName ?? "").trim(),
-    legalMiddleName: (p.legalMiddleName ?? "").trim(),
-    legalLastName: (p.legalLastName ?? "").trim(),
-    bio: (p.bio ?? "").trim(),
-    workType: String((p as any).workType ?? "").trim(),
-    workPreference: String((p as any).workPreference ?? "").trim(),
-    residencyStatus: (p.residencyStatus ?? "").trim(),
-    industryExperience: (p.industryExperience ?? "").trim(),
-    geographicLocation: (p.geographicLocation ?? "").trim(),
-    additionalDetails: (p.additionalDetails ?? "").trim(),
-    avatarImageUri: (p.avatarImageUri ?? "").trim(),
-    industryInterests: (p.industryInterests ?? []).map((s) => s.trim()).filter(Boolean).sort(),
-    valuesSummary: Array.isArray((p as any).valuesSummary)
-      ? (p as any).valuesSummary
-          .map((item: any, idx: number) => ({
-            key: String(item?.key ?? `value_${idx + 1}`).trim(),
-            label: String(item?.label ?? "").trim(),
-            value: String(item?.value ?? "").trim(),
-          }))
-          .filter((item: any) => item.label || item.value)
-      : [],
+    companyName: (p.companyName ?? "").trim(),
+    industry: (p.industry ?? "").trim(),
+    businessAge:(p.businessAge ?? "").trim(),
+    workType: (p.workType ?? "").trim(),
+    missionStatement: (p.missionStatement ?? "").trim(),
+    coreValues: (p.coreValues ?? []).map((s) => s.trim()).filter(Boolean).sort(), //the sort is important bc will read as different wityh the same words in different order
+    benefitsSummary: (p.benefitsSummary ?? "").trim(),
+    customBackgroundColor: (p.customBackgroundColor ?? "").trim(),
+    logoImageURI: (p.logoImageURI ?? "").trim(),
   };
 }
 
