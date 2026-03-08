@@ -56,7 +56,7 @@ export default function VideoScreen() {
 
   // fallback
   if (router.canGoBack()) router.back();
-  else router.replace("/(homeUser)/profile");
+  else router.replace("/(companyUser)/profile");
 };
 // Keep player configured (no loop) once it's created.
   useEffect(() => {
@@ -181,7 +181,7 @@ export default function VideoScreen() {
         <VideoView
           style={styles.video}
           player={player}
-          allowsFullscreen
+          //allowsFullscreen
           allowsPictureInPicture
           nativeControls
         />
