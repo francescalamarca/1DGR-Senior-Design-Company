@@ -592,7 +592,7 @@ export default function ProfileScreen() {
     };
 
     fixMissingThumbs();
-  }, []); // ✅ runs once on mount only — uses ref to read latest media
+  }, []); // runs once on mount only — uses ref to read latest media
 
   // ===== Fetch latest =====
   const fetchLatestProfile = useCallback(async () => {
@@ -750,16 +750,6 @@ export default function ProfileScreen() {
         "",
     ).trim() || "";
 
-  // ===== Values list (ONLY reads from valuesSummary; otherwise hidden) =====
-  const valuesItems = useMemo(() => {
-    const dynamic = (profile as any).valuesSummary;
-    if (!Array.isArray(dynamic) || dynamic.length === 0) return [];
-    return dynamic.map((it: any, idx: number) => ({
-      key: String(it?.key ?? it?.label ?? idx),
-      label: String(it?.label ?? "").trim(),
-      value: dashIfEmpty(it?.value),
-    }));
-  }, [profile]);
 
   // ===== Benefits dropdown (2-page pull-in) =====
   const [benefitsOpen, setBenefitsOpen] = useState(false);
@@ -1974,21 +1964,7 @@ export default function ProfileScreen() {
 
             {!!headlineText && <Text style={s.headline}>{headlineText}</Text>}
 
-            {valuesItems.length > 0 ? (
-              <View style={{ marginTop: 8, gap: 8, alignItems: "center" }}>
-                {valuesItems.map((it) => (
-                  <View
-                    key={it.key}
-                    style={{ gap: 4, alignItems: "center", width: "100%" }}
-                  >
-                    {!!it.label && (
-                      <Text style={s.valuesLabel}>{it.label}</Text>
-                    )}
-                    <Text style={s.valuesValue}>{it.value}</Text>
-                  </View>
-                ))}
-              </View>
-            ) : null}
+
           </View>
           <View style={{ height: 1, backgroundColor: BORDER }} />
           {/* Block B for company mission */}

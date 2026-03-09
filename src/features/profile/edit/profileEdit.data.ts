@@ -17,6 +17,7 @@ export function mapDraftToApiPayload(draft: DraftProfile) {
     industry: draft.industry ?? "",
     business_age: draft.businessAge ?? "",
     work_type: draft.workType ?? "",
+    locations: Array.isArray(draft.locations) ? draft.locations: [], //an array of all locations the company is based out of
     mission_statement: draft.missionStatement ?? "",
     core_values: Array.isArray(draft.coreValues) ? draft.coreValues: [], //this is an array bc list of values (up to 5)
     benefits_summary: draft.benefitsSummary ?? "",
