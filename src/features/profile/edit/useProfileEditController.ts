@@ -136,7 +136,7 @@ export function useProfileEditController() {
       requestAnimationFrame(() => {
         scrollRef.current?.scrollTo?.({ y: 0, animated: false });
       });
-    }, []) // ✅ empty deps - safe because we read profile via ref
+    }, [])
   );
   function handleCancel() {
     if (!changed) {

@@ -6,15 +6,16 @@ import { RequireUserType } from "@/src/components/RequireUserType";
 import { styles, UI } from "./profileEdit.styles";
 import { LLightText, KeyboardScreen } from "./profileEdit.components";
 import {
-  INDUSTRY_EXPERIENCE_OPTIONS,
+  COMPANY_AGE_OPTIONS,
   WORK_TYPE_OPTIONS,
   WORK_PREFERENCE_OPTIONS,
+  CORE_VALUES,
 } from "./profileEdit.constants";
 import { useProfileEditController } from "./useProfileEditController";
 import {
   AvatarSection,
   NameSection,
-  ValuesSection,
+  CoreValuesSection,
   HookSection,
   IndustryTypeSection,
   VideoLibrarySection,
@@ -34,7 +35,6 @@ export default function ProfileEditScreen() {
   const [workPreferenceTemp, setWorkPreferenceTemp] = React.useState("");
 
   const {
-    MAX_HIGHER_ED,
     scrollRef,
     draft,
     setDraft,
@@ -51,7 +51,6 @@ export default function ProfileEditScreen() {
     openSingleSelectPicker,
     openIndustryPicker,
     openCityPicker,
-    clearCity,
     mediaVideoUri,
     mediaThumbUri,
     mediaCaption,
@@ -59,8 +58,6 @@ export default function ProfileEditScreen() {
     generatingThumbs,
     thumbOptions,
     canUploadToLibrary,
-    valuesText,
-    onChangeValuesText,
     addingLibraryVideo,
     onPickMediaVideo,
     onPickMediaThumb,
@@ -85,9 +82,8 @@ export default function ProfileEditScreen() {
     citySearch,
     setCitySearch,
     filteredCities,
-    cityTempSelected,
-    setCityTempSelected,
-    applyCity,
+    addLocation,
+    deleteLocation,
     singlePickerVisible,
     setSinglePickerVisible,
     singlePickerTitle,
@@ -148,17 +144,11 @@ export default function ProfileEditScreen() {
         />
 
         <NameSection
-          preferredName={draft.preferredName ?? ""}
-          legalFirstName={draft.legalFirstName ?? ""}
-          legalMiddleName={(draft as any).legalMiddleName ?? ""}
-          legalLastName={draft.legalLastName ?? ""}
-          onChangePreferredName={(v: string) => setDraft((p) => ({ ...p, preferredName: v }))}
-          onChangeLegalFirst={(v: string) => setDraft((p) => ({ ...p, legalFirstName: v }))}
-          onChangeLegalMiddle={(v: string) => setDraft((p: any) => ({ ...p, legalMiddleName: v }))}
-          onChangeLegalLast={(v: string) => setDraft((p) => ({ ...p, legalLastName: v }))}
+          companyName={draft.companyName ?? ""}
+          onChangeCompanyName={(v: string) => setDraft((p) => ({ ...p, companyName: v }))}
         />
 
-        <ValuesSection valuesText={valuesText} onChangeValuesText={onChangeValuesText} />
+        <CoreValuesSection valuesText={valuesText} onChangeValuesText={onChangeValuesText} /> {/* this is referencing the core values made in profile edit.ui*/}
 
         <HookSection bio={draft.bio ?? ""} onChangeBio={(v: string) => setDraft((p) => ({ ...p, bio: v }))} />
 
@@ -172,14 +162,14 @@ export default function ProfileEditScreen() {
           onPressExperience={() =>
             openSingleSelectPicker({
               title: "Industry Experience",
-              options: INDUSTRY_EXPERIENCE_OPTIONS,
+              options: COMPANY_AGE_OPTIONS,
               value: draft.industryExperience ?? "",
               onSelect: (val: string) => setDraft((p) => ({ ...p, industryExperience: val })),
             })
           }
           onPressIndustry={openIndustryPicker}
           onPressCity={openCityPicker}
-          onClearCity={clearCity}
+          onClearCity={City}
         />
 
 
@@ -221,7 +211,7 @@ export default function ProfileEditScreen() {
           citySearch={citySearch}
           setCitySearch={setCitySearch}
           data={filteredCities}
-          selectedLabel={cityTempSelected}
+          selectedLabel={citySelected}
           onSelect={(label: string) => setCityTempSelected(label)}
           canApply={!!cityTempSelected.trim()}
           onClose={() => setCityPickerVisible(false)}

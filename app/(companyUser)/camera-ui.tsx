@@ -7,28 +7,28 @@
  * - After recording, allows Re-record or Continue (navigates to /recording-studio with { uri, prompt }).
  * - Resets all transient state when the screen gains focus/unmounts to avoid stale recordings or animations.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  Dimensions,
-  Alert,
-  ActivityIndicator,
-  Animated,
-  Easing,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
-import { router, useLocalSearchParams, useFocusEffect } from "expo-router";
+import { useSession } from "@/src/state/session";
+import { Audio as ExpoAudio } from "expo-av";
 import {
   CameraView,
   useCameraPermissions,
   useMicrophonePermissions,
 } from "expo-camera";
-import { useSession } from "@/src/state/session";
-import { Audio as ExpoAudio } from "expo-av";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  Alert,
+  Animated,
+  Dimensions,
+  Easing,
+  Pressable,
+  Text,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Svg, { Circle } from "react-native-svg";
-import { CAMERA_PROMPTS } from "./camera-prompts";
+import { CAMERA_PROMPTS } from "../../constants/camera-prompts";
 
 // ✅ Use your existing registered font name here (must match your font loader)
 const FONT_LEXEND_REGULAR = "Lexend-Regular" as const;
@@ -38,7 +38,7 @@ const { width } = Dimensions.get("window");
 const PROMPTS = CAMERA_PROMPTS;
 
 // Prompt/time/ring constants: enforce a 2-minute limit and drive the circular progress UI.
-const MAX_SECONDS = 120; 
+const MAX_SECONDS = 120;
 const MAX_MS = MAX_SECONDS * 1000;
 
 // ✅ ring geometry
@@ -50,7 +50,7 @@ const CIRCUMFERENCE = 2 * Math.PI * R;
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
 // Formats seconds into mm:ss for the on-screen recording timer.
-function formatTime(seconds: number) { 
+function formatTime(seconds: number) {
   const s = Math.max(0, Math.floor(seconds));
   const mm = String(Math.floor(s / 60)).padStart(2, "0");
   const ss = String(s % 60).padStart(2, "0");
@@ -75,16 +75,20 @@ export default function CameraUIScreen() {
     prepareRecording();
   }, []);
 
-  const params = useLocalSearchParams<{ returnTo?: "/(companyUser)/record" | "/(companyUser)/profile"; promptIndex?: string }>();
+  const params = useLocalSearchParams<{
+    returnTo?: "/(companyUser)/record" | "/(companyUser)/profile";
+    promptIndex?: string;
+  }>();
   const returnTo =
     typeof params.returnTo === "string" ? params.returnTo : undefined;
   const startPromptIndex = useMemo(() => {
-    const raw = typeof params.promptIndex === "string" ? Number(params.promptIndex) : 0;
+    const raw =
+      typeof params.promptIndex === "string" ? Number(params.promptIndex) : 0;
     if (!Number.isFinite(raw)) return 0;
     return Math.max(0, Math.min(PROMPTS.length - 1, Math.floor(raw)));
   }, [params.promptIndex]);
 
-    // Keep the active prompt index in state; `recordedPrompt` “locks” the prompt used for the current/last recording.
+  // Keep the active prompt index in state; `recordedPrompt` “locks” the prompt used for the current/last recording.
   const [promptIndex, setPromptIndex] = useState(0);
   const prompt = PROMPTS[promptIndex];
 
@@ -105,10 +109,10 @@ export default function CameraUIScreen() {
   const [elapsedSec, setElapsedSec] = useState(0);
 
   // ✅ Animated progress (0 → 1 over 2 minutes)
-  const progress = useRef(new Animated.Value(0)).current; 
+  const progress = useRef(new Animated.Value(0)).current;
   const progressAnimRef = useRef<Animated.CompositeAnimation | null>(null);
   // const tickIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const tickIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null); 
+  const tickIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   // found this in claud, this is a way to bypass whatever type comes out of setInterval on all systems so it will work regardless of return
   const recordingStartMsRef = useRef<number | null>(null);
 
@@ -118,10 +122,10 @@ export default function CameraUIScreen() {
   });
 
   // Visual timer helpers:
-// - clearTimer(): stops the text tick interval + resets elapsed state
-// - stopProgressAnimation(): stops Animated.timing and optionally resets progress to 0
-// - startVisualTimer(): starts both the text tick + ring animation (0→1 over MAX_MS)
-// - endVisualTimer(): shared cleanup for stop/unmount paths
+  // - clearTimer(): stops the text tick interval + resets elapsed state
+  // - stopProgressAnimation(): stops Animated.timing and optionally resets progress to 0
+  // - startVisualTimer(): starts both the text tick + ring animation (0→1 over MAX_MS)
+  // - endVisualTimer(): shared cleanup for stop/unmount paths
   function clearTimer() {
     if (tickIntervalRef.current) {
       clearInterval(tickIntervalRef.current);
@@ -178,7 +182,7 @@ export default function CameraUIScreen() {
     stopProgressAnimation(reset);
   }
 
-// Focus lifecycle: on enter/exit, stop any ongoing recording, clear the last URI/prompt, and reset the ring/timer.
+  // Focus lifecycle: on enter/exit, stop any ongoing recording, clear the last URI/prompt, and reset the ring/timer.
   useFocusEffect(
     useCallback(() => {
       try {
@@ -198,12 +202,12 @@ export default function CameraUIScreen() {
         } catch {}
         endVisualTimer({ reset: true });
       };
-    }, [endVisualTimer, startPromptIndex])
+    }, [endVisualTimer, startPromptIndex]),
   );
 
   // Navigation helpers:
-// - goBack(): returns deterministically to returnTo (if provided) or camera tab
-// - nextPrompt/prevPrompt(): prevent prompt changes while recording or after a take is captured
+  // - goBack(): returns deterministically to returnTo (if provided) or camera tab
+  // - nextPrompt/prevPrompt(): prevent prompt changes while recording or after a take is captured
   function goBack() {
     router.replace(returnTo ?? "/(companyUser)/record");
   }
@@ -240,9 +244,9 @@ export default function CameraUIScreen() {
   }
 
   // Starts a new recording:
-// - ensures permissions
-// - clears prior take, locks the current prompt, starts timer/ring
-// - records up to MAX_SECONDS; stores recordedUri on success
+  // - ensures permissions
+  // - clears prior take, locks the current prompt, starts timer/ring
+  // - records up to MAX_SECONDS; stores recordedUri on success
   async function startRecording() {
     if (!cameraRef.current) return;
 
@@ -250,7 +254,7 @@ export default function CameraUIScreen() {
     if (!ok) {
       Alert.alert(
         "Permissions needed",
-        "Camera + Microphone permission is required to record."
+        "Camera + Microphone permission is required to record.",
       );
       return;
     }
@@ -296,7 +300,7 @@ export default function CameraUIScreen() {
     }
   }
 
-// Clears the current take and resets timer/ring so the user can record again.
+  // Clears the current take and resets timer/ring so the user can record again.
   function onRecordPress() {
     if (requestingPerms) return;
     if (isRecording) stopRecording();
@@ -357,7 +361,7 @@ export default function CameraUIScreen() {
             if (!ok) {
               Alert.alert(
                 "Permission denied",
-                "Please allow camera + microphone access."
+                "Please allow camera + microphone access.",
               );
             }
           }}
@@ -406,7 +410,7 @@ export default function CameraUIScreen() {
 
   const lockedPrompt = recordedPrompt ?? prompt;
 
-    return (
+  return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
       <View style={{ flex: 1 }}>
         {/* CAMERA PREVIEW */}
@@ -433,7 +437,9 @@ export default function CameraUIScreen() {
           }}
         >
           {/* ✅ RECORD BUTTON + RING */}
-          <View style={{ width: RING_SIZE, height: RING_SIZE, marginBottom: 10 }}>
+          <View
+            style={{ width: RING_SIZE, height: RING_SIZE, marginBottom: 10 }}
+          >
             {/* Ring */}
             <Svg
               width={RING_SIZE}
