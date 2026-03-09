@@ -25,7 +25,7 @@ export const INDUSTRIES: { title: string; options: string[] }[] = [
 ];
 
 //answers the question of how old the company is and how long it has been running for
-export const BUSINESS_AGE_OPTIONS = ["Up to 1", "1-3", "3-5", "5-10", "10+"];
+export const COMPANY_AGE_OPTIONS = ["Up to 1", "1-3", "3-5", "5-10", "10+"];
 
 export const WORK_TYPE_OPTIONS = ["Part-Time", "Full Time", "Contract", "All", "Currently not looking"];
 
