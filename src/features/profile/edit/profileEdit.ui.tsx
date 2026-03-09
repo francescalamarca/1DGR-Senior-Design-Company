@@ -15,7 +15,6 @@ import {
 
 import { styles, UI } from "./profileEdit.styles";
 import { LLightText, BtnText } from "./profileEdit.components";
-import type { HigherEdEntry } from "@/src/features/profile/profile.types";
 
 // ---------- Types the screen expects ----------
 export type IndustryRow =
@@ -32,13 +31,6 @@ export type CityRow = {
   cityLower: string;
 };
 
-type DegreeDetail = { degree: string; fieldOfStudy?: string };
-
-export type HigherEdEntryDraft = HigherEdEntry & {
-  estimatedGraduation?: string;
-  degreeDetails?: DegreeDetail[];
-  fieldOfStudy?: string; // back-compat
-};
 
 // ---------- Modal layout constants ----------
 const MODAL_KB_OFFSET_IOS = 12;
@@ -154,25 +146,14 @@ export function AvatarSection(props: {
   );
 }
 
+//altered to fit the name we need here which is company only
 export function NameSection(props: {
-  preferredName: string;
-  legalFirstName: string;
-  legalMiddleName: string;
-  legalLastName: string;
-  onChangePreferredName: (v: string) => void;
-  onChangeLegalFirst: (v: string) => void;
-  onChangeLegalMiddle: (v: string) => void;
-  onChangeLegalLast: (v: string) => void;
+  companyName: string;
+  onChangeCompanyName: (v: string) => void;
 }) {
   const {
-    preferredName,
-    legalFirstName,
-    legalMiddleName,
-    legalLastName,
-    onChangePreferredName,
-    onChangeLegalFirst,
-    onChangeLegalMiddle,
-    onChangeLegalLast,
+    companyName,
+    onChangeCompanyName,
   } = props;
 
   return (
@@ -183,44 +164,9 @@ export function NameSection(props: {
       <View style={styles.fieldStack}>
         <LLightText style={styles.label}>Preferred Name</LLightText>
         <TextInput
-          value={preferredName}
-          onChangeText={onChangePreferredName}
-          placeholder="Preferred name"
-          placeholderTextColor={UI.hint}
-          style={styles.input}
-        />
-      </View>
-
-      <View style={styles.twoColRow}>
-        <View style={styles.col}>
-          <LLightText style={styles.label}>Legal First</LLightText>
-          <TextInput
-            value={legalFirstName}
-            onChangeText={onChangeLegalFirst}
-            placeholder="First"
-            placeholderTextColor={UI.hint}
-            style={styles.input}
-          />
-        </View>
-
-        <View style={styles.col}>
-          <LLightText style={styles.label}>Legal Middle</LLightText>
-          <TextInput
-            value={legalMiddleName}
-            onChangeText={onChangeLegalMiddle}
-            placeholder="Middle"
-            placeholderTextColor={UI.hint}
-            style={styles.input}
-          />
-        </View>
-      </View>
-
-      <View style={styles.full}>
-        <LLightText style={styles.label}>Legal Last</LLightText>
-        <TextInput
-          value={legalLastName}
-          onChangeText={onChangeLegalLast}
-          placeholder="Last"
+          value={companyName}
+          onChangeText={onChangeCompanyName}
+          placeholder="Company Name"
           placeholderTextColor={UI.hint}
           style={styles.input}
         />
@@ -251,7 +197,7 @@ export function HookSection(props: { bio: string; onChangeBio: (v: string) => vo
   );
 }
 
-export function ValuesSection(props: { valuesText: string; onChangeValuesText: (v: string) => void }) {
+export function CoreValuesSection(props: { valuesText: string; onChangeValuesText: (v: string) => void }) {
   const { valuesText, onChangeValuesText } = props;
 
   return (
@@ -280,7 +226,7 @@ export function IndustryTypeSection(props: { //changed this to type to categoriz
   citySubtitle: string;
   hasCity: boolean;
   onPressWorkType: () => void;
-  onPressExperience: () => void;
+  onPressCompanyAge: () => void;
   onPressIndustry: () => void;
   onPressCity: () => void;
   onClearCity: () => void;
@@ -292,7 +238,7 @@ export function IndustryTypeSection(props: { //changed this to type to categoriz
     citySubtitle,
     hasCity,
     onPressWorkType,
-    onPressExperience,
+    onPressCompanyAge,
     onPressIndustry,
     onPressCity,
     onClearCity,
@@ -308,7 +254,7 @@ export function IndustryTypeSection(props: { //changed this to type to categoriz
         <PickerRow
           title="Company Age (years)"
           subtitle={companyAgeSubtitle}
-          onPress={onPressExperience}
+          onPress={onPressCompanyAge}
           showDivider
         />
         <PickerRow title="Industry Type" subtitle={industrySubtitle} onPress={onPressIndustry} showDivider />

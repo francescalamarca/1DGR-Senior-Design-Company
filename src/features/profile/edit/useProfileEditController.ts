@@ -11,7 +11,7 @@ import { updateUserProfile } from "@/src/utils/update_api";
 import { hasProfileChanged, type DraftProfile } from "./profileEdit.compare";
 import { INDUSTRIES } from "./profileEdit.constants";
 import { mapDraftToApiPayload } from "./profileEdit.data";
-import { filterCitiesByQuery, mapCitiesFromJson } from "./profileEdit.mappers";
+import { filterCitiesByQuery, mapCitiesFromJson } from "./profileEdit.mappers"; //label is defined in this map function
 import { buildCdnUrlFromKey, pickImageFromLibrary, pickVideoFromLibrary, uploadToS3 } from "./profileEdit.media";
 import { type CityRow, type IndustryRow } from "./profileEdit.ui";
 
@@ -37,7 +37,6 @@ export function useProfileEditController() {
 
   const [cityPickerVisible, setCityPickerVisible] = useState(false);
   const [citySearch, setCitySearch] = useState("");
-  const [cityTempSelected, setCityTempSelected] = useState<string>("");
 
   const [singlePickerVisible, setSinglePickerVisible] = useState(false);
   const [singlePickerTitle, setSinglePickerTitle] = useState("");
@@ -107,6 +106,7 @@ export function useProfileEditController() {
     return rows;
   }, [industrySearch]);
 
+  //this is a call to get the cities in their city row form from the UI section so they present well
   const cities: CityRow[] = useMemo(() => {
     try {
       const raw = require("@/src/data/uscities.json");
@@ -222,19 +222,28 @@ export function useProfileEditController() {
     setIndustryPickerVisible(false);
   }
 
+  //THESE WILL CHANGE FOR COMPANY TO ADAPT TO CHOOSING MULTIPLE LOCATIONS
+  //don't need a temprorary placeholder
+
+  //clears the search bar and opens the modal
   function openCityPicker() {
     setCitySearch("");
-    setCityTempSelected(draft.geographicLocation ?? "");
     setCityPickerVisible(true);
   }
 
-  function applyCity() {
-    setDraft((p) => ({ ...p, geographicLocation: cityTempSelected }));
-    setCityPickerVisible(false);
+  function addLocation(city: CityRow) { //passing this in to get an instance of CityRow
+    setDraft((p) => {
+      const current = p.locations ?? []; //takes the current city that was tapped in the setDraft, gets current array, empty if nothing in it yet
+      if (current.includes(city.label)) return p; // prevent duplicates, if already there, does not add
+      return { ...p, locations: [...current, city.label] }; //appends to existing array
+  });
   }
 
-  function clearCity() {
-    setDraft((p) => ({ ...p, geographicLocation: "" }));
+  function deleteLocation(city: CityRow) {
+    setDraft((p) => ({
+    ...p,
+    locations: (p.locations ?? []).filter((l) => l !== city.label),
+  }));
   }
 
   async function onPickAvatarImage() {
@@ -501,7 +510,8 @@ export function useProfileEditController() {
     openSingleSelectPicker,
     openIndustryPicker,
     openCityPicker,
-    clearCity,
+    addLocation, //added for locations
+    deleteLocation, //added for locations
     mediaVideoUri,
     mediaThumbUri,
     mediaCaption,
@@ -533,9 +543,6 @@ export function useProfileEditController() {
     citySearch,
     setCitySearch,
     filteredCities,
-    cityTempSelected,
-    setCityTempSelected,
-    applyCity,
     singlePickerVisible,
     setSinglePickerVisible,
     singlePickerTitle,

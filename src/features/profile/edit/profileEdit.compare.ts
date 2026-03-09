@@ -35,6 +35,7 @@ export type DraftProfile = Profile & {
   industry?: string;
   businessAge?: string;
   workType?: string;
+  locations?: string[]; //this is an array of strings that will be populated by the companies choice of cities that they operate in
   missionStatement?: string;
   coreValues?: string[];
   benefitsSummary?: string;
@@ -50,6 +51,7 @@ export function normalizeForCompare(p: DraftProfile) {
     industry: (p.industry ?? "").trim(),
     businessAge:(p.businessAge ?? "").trim(),
     workType: (p.workType ?? "").trim(),
+    locations: (p.locations ?? []).map((s) => s.trim()).filter(Boolean).sort(), //same as the coreValues array functionality for checking change
     missionStatement: (p.missionStatement ?? "").trim(),
     coreValues: (p.coreValues ?? []).map((s) => s.trim()).filter(Boolean).sort(), //the sort is important bc will read as different wityh the same words in different order
     benefitsSummary: (p.benefitsSummary ?? "").trim(),
