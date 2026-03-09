@@ -5,8 +5,8 @@
  *
  * New layout:
  * Block A (bg): ShareLive + edit(pencil) + settings, avatar, name, headline, Values list
- * Block B (white): Hook
- * Block C (bg): Qualifications dropdown (2-page pull-in) + premium open/close animation
+ * Block B (white): mission
+ * Block C (bg): benefitsifications dropdown (2-page pull-in) + premium open/close animation
  * Block D (white): Horizontal snap videos w/ caption inside card
  */
 
@@ -60,12 +60,28 @@ const HINT = "#9bb4c0";
 const BORDER = "#d9d9d9";
 
 // Right-side page-toggle button takes space; keep text readable without shrinking the whole column.
-const QUAL_PAGE_BUTTON_W = 38;
-const QUAL_PAGE_BUTTON_GAP = 8; // breathing room so text never touches the divider
-const QUAL_RIGHT_GUTTER = QUAL_PAGE_BUTTON_W + QUAL_PAGE_BUTTON_GAP;
+const benefits_PAGE_BUTTON_W = 38; 
+const benefits_PAGE_BUTTON_GAP = 8; // breathing room so text never touches the divider
+const benefits_RIGHT_GUTTER = benefits_PAGE_BUTTON_W + benefits_PAGE_BUTTON_GAP;
 
-// Space between universities (works consistently on iOS/Android; avoids relying on `gap`)
-const HIGHER_ED_ITEM_GAP = 10;
+//FOR COMPANY SAME THING
+// Right-side page-toggle button takes space; keep text readable without shrinking the whole column.
+const company_PAGE_BUTTON_W = 38; 
+const company_PAGE_BUTTON_GAP = 8; // breathing room so text never touches the divider
+const company_RIGHT_GUTTER = company_PAGE_BUTTON_W + company_PAGE_BUTTON_GAP;
+
+//FOR EMPLOYEES SAME THING
+// Right-side page-toggle button takes space; keep text readable without shrinking the whole column.
+const employee_PAGE_BUTTON_W = 38; 
+const employee_PAGE_BUTTON_GAP = 8; // breathing room so text never touches the divider
+const employee_RIGHT_GUTTER = employee_PAGE_BUTTON_W + employee_PAGE_BUTTON_GAP;
+
+//FOR EMPLOYEES SAME THING
+// Right-side page-toggle button takes space; keep text readable without shrinking the whole column.
+const roles_PAGE_BUTTON_W = 38; 
+const roles_PAGE_BUTTON_GAP = 8; // breathing room so text never touches the divider
+const roles_RIGHT_GUTTER = roles_PAGE_BUTTON_W + roles_PAGE_BUTTON_GAP;
+
 
 function toCloudFrontUrl(urlOrKey: string): string {
   if (!urlOrKey) return "";
@@ -82,41 +98,11 @@ function toCloudFrontUrl(urlOrKey: string): string {
 
 /** ✅ helper: normalize "field of study" */
 function normalizeFieldOfStudy(e: any): string {
-  return String(e?.fieldOfStudy ?? e?.field_of_study ?? e?.field_of_study_name ?? "")
+  return String(
+    e?.fieldOfStudy ?? e?.field_of_study ?? e?.field_of_study_name ?? "",
+  )
     .replace(/\s+/g, " ")
     .trim();
-}
-
-/** ✅ helper: degrees as separate lines: "Bachelors in X", "Masters in Y", etc. */
-function degreesAsLines(e: any): string[] {
-  const degrees: string[] = Array.isArray(e?.degrees) ? e.degrees : [];
-  if (!degrees.length) return [];
-
-  const fallbackField = normalizeFieldOfStudy(e);
-
-  const details = Array.isArray(e?.degreeDetails)
-    ? e.degreeDetails
-    : Array.isArray(e?.degree_details)
-      ? e.degree_details
-      : [];
-
-  const detailMap = new Map<string, string>();
-  for (const d of details) {
-    const degree = String(d?.degree ?? "").trim();
-    const field = String(d?.fieldOfStudy ?? d?.field_of_study ?? "")
-      .replace(/\s+/g, " ")
-      .trim();
-    if (degree && field) detailMap.set(degree, field);
-  }
-
-  return degrees
-    .map((d) => {
-      const dd = String(d ?? "").trim();
-      if (!dd) return "";
-      const field = detailMap.get(dd) ?? fallbackField;
-      return field ? `${dd} in ${field}` : dd;
-    })
-    .filter(Boolean);
 }
 
 function dashIfEmpty(v: any) {
@@ -125,7 +111,12 @@ function dashIfEmpty(v: any) {
 }
 
 function joinOrDash(arr: any[]) {
-  const a = Array.isArray(arr) ? arr.filter(Boolean).map((x) => String(x).trim()).filter(Boolean) : [];
+  const a = Array.isArray(arr)
+    ? arr
+        .filter(Boolean)
+        .map((x) => String(x).trim())
+        .filter(Boolean)
+    : [];
   return a.length ? a.join(", ") : "—";
 }
 
@@ -139,16 +130,31 @@ function softWrapLongTokens(s: string) {
     .replace(/([a-z])([A-Z])/g, "$1\u200B$2");
 }
 
-type QualRowValue = string | string[];
-type QualRow = { label: string; value: QualRowValue };
+type benefitsRowValue = string | string[];
+type benefitsRow = { label: string; value: companyRowValue };
 
-/** Build a location string from common HigherEd shapes (city/state/country OR location fields). */
-function formatHigherEdLocationLine(e: any): string {
+type companyRowValue = string | string[];
+type companyRow = { label: string; value: companyRowValue };
+
+type employeeRowValue = string | string[];
+type employeeRow = { label: string; value: employeeRowValue };
+
+type rolesRowValue = string | string[];
+type rolesRow = { label: string; value: rolesRowValue };
+
+/** Build a location string from common fields (city/state/country OR location fields). */
+function formatBusinessLocationLine(e: any): string {
   const city = String(e?.city ?? e?.schoolCity ?? e?.school_city ?? "").trim();
-  const state = String(e?.state ?? e?.region ?? e?.schoolState ?? e?.school_state ?? "").trim();
-  const country = String(e?.country ?? e?.nation ?? e?.schoolCountry ?? e?.school_country ?? "").trim();
+  const state = String(
+    e?.state ?? e?.region ?? e?.schoolState ?? e?.school_state ?? "",
+  ).trim();
+  const country = String(
+    e?.country ?? e?.nation ?? e?.schoolCountry ?? e?.school_country ?? "",
+  ).trim();
 
-  const directLocation = String(e?.location ?? e?.schoolLocation ?? e?.school_location ?? "").trim();
+  const directLocation = String(
+    e?.location ?? e?.schoolLocation ?? e?.school_location ?? "",
+  ).trim();
 
   // Prefer explicit city/state/country if any exist
   const parts = [city, state, country].filter(Boolean);
@@ -167,7 +173,10 @@ function formatHigherEdLocationLine(e: any): string {
  *   school = "California State University-Los Angeles"
  *   location = "Los Angeles, California, USA"
  */
-function splitSchoolAndLocationFromLabel(label: string): { school: string; location: string } {
+function splitSchoolAndLocationFromLabel(label: string): {
+  school: string;
+  location: string;
+} {
   const raw = String(label ?? "").trim();
   if (!raw) return { school: "", location: "" };
   const idx = raw.indexOf(",");
@@ -178,51 +187,14 @@ function splitSchoolAndLocationFromLabel(label: string): { school: string; locat
   };
 }
 
-/**
- * ✅ Format one higher-ed entry into multi-line text:
- * School
- * Location
- * Degree 1
- * Degree 2
- * Estimated grad: YYYY (optional)
- */
-function formatHigherEdMultiline(e: any): string {
-  const rawLabel = String(e?.label ?? e?.schoolName ?? e?.school_name ?? "").trim();
-  const { school: schoolFromLabel, location: locationFromLabel } = splitSchoolAndLocationFromLabel(rawLabel);
-
-  // If backend provides structured location fields, prefer them; else use the parsed label location.
-  const structuredLocation = formatHigherEdLocationLine(e);
-
-  const finalSchool = String(schoolFromLabel || rawLabel).trim();
-  const finalLocation = String(structuredLocation || locationFromLabel).trim();
-
-  const estimated = String(
-    e?.estimatedGraduation ?? e?.estimated_graduation ?? e?.gradYear ?? e?.graduation ?? ""
-  ).trim();
-
-  const lines: string[] = [];
-
-  // ✅ Order matters: School -> Location -> Degrees -> Estimated
-  if (finalSchool) lines.push(finalSchool);
-  if (finalLocation) lines.push(finalLocation);
-
-  const degreeLines = degreesAsLines(e);
-  if (degreeLines.length) {
-    lines.push(...degreeLines);
-  } else {
-    const degreesFallback = Array.isArray(e?.degrees)
-      ? e.degrees.map((d: any) => String(d ?? "").trim()).filter(Boolean)
-      : [];
-    if (degreesFallback.length) lines.push(...degreesFallback);
-  }
-
-  if (estimated) lines.push(`Estimated grad: ${estimated}`);
-
-  return lines.length ? lines.join("\n") : "—";
-}
-
-/** Render a qual row's value. If it's a list (universities), add spacing between items. */
-function QualValue({ value, textStyle }: { value: QualRowValue; textStyle: any }) {
+/** Render a benefits row's value. If it's a list (universities), add spacing between items. */
+function BenefitsValue({
+  value,
+  textStyle,
+}: {
+  value: benefitsRowValue;
+  textStyle: any;
+}) {
   if (Array.isArray(value)) {
     if (value.length === 0) return <Text style={textStyle}>—</Text>;
 
@@ -231,7 +203,89 @@ function QualValue({ value, textStyle }: { value: QualRowValue; textStyle: any }
         {value.map((item, idx) => (
           <Text
             key={`${idx}_${item}`}
-            style={[textStyle, idx === value.length - 1 ? null : { marginBottom: HIGHER_ED_ITEM_GAP }]}
+            //style={[textStyle, idx === value.length - 1 ? null : { marginBottom: HIGHER_ED_ITEM_GAP }]}
+          >
+            {softWrapLongTokens(item)}
+          </Text>
+        ))}
+      </View>
+    );
+  }
+
+  return <Text style={textStyle}>{softWrapLongTokens(value)}</Text>;
+}
+
+/** Render a company row's value. If it's a list (universities), add spacing between items. */
+function CompanyValue({
+  value,
+  textStyle,
+}: {
+  value: companyRowValue;
+  textStyle: any;
+}) {
+  if (Array.isArray(value)) {
+    if (value.length === 0) return <Text style={textStyle}>—</Text>;
+
+    return (
+      <View>
+        {value.map((item, idx) => (
+          <Text
+            key={`${idx}_${item}`}
+            //style={[textStyle, idx === value.length - 1 ? null : { marginBottom: HIGHER_ED_ITEM_GAP }]}
+          >
+            {softWrapLongTokens(item)}
+          </Text>
+        ))}
+      </View>
+    );
+  }
+
+  return <Text style={textStyle}>{softWrapLongTokens(value)}</Text>;
+}
+
+function EmployeeValue({
+  value,
+  textStyle,
+}: {
+  value: companyRowValue;
+  textStyle: any;
+}) {
+  if (Array.isArray(value)) {
+    if (value.length === 0) return <Text style={textStyle}>—</Text>;
+
+    return (
+      <View>
+        {value.map((item, idx) => (
+          <Text
+            key={`${idx}_${item}`}
+            //style={[textStyle, idx === value.length - 1 ? null : { marginBottom: HIGHER_ED_ITEM_GAP }]}
+          >
+            {softWrapLongTokens(item)}
+          </Text>
+        ))}
+      </View>
+    );
+  }
+
+  return <Text style={textStyle}>{softWrapLongTokens(value)}</Text>;
+}
+
+function RolesValue({
+  value,
+  textStyle,
+}: {
+  value: rolesRowValue;
+  textStyle: any;
+}) {
+  if (Array.isArray(value)) {
+    if (value.length === 0) return <Text style={textStyle}>—</Text>;
+
+    return (
+      <View>
+        {value.map((item, idx) => (
+          <Text
+            key={`${idx}_${item}`}
+            //style={[textStyle, idx === value.length - 1 ? null : { marginBottom: HIGHER_ED_ITEM_GAP }]}
           >
             {softWrapLongTokens(item)}
           </Text>
@@ -293,7 +347,12 @@ export default function ProfileScreen() {
       } else {
         setShowLegalNow(false);
       }
-    }, [bothEnabled, preferredOk, legalOk, profile.nameDisplaySettings.firstWhenBothOn])
+    }, [
+      bothEnabled,
+      preferredOk,
+      legalOk,
+      profile.nameDisplaySettings.firstWhenBothOn,
+    ]),
   );
 
   // ===== Styles =====
@@ -322,7 +381,8 @@ export default function ProfileScreen() {
         marginTop: 6,
       } as const,
 
-      hook: {
+      mission: {
+        //renamed to be specific for company side
         ...crimson,
         textAlign: "center" as const,
         opacity: 1,
@@ -332,12 +392,33 @@ export default function ProfileScreen() {
         color: TEXT,
       } as const,
 
-      valuesLabel: { ...lexLight, fontSize: 12, color: TEXT, opacity: 1 } as const,
-      valuesValue: { ...lexLight, fontSize: 13, color: TEXT, opacity: .65, textAlign: "center" as const } as const,
-      contactLabel: { ...lexLight, fontSize: 12.5, color: HINT, opacity: 1 } as const,
-      contactValue: { ...lexLight, fontSize: 14, color: TEXT, opacity: 1 } as const,
+      valuesLabel: {
+        ...lexLight,
+        fontSize: 12,
+        color: TEXT,
+        opacity: 1,
+      } as const,
+      valuesValue: {
+        ...lexLight,
+        fontSize: 13,
+        color: TEXT,
+        opacity: 0.65,
+        textAlign: "center" as const,
+      } as const,
+      contactLabel: {
+        ...lexLight,
+        fontSize: 12.5,
+        color: HINT,
+        opacity: 1,
+      } as const,
+      contactValue: {
+        ...lexLight,
+        fontSize: 14,
+        color: TEXT,
+        opacity: 1,
+      } as const,
 
-      qualHeader: {
+      benefitsHeader: {
         ...lexLight,
         fontSize: 13,
         marginLeft: 5,
@@ -347,8 +428,104 @@ export default function ProfileScreen() {
       } as const,
 
       // (kept font + opacity exactly as you had)
-      qualLabel: { ...lexLight, fontSize: 12.5, color: TEXT, opacity: 1, marginLeft: 5 } as const,
-      qualValue: {
+      benefitsLabel: {
+        ...lexLight,
+        fontSize: 12.5,
+        color: TEXT,
+        opacity: 1,
+        marginLeft: 5,
+      } as const,
+      BenefitsValue: {
+        ...lexLight,
+        fontSize: 13,
+        marginLeft: 10,
+        color: TEXT,
+        opacity: 1,
+        lineHeight: 18,
+        flexShrink: 1,
+        flexWrap: "wrap",
+        width: "90%", // ✅ keep as requested
+      } as const,
+
+      //FOR COMPANY LOCATION SHOULD HAVE CLARIFIED
+      companyHeader: {
+        ...lexLight,
+        fontSize: 13,
+        marginLeft: 5,
+        letterSpacing: 1.4,
+        color: TEXT,
+        opacity: 1,
+      } as const,
+
+      // (kept font + opacity exactly as you had)
+      companyLabel: {
+        ...lexLight,
+        fontSize: 12.5,
+        color: TEXT,
+        opacity: 1,
+        marginLeft: 5,
+      } as const,
+      CompanyValue: {
+        ...lexLight,
+        fontSize: 13,
+        marginLeft: 10,
+        color: TEXT,
+        opacity: 1,
+        lineHeight: 18,
+        flexShrink: 1,
+        flexWrap: "wrap",
+        width: "90%", // ✅ keep as requested
+      } as const,
+
+
+      //FOR CURRENT EMPLOYEE INFORMATION
+      employeeHeader: {
+        ...lexLight,
+        fontSize: 13,
+        marginLeft: 5,
+        letterSpacing: 1.4,
+        color: TEXT,
+        opacity: 1,
+      } as const,
+
+      // (kept font + opacity exactly as you had)
+      employeeLabel: {
+        ...lexLight,
+        fontSize: 12.5,
+        color: TEXT,
+        opacity: 1,
+        marginLeft: 5,
+      } as const,
+      EmployeeValue: {
+        ...lexLight,
+        fontSize: 13,
+        marginLeft: 10,
+        color: TEXT,
+        opacity: 1,
+        lineHeight: 18,
+        flexShrink: 1,
+        flexWrap: "wrap",
+        width: "90%", // ✅ keep as requested
+      } as const,
+
+      rolesHeader: {
+        ...lexLight,
+        fontSize: 13,
+        marginLeft: 5,
+        letterSpacing: 1.4,
+        color: TEXT,
+        opacity: 1,
+      } as const,
+
+      // (kept font + opacity exactly as you had)
+      rolesLabel: {
+        ...lexLight,
+        fontSize: 12.5,
+        color: TEXT,
+        opacity: 1,
+        marginLeft: 5,
+      } as const,
+      RolesValue: {
         ...lexLight,
         fontSize: 13,
         marginLeft: 10,
@@ -364,29 +541,6 @@ export default function ProfileScreen() {
       logout: { ...lexLight, color: TEXT } as const,
     };
   }, []);
-
-  // ===== LIVE LINK (preserved) =====
-  const liveProfileUrl = useMemo(() => {
-    const base =
-      (aws_config as any).liveProfileBaseUrl ||
-      (aws_config as any).webBaseUrl ||
-      (aws_config as any).publicBaseUrl ||
-      (aws_config as any).apiBaseUrl;
-
-    const handle = (profile as any).liveHandle || (profile as any).handle || (profile as any).username || "me";
-
-    return `${String(base).replace(/\/$/, "")}/u/${encodeURIComponent(String(handle))}`;
-  }, [profile]);
-
-  async function copyLiveAsUrl() {
-    await Clipboard.setStringAsync(liveProfileUrl);
-    Alert.alert("Copied", "Live profile URL copied to clipboard.");
-  }
-
-  async function copyLiveAsQrData() {
-    await Clipboard.setStringAsync(liveProfileUrl);
-    Alert.alert("Copied", "QR data copied to clipboard.");
-  }
 
   async function copyEmail() {
     if (!contactEmail) return;
@@ -406,187 +560,170 @@ export default function ProfileScreen() {
     Alert.alert("Copied", "URL copied to clipboard.");
   }
 
-  function openLiveShareSheet() {
-    const options = ["Copy as URL", "Copy as QR code", "Cancel"];
-    const cancelButtonIndex = 2;
+  // ===== Fix missing thumbs =====
+  const profileMediaRef = useRef(profile.media);
+  profileMediaRef.current = profile.media;
 
-    if (Platform.OS === "ios") {
-      ActionSheetIOS.showActionSheetWithOptions({ options, cancelButtonIndex }, async (buttonIndex) => {
-        if (buttonIndex === 0) copyLiveAsUrl();
-        if (buttonIndex === 1) copyLiveAsQrData();
-      });
-    } else {
-      Alert.alert("Share live profile", "Choose an option", [
-        { text: "Copy as URL", onPress: copyLiveAsUrl },
-        { text: "Copy as QR code", onPress: copyLiveAsQrData },
-        { text: "Cancel", style: "cancel" },
-      ]);
-    }
-  }
+  useEffect(() => {
+    const fixMissingThumbs = async () => {
+      const media = profileMediaRef.current;
+      if (!media || media.length === 0) return;
 
-// ===== Fix missing thumbs =====
-const profileMediaRef = useRef(profile.media);
-profileMediaRef.current = profile.media;
-
-useEffect(() => {
-  const fixMissingThumbs = async () => {
-    const media = profileMediaRef.current;
-    if (!media || media.length === 0) return;
-
-    const updates = await Promise.all(
-      media.map(async (m: any) => {
-        if (m.videoUri && (!m.imageUri || m.imageUri.trim() === "")) {
-          try {
-            const res = await VideoThumbnails.getThumbnailAsync(m.videoUri, { time: 1000 });
-            if (res.uri) return { ...m, imageUri: res.uri };
-          } catch {
-            // ignore
+      const updates = await Promise.all(
+        media.map(async (m: any) => {
+          if (m.videoUri && (!m.imageUri || m.imageUri.trim() === "")) {
+            try {
+              const res = await VideoThumbnails.getThumbnailAsync(m.videoUri, {
+                time: 1000,
+              });
+              if (res.uri) return { ...m, imageUri: res.uri };
+            } catch {
+              // ignore
+            }
           }
-        }
-        return m;
-      })
-    );
-
-    const hasChanges = updates.some((u, i) => u.imageUri !== media[i].imageUri);
-    if (hasChanges) setProfile((prev: any) => ({ ...prev, media: updates }));
-  };
-
-  fixMissingThumbs();
-}, []); // ✅ runs once on mount only — uses ref to read latest media
-
-// ===== Fetch latest =====
-const fetchLatestProfile = useCallback(async () => {
-  try {
-    if (!accessToken) return;
-    if (fetchingRef.current) return;
-
-    fetchingRef.current = true;
-    setRefreshing(true);
-
-    const url = `${aws_config.apiBaseUrl}/profile`;
-
-    const doFetch = async (authHeader: string) => {
-      const res = await fetch(url, { headers: { Authorization: authHeader } });
-      const text = await res.text().catch(() => "");
-      return { res, text };
-    };
-
-    let { res, text } = await doFetch(`Bearer ${accessToken}`);
-
-    if (res.status === 401) {
-      ({ res, text } = await doFetch(accessToken));
-    }
-
-    if (!res.ok) {
-      console.error("Failed to fetch profile:", res.status, text);
-      return;
-    }
-
-    const data = text ? JSON.parse(text) : {};
-    const user = data?.user ?? data?.users?.[0] ?? null;
-    const videoLibrary = data?.videoLibrary ?? data?.videos ?? [];
-
-    const higherEducation = Array.isArray(data?.higher_education)
-      ? data.higher_education.map((e: any) => ({
-          ...e,
-          degreeDetails: Array.isArray(e?.degreeDetails)
-            ? e.degreeDetails
-            : Array.isArray(e?.degree_details)
-              ? e.degree_details
-              : [],
-          estimatedGraduation: String(e?.estimatedGraduation ?? e?.estimated_graduation ?? "").trim(),
-        }))
-      : [];
-
-    setProfile((prev: any) => {
-      const prevByUnit = new Map<string, any>(
-        (Array.isArray(prev?.higherEducation) ? prev.higherEducation : []).map((e: any) => [String(e?.unitid ?? ""), e])
+          return m;
+        }),
       );
 
-      const mergedHigherEducation = higherEducation.map((e: any) => {
-        const prevE = prevByUnit.get(String(e?.unitid ?? ""));
+      const hasChanges = updates.some(
+        (u, i) => u.imageUri !== media[i].imageUri,
+      );
+      if (hasChanges) setProfile((prev: any) => ({ ...prev, media: updates }));
+    };
+
+    fixMissingThumbs();
+  }, []); // runs once on mount only — uses ref to read latest media
+
+  // ===== Fetch latest =====
+  const fetchLatestProfile = useCallback(async () => {
+    try {
+      if (!accessToken) return;
+      if (fetchingRef.current) return;
+
+      fetchingRef.current = true;
+      setRefreshing(true);
+
+      const url = `${aws_config.apiBaseUrl}/profile`;
+
+      const doFetch = async (authHeader: string) => {
+        const res = await fetch(url, {
+          headers: { Authorization: authHeader },
+        });
+        const text = await res.text().catch(() => "");
+        return { res, text };
+      };
+
+      let { res, text } = await doFetch(`Bearer ${accessToken}`);
+
+      if (res.status === 401) {
+        ({ res, text } = await doFetch(accessToken));
+      }
+
+      if (!res.ok) {
+        console.error("Failed to fetch profile:", res.status, text);
+        return;
+      }
+
+      const data = text ? JSON.parse(text) : {};
+      const user = data?.user ?? data?.users?.[0] ?? null;
+      const videoLibrary = data?.videoLibrary ?? data?.videos ?? [];
+
+      setProfile((prev: any) => {
         return {
-          ...(prevE ?? {}),
-          ...e,
-          degreeDetails:
-            Array.isArray(e?.degreeDetails) && e.degreeDetails.length > 0
-              ? e.degreeDetails
-              : Array.isArray(prevE?.degreeDetails)
-                ? prevE.degreeDetails
-                : [],
-          estimatedGraduation:
-            String(e?.estimatedGraduation ?? "").trim() || String(prevE?.estimatedGraduation ?? "").trim(),
+          ...prev,
+          legalFirstName: user?.legal_first_name ?? "",
+          legalLastName: user?.legal_last_name ?? "",
+          legalMiddleName: user?.legal_middle_name ?? "",
+          email: user?.email ?? "",
+          phoneNumber: user?.phone_number ?? "",
+          contactUrl1:
+            user?.contact_url_1 ??
+            user?.contactUrl1 ??
+            user?.website_url_1 ??
+            "",
+          contactUrl2:
+            user?.contact_url_2 ??
+            user?.contactUrl2 ??
+            user?.website_url_2 ??
+            "",
+          contactUrl1Label:
+            user?.contact_url_1_label ??
+            user?.contactUrl1Label ??
+            (prev as any)?.contactUrl1Label ??
+            "URL 1",
+          contactUrl2Label:
+            user?.contact_url_2_label ??
+            user?.contactUrl2Label ??
+            (prev as any)?.contactUrl2Label ??
+            "URL 2",
+          preferredName: user?.preferred_name ?? "",
+          bio: user?.bio ?? "",
+          workType:
+            user?.work_type ?? user?.workType ?? user?.employment_type ?? "",
+          workPreference:
+            user?.work_preference ??
+            user?.workPreference ??
+            user?.work_location_preference ??
+            "",
+          residencyStatus: user?.residency ?? "",
+          geographicLocation: user?.location ?? "",
+          industryExperience: user?.experience ?? "",
+          industryInterests: user?.industry_interests ?? [],
+          valuesSummary: Array.isArray((user as any)?.values_summary)
+            ? (user as any).values_summary
+                .map((item: any, idx: number) => {
+                  const label = String(item?.label ?? "").trim();
+                  const value = String(item?.value ?? "").trim();
+                  if (!label && !value) return null;
+                  return {
+                    key:
+                      String(item?.key ?? `value_${idx + 1}`).trim() ||
+                      `value_${idx + 1}`,
+                    label,
+                    value: value || label,
+                  };
+                })
+                .filter(Boolean)
+            : ((prev as any)?.valuesSummary ?? []),
+          avatarImageUri: toCloudFrontUrl(
+            user?.avatar_image_url ?? user?.avatar_image_key,
+          ),
+          avatarVideoUri: toCloudFrontUrl(
+            user?.avatar_video_url ?? user?.avatar_video_key,
+          ),
+          media: (Array.isArray(videoLibrary) ? videoLibrary : [])
+            .filter((v: any) => v.slot !== null && v.slot !== undefined)
+            .sort((a: any, b: any) => (a.slot ?? 0) - (b.slot ?? 0))
+            .map((v: any, index: number) => {
+              const rawUrl = v.thumbnailUrl || v.thumbnail_key || "";
+              const finalThumb = toCloudFrontUrl(rawUrl);
+              return {
+                id: v.id || `vid_${index}`,
+                videoUri: toCloudFrontUrl(v.url || v.s3_key),
+                imageUri: finalThumb,
+                caption: (v.caption ?? v.title ?? "").trim?.()
+                  ? (v.caption ?? v.title).trim()
+                  : "Untitled",
+                slot: v.slot,
+              };
+            }),
         };
       });
+    } catch (error) {
+      console.error("Error fetching profile:", error);
+    } finally {
+      fetchingRef.current = false;
+      setRefreshing(false);
+    }
+  }, [accessToken]);
 
-      return {
-        ...prev,
-        legalFirstName: user?.legal_first_name ?? "",
-        legalLastName: user?.legal_last_name ?? "",
-        legalMiddleName: user?.legal_middle_name ?? "",
-        email: user?.email ?? "",
-        phoneNumber: user?.phone_number ?? "",
-        contactUrl1: user?.contact_url_1 ?? user?.contactUrl1 ?? user?.website_url_1 ?? "",
-        contactUrl2: user?.contact_url_2 ?? user?.contactUrl2 ?? user?.website_url_2 ?? "",
-        contactUrl1Label: user?.contact_url_1_label ?? user?.contactUrl1Label ?? (prev as any)?.contactUrl1Label ?? "URL 1",
-        contactUrl2Label: user?.contact_url_2_label ?? user?.contactUrl2Label ?? (prev as any)?.contactUrl2Label ?? "URL 2",
-        preferredName: user?.preferred_name ?? "",
-        bio: user?.bio ?? "",
-        workType: user?.work_type ?? user?.workType ?? user?.employment_type ?? "",
-        workPreference: user?.work_preference ?? user?.workPreference ?? user?.work_location_preference ?? "",
-        residencyStatus: user?.residency ?? "",
-        geographicLocation: user?.location ?? "",
-        industryExperience: user?.experience ?? "",
-        highestEducationCompleted: user?.highest_education ?? "",
-        industryInterests: user?.industry_interests ?? [],
-        higherEducation: mergedHigherEducation,
-        valuesSummary: Array.isArray((user as any)?.values_summary)
-          ? (user as any).values_summary
-              .map((item: any, idx: number) => {
-                const label = String(item?.label ?? "").trim();
-                const value = String(item?.value ?? "").trim();
-                if (!label && !value) return null;
-                return {
-                  key: String(item?.key ?? `value_${idx + 1}`).trim() || `value_${idx + 1}`,
-                  label,
-                  value: value || label,
-                };
-              })
-              .filter(Boolean)
-          : (prev as any)?.valuesSummary ?? [],
-        avatarImageUri: toCloudFrontUrl(user?.avatar_image_url ?? user?.avatar_image_key),
-        avatarVideoUri: toCloudFrontUrl(user?.avatar_video_url ?? user?.avatar_video_key),
-        media: (Array.isArray(videoLibrary) ? videoLibrary : [])
-          .filter((v: any) => v.slot !== null && v.slot !== undefined)
-          .sort((a: any, b: any) => (a.slot ?? 0) - (b.slot ?? 0))
-          .map((v: any, index: number) => {
-            const rawUrl = v.thumbnailUrl || v.thumbnail_key || "";
-            const finalThumb = toCloudFrontUrl(rawUrl);
-            return {
-              id: v.id || `vid_${index}`,
-              videoUri: toCloudFrontUrl(v.url || v.s3_key),
-              imageUri: finalThumb,
-              caption: (v.caption ?? v.title ?? "").trim?.() ? (v.caption ?? v.title).trim() : "Untitled",
-              slot: v.slot,
-            };
-          }),
-      };
-    });
-  } catch (error) {
-    console.error("Error fetching profile:", error);
-  } finally {
-    fetchingRef.current = false;
-    setRefreshing(false);
-  }
-}, [accessToken]); // ✅ removed setProfile — it's a stable setter, not needed here
-
-useFocusEffect(
-  useCallback(() => {
-    if (didFetchOnceRef.current) return;
-    didFetchOnceRef.current = true;
-    fetchLatestProfile();
-  }, [fetchLatestProfile])
-);
+  useFocusEffect(
+    useCallback(() => {
+      if (didFetchOnceRef.current) return;
+      didFetchOnceRef.current = true;
+      fetchLatestProfile();
+    }, [fetchLatestProfile]),
+  );
 
   // ===== Layout constants =====
   const screenW = Dimensions.get("window").width;
@@ -603,45 +740,100 @@ useFocusEffect(
     extrapolate: "clamp",
   });
 
-  // ===== Hook + headline mapping =====
-  const hookText = (profile.bio ?? "").trim();
+  // ===== mission + headline mapping =====
+  const missionText = (profile.bio ?? "").trim();
   const headlineText =
-    String((profile as any).headline ?? (profile as any).title ?? (profile as any).tagline ?? "").trim() || "";
+    String(
+      (profile as any).headline ??
+        (profile as any).title ??
+        (profile as any).tagline ??
+        "",
+    ).trim() || "";
 
-  // ===== Values list (ONLY reads from valuesSummary; otherwise hidden) =====
-  const valuesItems = useMemo(() => {
-    const dynamic = (profile as any).valuesSummary;
-    if (!Array.isArray(dynamic) || dynamic.length === 0) return [];
-    return dynamic.map((it: any, idx: number) => ({
-      key: String(it?.key ?? it?.label ?? idx),
-      label: String(it?.label ?? "").trim(),
-      value: dashIfEmpty(it?.value),
-    }));
-  }, [profile]);
 
-  // ===== Qualifications dropdown (2-page pull-in) =====
-  const [qualOpen, setQualOpen] = useState(false);
-  const [qualPage, setQualPage] = useState<0 | 1>(0);
+  // ===== Benefits dropdown (2-page pull-in) =====
+  const [benefitsOpen, setBenefitsOpen] = useState(false);
+  const [benefitsPage, setBenefitsPage] = useState<0 | 1>(0);
 
-  const qualHeight = useRef(new Animated.Value(0)).current; // non-native
-  const qualOpacity = useRef(new Animated.Value(0)).current; // native
-  const qualTranslateY = useRef(new Animated.Value(-6)).current; // native
-  const [qualContentH, setQualContentH] = useState(0);
+  const benefitsHeight = useRef(new Animated.Value(0)).current; // non-native
+  const benefitsOpacity = useRef(new Animated.Value(0)).current; // native
+  const benefitsTranslateY = useRef(new Animated.Value(-6)).current; // native
+  const [benefitsContentH, setBenefitsContentH] = useState(0);
 
-  const openingQualRef = useRef(false);
-  const closingQualRef = useRef(false);
+  const openingBenefitsRef = useRef(false);
+  const closingBenefitsRef = useRef(false);
 
-  useEffect(() => {
-    if (Platform.OS === "android" && UIManager.setLayoutAnimationEnabledExperimental) {
-      UIManager.setLayoutAnimationEnabledExperimental(true);
-    }
-  }, []);
-
-  const qualChevron = useRef(new Animated.Value(0)).current;
-  const qualChevronRotate = qualChevron.interpolate({
+  const benefitsChevron = useRef(new Animated.Value(0)).current;
+  const benefitsChevronRotate = benefitsChevron.interpolate({
     inputRange: [0, 1],
     outputRange: ["0deg", "180deg"],
   });
+
+  // ===== Company Location dropdown (2-page pull-in) =====
+  //all of these components must be unique to each dropdown in order for them to open individually
+  const [companyOpen, setCompanyOpen] = useState(false);
+  const [companyPage, setCompanyPage] = useState<0 | 1>(0);
+
+  const companyHeight = useRef(new Animated.Value(0)).current; // non-native
+  const companyOpacity = useRef(new Animated.Value(0)).current; // native
+  const companyTranslateY = useRef(new Animated.Value(-6)).current; // native
+  const [companyContentH, setCompanyContentH] = useState(0);
+
+  const openingCompanyRef = useRef(false);
+  const closingCompanyRef = useRef(false);
+
+  const companyChevron = useRef(new Animated.Value(0)).current;
+  const companyChevronRotate = companyChevron.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "180deg"],
+  });
+
+  // ===== Employee Location dropdown (2-page pull-in) =====
+  //all of these components must be unique to each dropdown in order for them to open individually
+  const [employeeOpen, setemployeeOpen] = useState(false);
+  const [employeePage, setemployeePage] = useState<0 | 1>(0);
+
+  const employeeHeight = useRef(new Animated.Value(0)).current; // non-native
+  const employeeOpacity = useRef(new Animated.Value(0)).current; // native
+  const employeeTranslateY = useRef(new Animated.Value(-6)).current; // native
+  const [employeeContentH, setemployeeContentH] = useState(0);
+
+  const employeeRef = useRef(false);
+  const closingEmployeeRef = useRef(false);
+
+  const employeeChevron = useRef(new Animated.Value(0)).current;
+  const employeeChevronRotate = employeeChevron.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "180deg"],
+  });
+
+  // ===== roles Location dropdown (2-page pull-in) =====
+  //all of these components must be unique to each dropdown in order for them to open individually
+  const [rolesOpen, setrolesOpen] = useState(false);
+  const [rolesPage, setrolesPage] = useState<0 | 1>(0);
+
+  const rolesHeight = useRef(new Animated.Value(0)).current; // non-native
+  const rolesOpacity = useRef(new Animated.Value(0)).current; // native
+  const rolesTranslateY = useRef(new Animated.Value(-6)).current; // native
+  const [rolesContentH, setrolesContentH] = useState(0);
+
+  const rolesRef = useRef(false);
+  const closingrolesRef = useRef(false);
+
+  const rolesChevron = useRef(new Animated.Value(0)).current;
+  const rolesChevronRotate = rolesChevron.interpolate({
+    inputRange: [0, 1],
+    outputRange: ["0deg", "180deg"],
+  });
+
+  useEffect(() => {
+    if (
+      Platform.OS === "android" &&
+      UIManager.setLayoutAnimationEnabledExperimental
+    ) {
+      UIManager.setLayoutAnimationEnabledExperimental(true);
+    }
+  }, []);
 
   // Page slide (0 -> 1 pulls second column into view)
   const pageX = useRef(new Animated.Value(0)).current;
@@ -653,54 +845,56 @@ useFocusEffect(
     outputRange: [-panelW, 0],
   });
 
+  //=========== START BENEFITS PAGE RETURN ==============
+
   // Keep container height synced if content height changes while open (ex: fetch updates)
   useEffect(() => {
-    if (!qualOpen) return;
-    if (!qualContentH) return;
+    if (!benefitsOpen) return;
+    if (!benefitsContentH) return;
 
-    Animated.timing(qualHeight, {
-      toValue: qualContentH,
+    Animated.timing(benefitsHeight, {
+      toValue: benefitsContentH,
       duration: 140,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: false,
     }).start();
-  }, [qualOpen, qualContentH, qualHeight]);
+  }, [benefitsOpen, benefitsContentH, benefitsHeight]);
 
-  const runOpenAnimation = useCallback(
+  const runOpenBenefitsAnimation = useCallback(
     (triesLeft: number) => {
       // If still no measurement yet, wait a frame (prevents “opens to height=1” bug)
-      if (!qualContentH && triesLeft > 0) {
-        requestAnimationFrame(() => runOpenAnimation(triesLeft - 1));
+      if (!benefitsContentH && triesLeft > 0) {
+        requestAnimationFrame(() => runOpenBenefitsAnimation(triesLeft - 1));
         return;
       }
 
-      const targetH = Math.max(qualContentH, 1);
+      const targetH = Math.max(benefitsContentH, 1);
 
       // Make sure values start from closed state (prevents half-open weirdness)
-      qualOpacity.setValue(0);
-      qualTranslateY.setValue(-6);
-      qualHeight.setValue(0);
+      benefitsOpacity.setValue(0);
+      benefitsTranslateY.setValue(-6);
+      benefitsHeight.setValue(0);
 
       Animated.parallel([
-        Animated.timing(qualChevron, {
+        Animated.timing(benefitsChevron, {
           toValue: 1,
           duration: 220,
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
-        Animated.timing(qualOpacity, {
+        Animated.timing(benefitsOpacity, {
           toValue: 1,
           duration: 170,
           easing: Easing.out(Easing.quad),
           useNativeDriver: true,
         }),
-        Animated.timing(qualTranslateY, {
+        Animated.timing(benefitsTranslateY, {
           toValue: 0,
           duration: 220,
           easing: Easing.out(Easing.cubic),
           useNativeDriver: true,
         }),
-        Animated.spring(qualHeight, {
+        Animated.spring(benefitsHeight, {
           toValue: targetH,
           damping: 26,
           stiffness: 220,
@@ -709,51 +903,57 @@ useFocusEffect(
           useNativeDriver: false,
         }),
       ]).start(() => {
-        openingQualRef.current = false;
+        openingBenefitsRef.current = false;
       });
     },
-    [qualChevron, qualContentH, qualHeight, qualOpacity, qualTranslateY]
+    [
+      benefitsChevron,
+      benefitsContentH,
+      benefitsHeight,
+      benefitsOpacity,
+      benefitsTranslateY,
+    ],
   );
 
-  const openQual = useCallback(() => {
-    if (qualOpen) return;
-    if (openingQualRef.current || closingQualRef.current) return;
+  const openbenefits = useCallback(() => {
+    if (benefitsOpen) return;
+    if (openingBenefitsRef.current || closingBenefitsRef.current) return;
 
-    openingQualRef.current = true;
+    openingBenefitsRef.current = true;
 
     LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    setQualOpen(true);
+    setBenefitsOpen(true);
 
     // Wait up to ~8 frames for the measurer to report a real height.
-    requestAnimationFrame(() => runOpenAnimation(8));
-  }, [qualOpen, runOpenAnimation]);
+    requestAnimationFrame(() => runOpenBenefitsAnimation(8));
+  }, [benefitsOpen, runOpenBenefitsAnimation]);
 
-  const closeQual = useCallback(() => {
-    if (!qualOpen) return;
-    if (closingQualRef.current || openingQualRef.current) return;
+  const closebenefits = useCallback(() => {
+    if (!benefitsOpen) return;
+    if (closingBenefitsRef.current || openingBenefitsRef.current) return;
 
-    closingQualRef.current = true;
+    closingBenefitsRef.current = true;
 
     Animated.parallel([
-      Animated.timing(qualChevron, {
+      Animated.timing(benefitsChevron, {
         toValue: 0,
         duration: 160,
         easing: Easing.out(Easing.cubic),
         useNativeDriver: true,
       }),
-      Animated.timing(qualOpacity, {
+      Animated.timing(benefitsOpacity, {
         toValue: 0,
         duration: 140,
         easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }),
-      Animated.timing(qualTranslateY, {
+      Animated.timing(benefitsTranslateY, {
         toValue: -6,
         duration: 160,
         easing: Easing.out(Easing.quad),
         useNativeDriver: true,
       }),
-      Animated.timing(qualHeight, {
+      Animated.timing(benefitsHeight, {
         toValue: 0,
         duration: 170,
         easing: Easing.out(Easing.cubic),
@@ -768,23 +968,30 @@ useFocusEffect(
       }),
     ]).start(() => {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-      setQualPage(0);
-      setQualOpen(false);
-      closingQualRef.current = false;
+      setBenefitsPage(0);
+      setBenefitsOpen(false);
+      closingBenefitsRef.current = false;
     });
-  }, [qualOpen, pageX, qualChevron, qualHeight, qualOpacity, qualTranslateY]);
+  }, [
+    benefitsOpen,
+    pageX,
+    benefitsChevron,
+    benefitsHeight,
+    benefitsOpacity,
+    benefitsTranslateY,
+  ]);
 
-  const toggleQual = useCallback(() => {
-    if (!qualOpen) return openQual();
-    return closeQual();
-  }, [qualOpen, openQual, closeQual]);
+  const togglebenefits = useCallback(() => {
+    if (!benefitsOpen) return openbenefits();
+    return closebenefits();
+  }, [benefitsOpen, openbenefits, closebenefits]);
 
-  const toggleQualPage = useCallback(() => {
-    if (!qualOpen) return;
-    if (closingQualRef.current || openingQualRef.current) return;
+  const togglebenefitsPage = useCallback(() => {
+    if (!benefitsOpen) return;
+    if (closingBenefitsRef.current || openingBenefitsRef.current) return;
 
-    const next: 0 | 1 = qualPage === 0 ? 1 : 0;
-    setQualPage(next);
+    const next: 0 | 1 = benefitsPage === 0 ? 1 : 0;
+    setBenefitsPage(next);
 
     Animated.spring(pageX, {
       toValue: next === 1 ? -1 : 0,
@@ -794,22 +1001,32 @@ useFocusEffect(
       overshootClamping: true,
       useNativeDriver: true,
     }).start();
-  }, [pageX, qualPage, qualOpen]);
+  }, [pageX, benefitsPage, benefitsOpen]);
 
-  const qualSwipeResponder = useMemo(
+  const benefitsSwipeResponder = useMemo(
     () =>
       PanResponder.create({
         onMoveShouldSetPanResponder: (_, gestureState) => {
-          if (!qualOpen || closingQualRef.current || openingQualRef.current) return false;
+          if (
+            !benefitsOpen ||
+            closingBenefitsRef.current ||
+            openingBenefitsRef.current
+          )
+            return false;
           const dx = Math.abs(gestureState.dx);
           const dy = Math.abs(gestureState.dy);
           return dx > 10 && dx > dy;
         },
         onPanResponderRelease: (_, gestureState) => {
-          if (!qualOpen || closingQualRef.current || openingQualRef.current) return;
+          if (
+            !benefitsOpen ||
+            closingBenefitsRef.current ||
+            openingBenefitsRef.current
+          )
+            return;
           const { dx } = gestureState;
-          if (dx < -35 && qualPage === 0) {
-            setQualPage(1);
+          if (dx < -35 && benefitsPage === 0) {
+            setBenefitsPage(1);
             Animated.spring(pageX, {
               toValue: -1,
               damping: 26,
@@ -820,8 +1037,8 @@ useFocusEffect(
             }).start();
             return;
           }
-          if (dx > 35 && qualPage === 1) {
-            setQualPage(0);
+          if (dx > 35 && benefitsPage === 1) {
+            setBenefitsPage(0);
             Animated.spring(pageX, {
               toValue: 0,
               damping: 26,
@@ -833,39 +1050,36 @@ useFocusEffect(
           }
         },
       }),
-    [pageX, qualOpen, qualPage]
+    [pageX, benefitsOpen, benefitsPage],
   );
 
-  const higherEd = Array.isArray((profile as any).higherEducation) ? ((profile as any).higherEducation as any[]) : [];
-
-  const qualCol1: QualRow[] = useMemo(() => {
+  const benefitsCol1: benefitsRow[] = useMemo(() => {
     const workTypePrimary = String(
-      (profile as any).workType ?? (profile as any).work_type ?? (profile as any).employmentType ?? ""
+      (profile as any).workType ??
+        (profile as any).work_type ??
+        (profile as any).employmentType ??
+        "",
     ).trim();
     const workTypeSecondary = String(
-      (profile as any).workPreference ?? (profile as any).work_preference ?? (profile as any).work_location_preference ?? ""
+      (profile as any).workPreference ??
+        (profile as any).work_preference ??
+        (profile as any).work_location_preference ??
+        "",
     ).trim();
-    const workType = dashIfEmpty([workTypePrimary, workTypeSecondary].filter(Boolean).join(" · "));
+    const workType = dashIfEmpty(
+      [workTypePrimary, workTypeSecondary].filter(Boolean).join(" · "),
+    );
     const location = dashIfEmpty(profile.geographicLocation);
-
-    const higherEdItems =
-      higherEd.length > 0
-        ? higherEd
-            .map((e: any) => formatHigherEdMultiline(e))
-            .filter((s: string) => String(s ?? "").trim() && String(s ?? "").trim() !== "—")
-        : [];
 
     return [
       { label: "Work type", value: workType },
       { label: "Location", value: location },
-      { label: "Higher education", value: higherEdItems.length ? higherEdItems : "—" },
     ];
-  }, [higherEd, profile]);
+  }, [profile]);
 
-  const qualCol2: QualRow[] = useMemo(() => {
+  const benefitsCol2: benefitsRow[] = useMemo(() => {
     const residency = dashIfEmpty(profile.residencyStatus);
     const experience = dashIfEmpty(profile.industryExperience);
-    const interests = joinOrDash(profile.industryInterests ?? []);
 
     const funFacts = (profile.additionalDetails ?? "")
       .split(/\r?\n/)
@@ -876,10 +1090,740 @@ useFocusEffect(
     return [
       { label: "Residency status", value: residency },
       { label: "Industry experience", value: experience },
-      { label: "Industry interests", value: interests },
-      { label: "Fun facts", value: funFacts.length ? funFacts.join("\n") : "—" },
+      {
+        label: "Fun facts",
+        value: funFacts.length ? funFacts.join("\n") : "—",
+      },
     ];
   }, [profile]);
+
+  //=========== COMPANY COLUMN ====================
+  // Keep container height synced if content height changes while open (ex: fetch updates)
+  useEffect(() => {
+    if (!companyOpen) return;
+    if (!companyContentH) return; //need to change this function to reflect company info i want to drop down
+
+    Animated.timing(companyHeight, {
+      toValue: companyContentH,
+      duration: 140,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [companyOpen, companyContentH, companyHeight]);
+
+  const runOpenCompanyAnimation = useCallback(
+    (triesLeft: number) => {
+      // If still no measurement yet, wait a frame (prevents “opens to height=1” bug)
+      if (!companyContentH && triesLeft > 0) {
+        requestAnimationFrame(() => runOpenCompanyAnimation(triesLeft - 1));
+        return;
+      }
+
+      const targetH = Math.max(companyContentH, 1);
+
+      // Make sure values start from closed state (prevents half-open weirdness)
+      companyOpacity.setValue(0);
+      companyTranslateY.setValue(-6);
+      companyHeight.setValue(0);
+
+      Animated.parallel([
+        Animated.timing(companyChevron, {
+          toValue: 1,
+          duration: 220,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(companyOpacity, {
+          toValue: 1,
+          duration: 170,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(companyTranslateY, {
+          toValue: 0,
+          duration: 220,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.spring(companyHeight, {
+          toValue: targetH,
+          damping: 26,
+          stiffness: 220,
+          mass: 1,
+          overshootClamping: true,
+          useNativeDriver: false,
+        }),
+      ]).start(() => {
+        openingCompanyRef.current = false;
+      });
+    },
+    [
+      companyChevron,
+      companyContentH,
+      companyHeight,
+      companyOpacity,
+      companyTranslateY,
+    ],
+  );
+
+  const opencompany = useCallback(() => {
+    if (companyOpen) return;
+    if (openingCompanyRef.current || closingCompanyRef.current) return;
+
+    openingCompanyRef.current = true;
+
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setCompanyOpen(true);
+
+    // Wait up to ~8 frames for the measurer to report a real height.
+    requestAnimationFrame(() => runOpenCompanyAnimation(8));
+  }, [companyOpen, runOpenCompanyAnimation]);
+
+  const closecompany = useCallback(() => {
+    if (!companyOpen) return;
+    if (closingCompanyRef.current || openingCompanyRef.current) return;
+
+    closingCompanyRef.current = true;
+
+    Animated.parallel([
+      Animated.timing(companyChevron, {
+        toValue: 0,
+        duration: 160,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(companyOpacity, {
+        toValue: 0,
+        duration: 140,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(companyTranslateY, {
+        toValue: -6,
+        duration: 160,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(companyHeight, {
+        toValue: 0,
+        duration: 170,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }),
+      // Reset slider back to page 0 while collapsing
+      Animated.timing(pageX, {
+        toValue: 0,
+        duration: 160,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setCompanyPage(0);
+      setCompanyOpen(false);
+      closingCompanyRef.current = false;
+    });
+  }, [
+    companyOpen,
+    pageX,
+    companyChevron,
+    companyHeight,
+    companyOpacity,
+    companyTranslateY,
+  ]);
+
+  const togglecompany = useCallback(() => {
+    if (!companyOpen) return opencompany();
+    return closecompany();
+  }, [companyOpen, opencompany, closecompany]);
+
+  const togglecompanyPage = useCallback(() => {
+    if (!companyOpen) return;
+    if (closingCompanyRef.current || openingCompanyRef.current) return;
+
+    const next: 0 | 1 = companyPage === 0 ? 1 : 0;
+    setCompanyPage(next);
+
+    Animated.spring(pageX, {
+      toValue: next === 1 ? -1 : 0,
+      damping: 26,
+      stiffness: 240,
+      mass: 1,
+      overshootClamping: true,
+      useNativeDriver: true,
+    }).start();
+  }, [pageX, companyPage, companyOpen]);
+
+  const companySwipeResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          if (
+            !companyOpen ||
+            closingCompanyRef.current ||
+            openingCompanyRef.current
+          )
+            return false;
+          const dx = Math.abs(gestureState.dx);
+          const dy = Math.abs(gestureState.dy);
+          return dx > 10 && dx > dy;
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          if (
+            !companyOpen ||
+            closingCompanyRef.current ||
+            openingCompanyRef.current
+          )
+            return;
+          const { dx } = gestureState;
+          if (dx < -35 && companyPage === 0) {
+            setCompanyPage(1);
+            Animated.spring(pageX, {
+              toValue: -1,
+              damping: 26,
+              stiffness: 240,
+              mass: 1,
+              overshootClamping: true,
+              useNativeDriver: true,
+            }).start();
+            return;
+          }
+          if (dx > 35 && companyPage === 1) {
+            setCompanyPage(0);
+            Animated.spring(pageX, {
+              toValue: 0,
+              damping: 26,
+              stiffness: 240,
+              mass: 1,
+              overshootClamping: true,
+              useNativeDriver: true,
+            }).start();
+          }
+        },
+      }),
+    [pageX, companyOpen, companyPage],
+  );
+
+  const companyCol1: companyRow[] = useMemo(() => {
+    const workTypePrimary = String(
+      (profile as any).workType ??
+        (profile as any).work_type ??
+        (profile as any).employmentType ??
+        "",
+    ).trim();
+    const workTypeSecondary = String(
+      (profile as any).workPreference ??
+        (profile as any).work_preference ??
+        (profile as any).work_location_preference ??
+        "",
+    ).trim();
+    const workType = dashIfEmpty(
+      [workTypePrimary, workTypeSecondary].filter(Boolean).join(" · "),
+    );
+    const location = dashIfEmpty(profile.geographicLocation);
+
+    return [
+      { label: "Work type", value: workType },
+      { label: "Location", value: location },
+    ];
+  }, [profile]);
+
+  const companyCol2: companyRow[] = useMemo(() => {
+    const residency = dashIfEmpty(profile.residencyStatus);
+    const experience = dashIfEmpty(profile.industryExperience);
+
+    return [
+      { label: "Residency status", value: residency },
+      { label: "Industry experience", value: experience },
+    ];
+  }, [profile]);
+
+  //========= end company set up blocks
+
+  //=========== EMPLOYEE COLUMN ====================
+  // Keep container height synced if content height changes while open (ex: fetch updates)
+  useEffect(() => {
+    if (!employeeOpen) return;
+    if (!employeeContentH) return; 
+
+    Animated.timing(employeeHeight, {
+      toValue: employeeContentH,
+      duration: 140,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [employeeOpen, employeeContentH, employeeHeight]);
+
+  const runopenemployeeAnimation = useCallback(
+    (triesLeft: number) => {
+      // If still no measurement yet, wait a frame (prevents “opens to height=1” bug)
+      if (!employeeContentH && triesLeft > 0) {
+        requestAnimationFrame(() => runopenemployeeAnimation(triesLeft - 1));
+        return;
+      }
+
+      const targetH = Math.max(employeeContentH, 1);
+
+      // Make sure values start from closed state (prevents half-open weirdness)
+      employeeOpacity.setValue(0);
+      employeeTranslateY.setValue(-6);
+      employeeHeight.setValue(0);
+
+      Animated.parallel([
+        Animated.timing(employeeChevron, {
+          toValue: 1,
+          duration: 220,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(employeeOpacity, {
+          toValue: 1,
+          duration: 170,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(employeeTranslateY, {
+          toValue: 0,
+          duration: 220,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.spring(employeeHeight, {
+          toValue: targetH,
+          damping: 26,
+          stiffness: 220,
+          mass: 1,
+          overshootClamping: true,
+          useNativeDriver: false,
+        }),
+      ]).start(() => {
+        employeeRef.current = false;
+      });
+    },
+    [
+      employeeChevron,
+      employeeContentH,
+      employeeHeight,
+      employeeOpacity,
+      employeeTranslateY,
+    ],
+  );
+
+  const openemployee = useCallback(() => {
+    if (employeeOpen) return;
+    if (employeeRef.current || closingEmployeeRef.current) return;
+
+    employeeRef.current = true;
+
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setemployeeOpen(true);
+
+    // Wait up to ~8 frames for the measurer to report a real height.
+    requestAnimationFrame(() => runopenemployeeAnimation(8));
+  }, [employeeOpen, runopenemployeeAnimation]);
+
+  const closeemployee = useCallback(() => {
+    if (!employeeOpen) return;
+    if (closingEmployeeRef.current || employeeRef.current) return;
+
+    closingEmployeeRef.current = true;
+
+    Animated.parallel([
+      Animated.timing(employeeChevron, {
+        toValue: 0,
+        duration: 160,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(employeeOpacity, {
+        toValue: 0,
+        duration: 140,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(employeeTranslateY, {
+        toValue: -6,
+        duration: 160,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(employeeHeight, {
+        toValue: 0,
+        duration: 170,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }),
+      // Reset slider back to page 0 while collapsing
+      Animated.timing(pageX, {
+        toValue: 0,
+        duration: 160,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setemployeePage(0);
+      setemployeeOpen(false);
+      closingEmployeeRef.current = false;
+    });
+  }, [
+    employeeOpen,
+    pageX,
+    employeeChevron,
+    employeeHeight,
+    employeeOpacity,
+    employeeTranslateY,
+  ]);
+
+  const toggleemployees = useCallback(() => {
+    if (!employeeOpen) return openemployee();
+    return closeemployee();
+  }, [employeeOpen, openemployee, closeemployee]);
+
+  const toggleemployeePage = useCallback(() => {
+    if (!employeeOpen) return;
+    if (closingEmployeeRef.current || employeeRef.current) return;
+
+    const next: 0 | 1 = employeePage === 0 ? 1 : 0;
+    setemployeePage(next);
+
+    Animated.spring(pageX, {
+      toValue: next === 1 ? -1 : 0,
+      damping: 26,
+      stiffness: 240,
+      mass: 1,
+      overshootClamping: true,
+      useNativeDriver: true,
+    }).start();
+  }, [pageX, employeePage, employeeOpen]);
+
+  const employeeSwipeResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          if (
+            !employeeOpen ||
+            closingEmployeeRef.current ||
+            employeeRef.current
+          )
+            return false;
+          const dx = Math.abs(gestureState.dx);
+          const dy = Math.abs(gestureState.dy);
+          return dx > 10 && dx > dy;
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          if (
+            !employeeOpen ||
+            closingEmployeeRef.current ||
+            employeeRef.current
+          )
+            return;
+          const { dx } = gestureState;
+          if (dx < -35 && employeePage === 0) {
+            setemployeePage(1);
+            Animated.spring(pageX, {
+              toValue: -1,
+              damping: 26,
+              stiffness: 240,
+              mass: 1,
+              overshootClamping: true,
+              useNativeDriver: true,
+            }).start();
+            return;
+          }
+          if (dx > 35 && employeePage === 1) {
+            setemployeePage(0);
+            Animated.spring(pageX, {
+              toValue: 0,
+              damping: 26,
+              stiffness: 240,
+              mass: 1,
+              overshootClamping: true,
+              useNativeDriver: true,
+            }).start();
+          }
+        },
+      }),
+    [pageX, employeeOpen, employeePage],
+  );
+
+  const employeeCol1: employeeRow[] = useMemo(() => {
+    const workTypePrimary = String(
+      (profile as any).workType ??
+        (profile as any).work_type ??
+        (profile as any).employmentType ??
+        "",
+    ).trim();
+    const workTypeSecondary = String(
+      (profile as any).workPreference ??
+        (profile as any).work_preference ??
+        (profile as any).work_location_preference ??
+        "",
+    ).trim();
+    const workType = dashIfEmpty(
+      [workTypePrimary, workTypeSecondary].filter(Boolean).join(" · "),
+    );
+    const location = dashIfEmpty(profile.geographicLocation);
+
+    return [
+      { label: "Work type", value: workType },
+      { label: "Location", value: location },
+    ];
+  }, [profile]);
+
+  const employeeCol2: employeeRow[] = useMemo(() => {
+    const residency = dashIfEmpty(profile.residencyStatus);
+    const experience = dashIfEmpty(profile.industryExperience);
+
+    return [
+      { label: "Residency status", value: residency },
+      { label: "Industry experience", value: experience },
+    ];
+  }, [profile]);
+
+  //======= end employee column set up ===========
+
+  //======= START roles column info set up ============
+  // Keep container height synced if content height changes while open (ex: fetch updates)
+  useEffect(() => {
+    if (!rolesOpen) return;
+    if (!rolesContentH) return; 
+
+    Animated.timing(rolesHeight, {
+      toValue: rolesContentH,
+      duration: 140,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: false,
+    }).start();
+  }, [rolesOpen, rolesContentH, rolesHeight]);
+
+  const runopenrolesAnimation = useCallback(
+    (triesLeft: number) => {
+      // If still no measurement yet, wait a frame (prevents “opens to height=1” bug)
+      if (!rolesContentH && triesLeft > 0) {
+        requestAnimationFrame(() => runopenrolesAnimation(triesLeft - 1));
+        return;
+      }
+
+      const targetH = Math.max(rolesContentH, 1);
+
+      // Make sure values start from closed state (prevents half-open weirdness)
+      rolesOpacity.setValue(0);
+      rolesTranslateY.setValue(-6);
+      rolesHeight.setValue(0);
+
+      Animated.parallel([
+        Animated.timing(rolesChevron, {
+          toValue: 1,
+          duration: 220,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.timing(rolesOpacity, {
+          toValue: 1,
+          duration: 170,
+          easing: Easing.out(Easing.quad),
+          useNativeDriver: true,
+        }),
+        Animated.timing(rolesTranslateY, {
+          toValue: 0,
+          duration: 220,
+          easing: Easing.out(Easing.cubic),
+          useNativeDriver: true,
+        }),
+        Animated.spring(rolesHeight, {
+          toValue: targetH,
+          damping: 26,
+          stiffness: 220,
+          mass: 1,
+          overshootClamping: true,
+          useNativeDriver: false,
+        }),
+      ]).start(() => {
+        rolesRef.current = false;
+      });
+    },
+    [
+      rolesChevron,
+      rolesContentH,
+      rolesHeight,
+      rolesOpacity,
+      rolesTranslateY,
+    ],
+  );
+
+  const openroles = useCallback(() => {
+    if (rolesOpen) return;
+    if (rolesRef.current || closingrolesRef.current) return;
+
+    rolesRef.current = true;
+
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    setrolesOpen(true);
+
+    // Wait up to ~8 frames for the measurer to report a real height.
+    requestAnimationFrame(() => runopenrolesAnimation(8));
+  }, [rolesOpen, runopenrolesAnimation]);
+
+  const closeroles = useCallback(() => {
+    if (!rolesOpen) return;
+    if (closingrolesRef.current || rolesRef.current) return;
+
+    closingrolesRef.current = true;
+
+    Animated.parallel([
+      Animated.timing(rolesChevron, {
+        toValue: 0,
+        duration: 160,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+      Animated.timing(rolesOpacity, {
+        toValue: 0,
+        duration: 140,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(rolesTranslateY, {
+        toValue: -6,
+        duration: 160,
+        easing: Easing.out(Easing.quad),
+        useNativeDriver: true,
+      }),
+      Animated.timing(rolesHeight, {
+        toValue: 0,
+        duration: 170,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: false,
+      }),
+      // Reset slider back to page 0 while collapsing
+      Animated.timing(pageX, {
+        toValue: 0,
+        duration: 160,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start(() => {
+      LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+      setrolesPage(0);
+      setrolesOpen(false);
+      closingrolesRef.current = false;
+    });
+  }, [
+    rolesOpen,
+    pageX,
+    rolesChevron,
+    rolesHeight,
+    rolesOpacity,
+    rolesTranslateY,
+  ]);
+
+  const toggleroless = useCallback(() => {
+    if (!rolesOpen) return openroles();
+    return closeroles();
+  }, [rolesOpen, openroles, closeroles]);
+
+  const togglerolesPage = useCallback(() => {
+    if (!rolesOpen) return;
+    if (closingrolesRef.current || rolesRef.current) return;
+
+    const next: 0 | 1 = rolesPage === 0 ? 1 : 0;
+    setrolesPage(next);
+
+    Animated.spring(pageX, {
+      toValue: next === 1 ? -1 : 0,
+      damping: 26,
+      stiffness: 240,
+      mass: 1,
+      overshootClamping: true,
+      useNativeDriver: true,
+    }).start();
+  }, [pageX, rolesPage, rolesOpen]);
+
+  const rolesSwipeResponder = useMemo(
+    () =>
+      PanResponder.create({
+        onMoveShouldSetPanResponder: (_, gestureState) => {
+          if (
+            !rolesOpen ||
+            closingrolesRef.current ||
+            rolesRef.current
+          )
+            return false;
+          const dx = Math.abs(gestureState.dx);
+          const dy = Math.abs(gestureState.dy);
+          return dx > 10 && dx > dy;
+        },
+        onPanResponderRelease: (_, gestureState) => {
+          if (
+            !rolesOpen ||
+            closingrolesRef.current ||
+            rolesRef.current
+          )
+            return;
+          const { dx } = gestureState;
+          if (dx < -35 && rolesPage === 0) {
+            setrolesPage(1);
+            Animated.spring(pageX, {
+              toValue: -1,
+              damping: 26,
+              stiffness: 240,
+              mass: 1,
+              overshootClamping: true,
+              useNativeDriver: true,
+            }).start();
+            return;
+          }
+          if (dx > 35 && rolesPage === 1) {
+            setrolesPage(0);
+            Animated.spring(pageX, {
+              toValue: 0,
+              damping: 26,
+              stiffness: 240,
+              mass: 1,
+              overshootClamping: true,
+              useNativeDriver: true,
+            }).start();
+          }
+        },
+      }),
+    [pageX, rolesOpen, rolesPage],
+  );
+
+  const rolesCol1: rolesRow[] = useMemo(() => {
+    const workTypePrimary = String(
+      (profile as any).workType ??
+        (profile as any).work_type ??
+        (profile as any).employmentType ??
+        "",
+    ).trim();
+    const workTypeSecondary = String(
+      (profile as any).workPreference ??
+        (profile as any).work_preference ??
+        (profile as any).work_location_preference ??
+        "",
+    ).trim();
+    const workType = dashIfEmpty(
+      [workTypePrimary, workTypeSecondary].filter(Boolean).join(" · "),
+    );
+    const location = dashIfEmpty(profile.geographicLocation);
+
+    return [
+      { label: "Work type", value: workType },
+      { label: "Location", value: location },
+    ];
+  }, [profile]);
+
+  const rolesCol2: rolesRow[] = useMemo(() => {
+    const residency = dashIfEmpty(profile.residencyStatus);
+    const experience = dashIfEmpty(profile.industryExperience);
+
+    return [
+      { label: "Residency status", value: residency },
+      { label: "Industry experience", value: experience },
+    ];
+  }, [profile]);
+
 
   // ===== Videos (horizontal snap) =====
   const videos = useMemo(() => {
@@ -890,8 +1834,10 @@ useFocusEffect(
   const contactPhone = String(profile.phoneNumber ?? "").trim();
   const contactUrl1 = String((profile as any).contactUrl1 ?? "").trim();
   const contactUrl2 = String((profile as any).contactUrl2 ?? "").trim();
-  const contactUrl1Label = String((profile as any).contactUrl1Label ?? "URL 1").trim() || "URL 1";
-  const contactUrl2Label = String((profile as any).contactUrl2Label ?? "URL 2").trim() || "URL 2";
+  const contactUrl1Label =
+    String((profile as any).contactUrl1Label ?? "URL 1").trim() || "URL 1";
+  const contactUrl2Label =
+    String((profile as any).contactUrl2Label ?? "URL 2").trim() || "URL 2";
   const showUrl1 = !!(profile as any)?.contactDisplaySettings?.showUrl1;
   const showUrl2 = !!(profile as any)?.contactDisplaySettings?.showUrl2;
 
@@ -910,29 +1856,45 @@ useFocusEffect(
         },
       });
     },
-    [pathname]
+    [pathname],
   );
 
+  //START FUNCTION RETURN WHERE PAGE LAYOUT IS SET, this is where we add blocks
   return (
     <>
-      <RequireUserType type="home" />
+      <RequireUserType type="company" />
 
-      <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: BG }}>
+      <SafeAreaView
+        edges={["top", "left", "right"]}
+        style={{ flex: 1, backgroundColor: BG }}
+      >
         <Animated.ScrollView
           style={{ backgroundColor: BG }}
           contentContainerStyle={{ paddingBottom: 24 }}
-          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchLatestProfile} />}
-          onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={fetchLatestProfile}
+            />
+          }
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false },
+          )}
           scrollEventThrottle={16}
         >
           {/* Block A */}
           <View style={{ backgroundColor: BG, padding: BLOCK_PAD }}>
-            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
-              <Pressable onPress={openLiveShareSheet} hitSlop={10}>
-                <Text style={s.topLink}>Share Live</Text>
-              </Pressable>
-
-              <View style={{ flexDirection: "row", alignItems: "center", gap: 22 }}>
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
+            >
+              <View
+                style={{ flexDirection: "row", alignItems: "center", gap: 22 }}
+              >
                 <Pressable
                   onPress={() =>
                     router.push({
@@ -945,11 +1907,17 @@ useFocusEffect(
                   <Feather name="layers" size={18} color={TEXT} />
                 </Pressable>
 
-                <Pressable onPress={() => router.push("/(companyUser)/profile-edit")} hitSlop={10}>
+                <Pressable
+                  onPress={() => router.push("/(companyUser)/profile-edit")}
+                  hitSlop={10}
+                >
                   <Feather name="edit-2" size={18} color={TEXT} />
                 </Pressable>
 
-                <Pressable onPress={() => router.push("/(companyUser)/settings")} hitSlop={10}>
+                <Pressable
+                  onPress={() => router.push("/(companyUser)/settings")}
+                  hitSlop={10}
+                >
                   <Feather name="settings" size={18} color={TEXT} />
                 </Pressable>
               </View>
@@ -963,7 +1931,11 @@ useFocusEffect(
               {profile.avatarImageUri?.trim() ? (
                 <Animated.Image
                   source={{ uri: profile.avatarImageUri }}
-                  style={{ width: avatarSize, height: avatarSize, borderRadius: avatarRadius }}
+                  style={{
+                    width: avatarSize,
+                    height: avatarSize,
+                    borderRadius: avatarRadius,
+                  }}
                 />
               ) : (
                 <Animated.View
@@ -992,31 +1964,31 @@ useFocusEffect(
 
             {!!headlineText && <Text style={s.headline}>{headlineText}</Text>}
 
-            {valuesItems.length > 0 ? (
-              <View style={{ marginTop: 8, gap: 8, alignItems: "center" }}>
-                {valuesItems.map((it) => (
-                  <View key={it.key} style={{ gap: 4, alignItems: "center", width: "100%" }}>
-                    {!!it.label && <Text style={s.valuesLabel}>{it.label}</Text>}
-                    <Text style={s.valuesValue}>{it.value}</Text>
-                  </View>
-                ))}
-              </View>
-            ) : null}
+
           </View>
-
           <View style={{ height: 1, backgroundColor: BORDER }} />
-
-          {/* Block B */}
+          {/* Block B for company mission */}
           <View style={{ backgroundColor: WHITE, padding: BLOCK_PAD }}>
-            {!!hookText ? <Text style={s.hook}>{hookText}</Text> : <Text style={[s.hook, { opacity: 1 }]}>—</Text>}
+            {!!missionText ? (
+              <Text style={s.mission}>{missionText}</Text>
+            ) : (
+              <Text style={[s.mission, { opacity: 1 }]}>—</Text>
+            )}
           </View>
-
           <View style={{ height: 1, backgroundColor: BORDER }} />
-
-          {/* Block C */}
+          {/* Block BA for company values - need to change variables */}
+          <View style={{ backgroundColor: WHITE, padding: BLOCK_PAD }}>
+            {!!missionText ? (
+              <Text style={s.mission}>{missionText}</Text>
+            ) : (
+              <Text style={[s.mission, { opacity: 1 }]}>—</Text>
+            )}
+          </View>
+          <View style={{ height: 1, backgroundColor: BORDER }} />
+          {/* Block benefits */}
           <View style={{ backgroundColor: BG, padding: BLOCK_PAD }}>
             <Pressable
-              onPress={toggleQual}
+              onPress={togglebenefits}
               hitSlop={10}
               style={{
                 flexDirection: "row",
@@ -1025,22 +1997,32 @@ useFocusEffect(
                 paddingVertical: 2,
               }}
             >
-              <Text style={s.qualHeader}>QUALIFICATIONS</Text>
+              <Text style={s.benefitsHeader}>
+                BENEFITS SUMMARY - management style, PTO
+              </Text>
 
-              <Animated.View style={{ transform: [{ rotate: qualChevronRotate }], marginRight: 6 }}>
+              <Animated.View
+                style={{
+                  transform: [{ rotate: benefitsChevronRotate }],
+                  marginRight: 6,
+                }}
+              >
                 <Feather name="chevron-down" size={24} color={HINT} />
               </Animated.View>
             </Pressable>
 
             {/* ✅ Premium animated reveal container */}
-            <Animated.View style={{ height: qualHeight, overflow: "hidden" }}>
+            <Animated.View
+              style={{ height: benefitsHeight, overflow: "hidden" }}
+            >
               {/* ✅ Hidden measurer */}
               <View
                 pointerEvents="none"
                 style={{ opacity: 0, position: "absolute", left: 0, right: 0 }}
                 onLayout={(e) => {
                   const h = e.nativeEvent.layout.height;
-                  if (h > 0 && Math.abs(h - qualContentH) > 2) setQualContentH(h);
+                  if (h > 0 && Math.abs(h - benefitsContentH) > 2)
+                    setBenefitsContentH(h);
                 }}
               >
                 <View style={{ marginTop: 14 }}>
@@ -1048,10 +2030,16 @@ useFocusEffect(
                     <View style={{ width: panelW * 2, flexDirection: "row" }}>
                       <View style={{ width: panelW }}>
                         <View style={{ gap: 14 }}>
-                          {qualCol1.map((row) => (
-                            <View key={row.label} style={{ gap: 4, paddingRight: QUAL_RIGHT_GUTTER }}>
-                              <Text style={s.qualLabel}>{row.label}</Text>
-                              <QualValue value={row.value} textStyle={s.qualValue} />
+                          {benefitsCol1.map((row) => (
+                            <View
+                              key={row.label}
+                              style={{ gap: 4, paddingRight: benefits_RIGHT_GUTTER }}
+                            >
+                              <Text style={s.benefitsLabel}>{row.label}</Text>
+                              <BenefitsValue
+                                value={row.value}
+                                textStyle={s.BenefitsValue}
+                              />
                             </View>
                           ))}
                         </View>
@@ -1059,10 +2047,16 @@ useFocusEffect(
 
                       <View style={{ width: panelW }}>
                         <View style={{ gap: 14 }}>
-                          {qualCol2.map((row) => (
-                            <View key={row.label} style={{ gap: 4, paddingRight: QUAL_RIGHT_GUTTER }}>
-                              <Text style={s.qualLabel}>{row.label}</Text>
-                              <QualValue value={row.value} textStyle={s.qualValue} />
+                          {benefitsCol2.map((row) => (
+                            <View
+                              key={row.label}
+                              style={{ gap: 4, paddingRight: benefits_RIGHT_GUTTER }}
+                            >
+                              <Text style={s.benefitsLabel}>{row.label}</Text>
+                              <BenefitsValue
+                                value={row.value}
+                                textStyle={s.BenefitsValue}
+                              />
                             </View>
                           ))}
                         </View>
@@ -1070,12 +2064,18 @@ useFocusEffect(
                     </View>
                   </View>
 
-                  <View style={{ marginTop: 14, flexDirection: "row", justifyContent: "center" }}>
+                  <View
+                    style={{
+                      marginTop: 14,
+                      flexDirection: "row",
+                      justifyContent: "center",
+                    }}
+                  >
                     {[0, 1].map((idx) => {
-                      const active = qualPage === idx;
+                      const active = benefitsPage === idx;
                       return (
                         <View
-                          key={`qual-dot-measure-${idx}`}
+                          key={`benefits-dot-measure-${idx}`}
                           style={{
                             width: 5,
                             height: 5,
@@ -1092,10 +2092,18 @@ useFocusEffect(
               </View>
 
               {/* Visible animated content */}
-              {qualOpen ? (
-                <Animated.View style={{ opacity: qualOpacity, transform: [{ translateY: qualTranslateY }] }}>
+              {benefitsOpen ? (
+                <Animated.View
+                  style={{
+                    opacity: benefitsOpacity,
+                    transform: [{ translateY: benefitsTranslateY }],
+                  }}
+                >
                   <View style={{ marginTop: 14 }}>
-                    <View style={{ overflow: "hidden" }} {...qualSwipeResponder.panHandlers}>
+                    <View
+                      style={{ overflow: "hidden" }}
+                      {...benefitsSwipeResponder.panHandlers}
+                    >
                       <Animated.View
                         style={{
                           width: panelW * 2,
@@ -1105,10 +2113,16 @@ useFocusEffect(
                       >
                         <View style={{ width: panelW }}>
                           <View style={{ gap: 14 }}>
-                            {qualCol1.map((row) => (
-                              <View key={row.label} style={{ gap: 4, paddingRight: QUAL_RIGHT_GUTTER }}>
-                                <Text style={s.qualLabel}>{row.label}</Text>
-                                <QualValue value={row.value} textStyle={s.qualValue} />
+                            {benefitsCol1.map((row) => (
+                              <View
+                                key={row.label}
+                                style={{ gap: 4, paddingRight: benefits_RIGHT_GUTTER }}
+                              >
+                                <Text style={s.benefitsLabel}>{row.label}</Text>
+                                <BenefitsValue
+                                  value={row.value}
+                                  textStyle={s.BenefitsValue}
+                                />
                               </View>
                             ))}
                           </View>
@@ -1116,10 +2130,16 @@ useFocusEffect(
 
                         <View style={{ width: panelW }}>
                           <View style={{ gap: 14 }}>
-                            {qualCol2.map((row) => (
-                              <View key={row.label} style={{ gap: 4, paddingRight: QUAL_RIGHT_GUTTER }}>
-                                <Text style={s.qualLabel}>{row.label}</Text>
-                                <QualValue value={row.value} textStyle={s.qualValue} />
+                            {benefitsCol2.map((row) => (
+                              <View
+                                key={row.label}
+                                style={{ gap: 4, paddingRight: benefits_RIGHT_GUTTER }}
+                              >
+                                <Text style={s.benefitsLabel}>{row.label}</Text>
+                                <BenefitsValue
+                                  value={row.value}
+                                  textStyle={s.BenefitsValue}
+                                />
                               </View>
                             ))}
                           </View>
@@ -1128,26 +2148,32 @@ useFocusEffect(
 
                       {/* Page toggle button */}
                       <Pressable
-                        onPress={toggleQualPage}
+                        onPress={togglebenefitsPage}
                         hitSlop={10}
                         style={{
                           position: "absolute",
                           right: 0,
                           top: 0,
                           bottom: 0,
-                          width: QUAL_PAGE_BUTTON_W,
+                          width: benefits_PAGE_BUTTON_W,
                           alignItems: "center",
                           justifyContent: "center",
                         }}
                       />
                     </View>
 
-                    <View style={{ marginTop: 14, flexDirection: "row", justifyContent: "center" }}>
+                    <View
+                      style={{
+                        marginTop: 14,
+                        flexDirection: "row",
+                        justifyContent: "center",
+                      }}
+                    >
                       {[0, 1].map((idx) => {
-                        const active = qualPage === idx;
+                        const active = benefitsPage === idx;
                         return (
                           <View
-                            key={`qual-dot-${idx}`}
+                            key={`benefits-dot-${idx}`}
                             style={{
                               width: 5,
                               height: 5,
@@ -1164,26 +2190,453 @@ useFocusEffect(
                 </Animated.View>
               ) : null}
             </Animated.View>
-          </View>
+          </View>{" "}
+          {/*end benefits return block*/}
 
           <View style={{ height: 1, backgroundColor: BORDER }} />
 
-          {/* Block D */}
-          <View style={{ backgroundColor: WHITE, paddingVertical: BLOCK_PAD, paddingLeft: BLOCK_PAD }}>
+          {/* Block company location START */}
+          <View style={{ backgroundColor: BG, padding: BLOCK_PAD }}>
+            <Pressable
+              onPress={togglecompany}
+              hitSlop={10}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingVertical: 2,
+              }}
+            >
+              <Text style={s.companyHeader}>COMPANY LOCATION</Text>
+
+              <Animated.View
+                style={{
+                  transform: [{ rotate: companyChevronRotate }],
+                  marginRight: 6,
+                }}
+              >
+                <Feather name="chevron-down" size={24} color={HINT} />
+              </Animated.View>
+            </Pressable>
+
+            {/* ✅ Premium animated reveal container */}
+            <Animated.View
+              style={{ height: companyHeight, overflow: "hidden" }}
+            >
+              {/* ✅ Hidden measurer */}
+              <View
+                pointerEvents="none"
+                style={{ opacity: 0, position: "absolute", left: 0, right: 0 }}
+                onLayout={(e) => {
+                  const h = e.nativeEvent.layout.height;
+                  if (h > 0 && Math.abs(h - companyContentH) > 2)
+                    setCompanyContentH(h);
+                }}
+              >
+                <View style={{ marginTop: 14 }}>
+                  <View style={{ overflow: "hidden" }}>
+                    <View style={{ width: panelW * 2, flexDirection: "row" }}>
+                      <View style={{ width: panelW }}>
+                        <View style={{ gap: 14 }}>
+                          {companyCol1.map((row) => (
+                            <View
+                              key={row.label}
+                              style={{ gap: 4, paddingRight: company_RIGHT_GUTTER }}
+                            >
+                              <Text style={s.companyLabel}>{row.label}</Text>
+                              <BenefitsValue
+                                value={row.value}
+                                textStyle={s.CompanyValue}
+                              />
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+
+                      <View style={{ width: panelW }}>
+                        <View style={{ gap: 14 }}>
+                          {companyCol2.map((row) => (
+                            <View
+                              key={row.label}
+                              style={{ gap: 4, paddingRight: company_RIGHT_GUTTER }}
+                            >
+                              <Text style={s.companyLabel}>{row.label}</Text>
+                              <CompanyValue
+                                value={row.value}
+                                textStyle={s.CompanyValue}
+                              />
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View
+                    style={{
+                      marginTop: 14,
+                      flexDirection: "row",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {[0, 1].map((idx) => {
+                      const active = companyPage === idx;
+                      return (
+                        <View
+                          key={`benefits-dot-measure-${idx}`}
+                          style={{
+                            width: 5,
+                            height: 5,
+                            borderRadius: 999,
+                            marginHorizontal: 3.5,
+                            backgroundColor: active ? "#202020" : HINT,
+                            opacity: active ? 1 : 0.95,
+                          }}
+                        />
+                      );
+                    })}
+                  </View>
+                </View>
+              </View>
+
+              {/* Visible animated content */}
+              {companyOpen ? (
+                <Animated.View
+                  style={{
+                    opacity: companyOpacity,
+                    transform: [{ translateY: companyTranslateY }],
+                  }}
+                >
+                  <View style={{ marginTop: 14 }}>
+                    <View
+                      style={{ overflow: "hidden" }}
+                      {...companySwipeResponder.panHandlers}
+                    >
+                      <Animated.View
+                        style={{
+                          width: panelW * 2,
+                          flexDirection: "row",
+                          transform: [{ translateX: pageTranslateX }],
+                        }}
+                      >
+                        <View style={{ width: panelW }}>
+                          <View style={{ gap: 14 }}>
+                            {companyCol1.map((row) => (
+                              <View
+                                key={row.label}
+                                style={{ gap: 4, paddingRight: company_RIGHT_GUTTER }}
+                              >
+                                <Text style={s.companyLabel}>{row.label}</Text>
+                                <BenefitsValue
+                                  value={row.value}
+                                  textStyle={s.CompanyValue}
+                                />
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+
+                        <View style={{ width: panelW }}>
+                          <View style={{ gap: 14 }}>
+                            {companyCol2.map((row) => (
+                              <View
+                                key={row.label}
+                                style={{ gap: 4, paddingRight: company_RIGHT_GUTTER }}
+                              >
+                                <Text style={s.companyLabel}>{row.label}</Text>
+                                <BenefitsValue
+                                  value={row.value}
+                                  textStyle={s.CompanyValue}
+                                />
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      </Animated.View>
+
+                      {/* Page toggle button */}
+                      <Pressable
+                        onPress={togglecompanyPage}
+                        hitSlop={10}
+                        style={{
+                          position: "absolute",
+                          right: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: company_PAGE_BUTTON_W,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      />
+                    </View>
+
+                    <View
+                      style={{
+                        marginTop: 14,
+                        flexDirection: "row",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {[0, 1].map((idx) => {
+                        const active = companyPage === idx;
+                        return (
+                          <View
+                            key={`benefits-dot-${idx}`}
+                            style={{
+                              width: 5,
+                              height: 5,
+                              borderRadius: 999,
+                              marginHorizontal: 3.5,
+                              backgroundColor: active ? "#202020" : HINT,
+                              opacity: active ? 1 : 0.95,
+                            }}
+                          />
+                        );
+                      })}
+                    </View>
+                  </View>
+                </Animated.View>
+              ) : null}
+            </Animated.View>
+          </View>{" "}
+          {/* end block for company location */}
+
+          <View style={{ height: 1, backgroundColor: BORDER }} />
+
+          {/* Block employees start */}
+          <View style={{ backgroundColor: BG, padding: BLOCK_PAD }}>
+            <Pressable
+              onPress={toggleemployees}
+              hitSlop={10}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingVertical: 2,
+              }}
+            >
+              <Text style={s.employeeHeader}>
+                CURRENT EMPLOYEES
+              </Text>
+
+              <Animated.View
+                style={{
+                  transform: [{ rotate: employeeChevronRotate }],
+                  marginRight: 6,
+                }}
+              >
+                <Feather name="chevron-down" size={24} color={HINT} />
+              </Animated.View>
+            </Pressable>
+
+            {/* ✅ Premium animated reveal container */}
+            <Animated.View
+              style={{ height: employeeHeight, overflow: "hidden" }}
+            >
+              {/* ✅ Hidden measurer */}
+              <View
+                pointerEvents="none"
+                style={{ opacity: 0, position: "absolute", left: 0, right: 0 }}
+                onLayout={(e) => {
+                  const h = e.nativeEvent.layout.height;
+                  if (h > 0 && Math.abs(h - employeeContentH) > 2)
+                    setemployeeContentH(h);
+                }}
+              >
+                <View style={{ marginTop: 14 }}>
+                  <View style={{ overflow: "hidden" }}>
+                    <View style={{ width: panelW * 2, flexDirection: "row" }}>
+                      <View style={{ width: panelW }}>
+                        <View style={{ gap: 14 }}>
+                          {employeeCol1.map((row) => (
+                            <View
+                              key={row.label}
+                              style={{ gap: 4, paddingRight: employee_RIGHT_GUTTER }}
+                            >
+                              <Text style={s.employeeLabel}>{row.label}</Text>
+                              <EmployeeValue
+                                value={row.value}
+                                textStyle={s.EmployeeValue}
+                              />
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+
+                      <View style={{ width: panelW }}>
+                        <View style={{ gap: 14 }}>
+                          {employeeCol2.map((row) => (
+                            <View
+                              key={row.label}
+                              style={{ gap: 4, paddingRight: employee_RIGHT_GUTTER }}
+                            >
+                              <Text style={s.employeeLabel}>{row.label}</Text>
+                              <EmployeeValue
+                                value={row.value}
+                                textStyle={s.EmployeeValue}
+                              />
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View
+                    style={{
+                      marginTop: 14,
+                      flexDirection: "row",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {[0, 1].map((idx) => {
+                      const active = employeePage === idx;
+                      return (
+                        <View
+                          key={`benefits-dot-measure-${idx}`}
+                          style={{
+                            width: 5,
+                            height: 5,
+                            borderRadius: 999,
+                            marginHorizontal: 3.5,
+                            backgroundColor: active ? "#202020" : HINT,
+                            opacity: active ? 1 : 0.95,
+                          }}
+                        />
+                      );
+                    })}
+                  </View>
+                </View>
+              </View>
+
+              {/* Visible animated content */}
+              {employeeOpen ? (
+                <Animated.View
+                  style={{
+                    opacity: employeeOpacity,
+                    transform: [{ translateY: employeeTranslateY }],
+                  }}
+                >
+                  <View style={{ marginTop: 14 }}>
+                    <View
+                      style={{ overflow: "hidden" }}
+                      {...employeeSwipeResponder.panHandlers}
+                    >
+                      <Animated.View
+                        style={{
+                          width: panelW * 2,
+                          flexDirection: "row",
+                          transform: [{ translateX: pageTranslateX }],
+                        }}
+                      >
+                        <View style={{ width: panelW }}>
+                          <View style={{ gap: 14 }}>
+                            {employeeCol1.map((row) => (
+                              <View
+                                key={row.label}
+                                style={{ gap: 4, paddingRight: employee_RIGHT_GUTTER }}
+                              >
+                                <Text style={s.employeeLabel}>{row.label}</Text>
+                                <EmployeeValue
+                                  value={row.value}
+                                  textStyle={s.EmployeeValue}
+                                />
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+
+                        <View style={{ width: panelW }}>
+                          <View style={{ gap: 14 }}>
+                            {employeeCol2.map((row) => (
+                              <View
+                                key={row.label}
+                                style={{ gap: 4, paddingRight: employee_RIGHT_GUTTER }}
+                              >
+                                <Text style={s.employeeLabel}>{row.label}</Text>
+                                <EmployeeValue
+                                  value={row.value}
+                                  textStyle={s.EmployeeValue}
+                                />
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      </Animated.View>
+
+                      {/* Page toggle button */}
+                      <Pressable
+                        onPress={toggleemployeePage}
+                        hitSlop={10}
+                        style={{
+                          position: "absolute",
+                          right: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: employee_PAGE_BUTTON_W,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      />
+                    </View>
+
+                    <View
+                      style={{
+                        marginTop: 14,
+                        flexDirection: "row",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {[0, 1].map((idx) => {
+                        const active = employeePage === idx;
+                        return (
+                          <View
+                            key={`benefits-dot-${idx}`}
+                            style={{
+                              width: 5,
+                              height: 5,
+                              borderRadius: 999,
+                              marginHorizontal: 3.5,
+                              backgroundColor: active ? "#202020" : HINT,
+                              opacity: active ? 1 : 0.95,
+                            }}
+                          />
+                        );
+                      })}
+                    </View>
+                  </View>
+                </Animated.View>
+              ) : null}
+            </Animated.View>
+          </View>{" "}
+          {/*end employee return block*/}
+
+          {/* Block D VIDEO BLOCK - i want this to be a grid like/scroll view look so right now i will hold this structure*/}
+          <View
+            style={{
+              backgroundColor: WHITE,
+              paddingVertical: BLOCK_PAD,
+              paddingLeft: BLOCK_PAD,
+            }}
+          >
             <View style={{ paddingRight: BLOCK_PAD, paddingBottom: 16 }}>
-              <Text style={s.qualHeader}>QUESTIONS</Text>
+              <Text style={s.benefitsHeader}>VIDEOS</Text>
             </View>
 
             <FlatList
               data={videos}
-              keyExtractor={(item: any) => String(item.id ?? `${item.slot ?? "x"}_${item.videoUri ?? ""}`)}
+              keyExtractor={(item: any) =>
+                String(item.id ?? `${item.slot ?? "x"}_${item.videoUri ?? ""}`)
+              }
               horizontal
               showsHorizontalScrollIndicator={false}
               snapToInterval={SNAP}
               decelerationRate="fast"
               disableIntervalMomentum
               contentContainerStyle={{ paddingRight: BLOCK_PAD }}
-              ItemSeparatorComponent={() => <View style={{ width: CARD_GAP }} />}
+              ItemSeparatorComponent={() => (
+                <View style={{ width: CARD_GAP }} />
+              )}
               renderItem={({ item }: { item: any }) => {
                 const uri = String(item.videoUri ?? "").trim();
                 const thumb = String(item.imageUri ?? "").trim();
@@ -1201,46 +2654,286 @@ useFocusEffect(
                       overflow: "hidden",
                     }}
                   >
-                    <View style={{ width: "100%", height: Math.round(CARD_W * 0.78), backgroundColor: "#EDEDED" }}>
-                      {!!thumb ? <Image source={{ uri: thumb }} style={{ width: "100%", height: "100%" }} /> : null}
+                    <View
+                      style={{
+                        width: "100%",
+                        height: Math.round(CARD_W * 0.78),
+                        backgroundColor: "#EDEDED",
+                      }}
+                    >
+                      {!!thumb ? (
+                        <Image
+                          source={{ uri: thumb }}
+                          style={{ width: "100%", height: "100%" }}
+                        />
+                      ) : null}
                     </View>
 
                     <View style={{ padding: 12 }}>
-                      <Text style={s.videoCaption}>
-                        {caption}
-                      </Text>
+                      <Text style={s.videoCaption}>{caption}</Text>
                     </View>
                   </Pressable>
                 );
               }}
             />
           </View>
-
           <View style={{ height: 1, backgroundColor: BORDER }} />
 
-          {/* Block E */}
+          {/* =========== Block E - OPEN ROLES ============= */}
+          {/* Block roles start */}
           <View style={{ backgroundColor: BG, padding: BLOCK_PAD }}>
-            <Text style={s.qualHeader}>CONTACT</Text>
+            <Pressable
+              onPress={toggleroless}
+              hitSlop={10}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingVertical: 2,
+              }}
+            >
+              <Text style={s.rolesHeader}>
+                OPEN ROLES
+              </Text>
+
+              <Animated.View
+                style={{
+                  transform: [{ rotate: rolesChevronRotate }],
+                  marginRight: 6,
+                }}
+              >
+                <Feather name="chevron-down" size={24} color={HINT} />
+              </Animated.View>
+            </Pressable>
+
+            {/* ✅ Premium animated reveal container */}
+            <Animated.View
+              style={{ height: rolesHeight, overflow: "hidden" }}
+            >
+              {/* ✅ Hidden measurer */}
+              <View
+                pointerEvents="none"
+                style={{ opacity: 0, position: "absolute", left: 0, right: 0 }}
+                onLayout={(e) => {
+                  const h = e.nativeEvent.layout.height;
+                  if (h > 0 && Math.abs(h - rolesContentH) > 2)
+                    setrolesContentH(h);
+                }}
+              >
+                <View style={{ marginTop: 14 }}>
+                  <View style={{ overflow: "hidden" }}>
+                    <View style={{ width: panelW * 2, flexDirection: "row" }}>
+                      <View style={{ width: panelW }}>
+                        <View style={{ gap: 14 }}>
+                          {rolesCol1.map((row) => (
+                            <View
+                              key={row.label}
+                              style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
+                            >
+                              <Text style={s.rolesLabel}>{row.label}</Text>
+                              <RolesValue
+                                value={row.value}
+                                textStyle={s.RolesValue}
+                              />
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+
+                      <View style={{ width: panelW }}>
+                        <View style={{ gap: 14 }}>
+                          {rolesCol2.map((row) => (
+                            <View
+                              key={row.label}
+                              style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
+                            >
+                              <Text style={s.rolesLabel}>{row.label}</Text>
+                              <RolesValue
+                                value={row.value}
+                                textStyle={s.RolesValue}
+                              />
+                            </View>
+                          ))}
+                        </View>
+                      </View>
+                    </View>
+                  </View>
+
+                  <View
+                    style={{
+                      marginTop: 14,
+                      flexDirection: "row",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {[0, 1].map((idx) => {
+                      const active = rolesPage === idx;
+                      return (
+                        <View
+                          key={`roles-dot-measure-${idx}`}
+                          style={{
+                            width: 5,
+                            height: 5,
+                            borderRadius: 999,
+                            marginHorizontal: 3.5,
+                            backgroundColor: active ? "#202020" : HINT,
+                            opacity: active ? 1 : 0.95,
+                          }}
+                        />
+                      );
+                    })}
+                  </View>
+                </View>
+              </View>
+
+              {/* Visible animated content */}
+              {rolesOpen ? (
+                <Animated.View
+                  style={{
+                    opacity: rolesOpacity,
+                    transform: [{ translateY: rolesTranslateY }],
+                  }}
+                >
+                  <View style={{ marginTop: 14 }}>
+                    <View
+                      style={{ overflow: "hidden" }}
+                      {...rolesSwipeResponder.panHandlers}
+                    >
+                      <Animated.View
+                        style={{
+                          width: panelW * 2,
+                          flexDirection: "row",
+                          transform: [{ translateX: pageTranslateX }],
+                        }}
+                      >
+                        <View style={{ width: panelW }}>
+                          <View style={{ gap: 14 }}>
+                            {rolesCol1.map((row) => (
+                              <View
+                                key={row.label}
+                                style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
+                              >
+                                <Text style={s.rolesLabel}>{row.label}</Text>
+                                <RolesValue
+                                  value={row.value}
+                                  textStyle={s.RolesValue}
+                                />
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+
+                        <View style={{ width: panelW }}>
+                          <View style={{ gap: 14 }}>
+                            {rolesCol2.map((row) => (
+                              <View
+                                key={row.label}
+                                style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
+                              >
+                                <Text style={s.rolesLabel}>{row.label}</Text>
+                                <RolesValue
+                                  value={row.value}
+                                  textStyle={s.RolesValue}
+                                />
+                              </View>
+                            ))}
+                          </View>
+                        </View>
+                      </Animated.View>
+
+                      {/* Page toggle button */}
+                      <Pressable
+                        onPress={togglerolesPage}
+                        hitSlop={10}
+                        style={{
+                          position: "absolute",
+                          right: 0,
+                          top: 0,
+                          bottom: 0,
+                          width: roles_PAGE_BUTTON_W,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      />
+                    </View>
+
+                    <View
+                      style={{
+                        marginTop: 14,
+                        flexDirection: "row",
+                        justifyContent: "center",
+                      }}
+                    >
+                      {[0, 1].map((idx) => {
+                        const active = rolesPage === idx;
+                        return (
+                          <View
+                            key={`benefits-dot-${idx}`}
+                            style={{
+                              width: 5,
+                              height: 5,
+                              borderRadius: 999,
+                              marginHorizontal: 3.5,
+                              backgroundColor: active ? "#202020" : HINT,
+                              opacity: active ? 1 : 0.95,
+                            }}
+                          />
+                        );
+                      })}
+                    </View>
+                  </View>
+                </Animated.View>
+              ) : null}
+            </Animated.View>
+          </View>{" "}
+          {/*end roles return block*/}
+
+          {/* =========== Block F - contact us ============= */}
+          <View style={{ backgroundColor: BG, padding: BLOCK_PAD }}>
+            <Text style={s.benefitsHeader}>CONTACT US</Text>
 
             <View style={{ marginTop: 14, gap: 12 }}>
               <View style={{ gap: 4 }}>
                 <Text style={s.contactLabel}>Email</Text>
-                <Pressable onPress={copyEmail} disabled={!contactEmail} hitSlop={8}>
+                <Pressable
+                  onPress={copyEmail}
+                  disabled={!contactEmail}
+                  hitSlop={8}
+                >
                   <Text style={s.contactValue}>{contactEmail || "—"}</Text>
                 </Pressable>
               </View>
 
               <View style={{ gap: 4 }}>
                 <Text style={s.contactLabel}>Phone</Text>
-                <Pressable onPress={copyPhone} disabled={!contactPhone} hitSlop={8}>
+                <Pressable
+                  onPress={copyPhone}
+                  disabled={!contactPhone}
+                  hitSlop={8}
+                >
                   <Text style={s.contactValue}>{contactPhone || "—"}</Text>
                 </Pressable>
+              </View>
+
+               <View style={{ gap: 4 }}>
+                <Text style={s.contactLabel}>Website</Text>
+                {/*<Pressable commenting this out bc we don't yet know if outside URL's are allowed to open from the app
+                  onPress={copyPhone}
+                  disabled={!contactPhone}
+                  hitSlop={8}
+                >
+                  <Text style={s.contactValue}>{contactPhone || "—"}</Text>
+                </Pressable>*/}
               </View>
 
               {showUrl1 ? (
                 <View style={{ gap: 4 }}>
                   <Text style={s.contactLabel}>{contactUrl1Label}</Text>
-                  <Pressable onPress={() => copyUrl(contactUrl1)} disabled={!contactUrl1} hitSlop={8}>
+                  <Pressable
+                    onPress={() => copyUrl(contactUrl1)}
+                    disabled={!contactUrl1}
+                    hitSlop={8}
+                  >
                     <Text style={s.contactValue}>{contactUrl1 || "—"}</Text>
                   </Pressable>
                 </View>
@@ -1249,14 +2942,17 @@ useFocusEffect(
               {showUrl2 ? (
                 <View style={{ gap: 4 }}>
                   <Text style={s.contactLabel}>{contactUrl2Label}</Text>
-                  <Pressable onPress={() => copyUrl(contactUrl2)} disabled={!contactUrl2} hitSlop={8}>
+                  <Pressable
+                    onPress={() => copyUrl(contactUrl2)}
+                    disabled={!contactUrl2}
+                    hitSlop={8}
+                  >
                     <Text style={s.contactValue}>{contactUrl2 || "—"}</Text>
                   </Pressable>
                 </View>
               ) : null}
             </View>
           </View>
-
         </Animated.ScrollView>
       </SafeAreaView>
     </>

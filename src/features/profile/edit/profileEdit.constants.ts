@@ -1,4 +1,10 @@
 // src/features/profile/edit/profileEdit.constants.ts
+
+/*
+these are features that are company specifc
+*/
+
+
 export const INDUSTRIES: { title: string; options: string[] }[] = [
   { title: "Technology", options: ["Software & IT", "Hardware & Electronics", "Telecom", "Internet & Digital Services"] },
   { title: "Healthcare & Life Sciences", options: ["Healthcare Services", "Pharmaceuticals & Biotechnology", "Medical Devices", "Health Insurance"] },
@@ -18,26 +24,32 @@ export const INDUSTRIES: { title: string; options: string[] }[] = [
   { title: "Other / Emerging Industries", options: ["Startups", "Climate Tech", "Space & Advanced Tech", "Other"] },
 ];
 
-export const INDUSTRY_EXPERIENCE_OPTIONS = ["Up to 1", "1-3", "3-5", "5-10", "10+"];
+//answers the question of how old the company is and how long it has been running for
+export const BUSINESS_AGE_OPTIONS = ["Up to 1", "1-3", "3-5", "5-10", "10+"];
 
 export const WORK_TYPE_OPTIONS = ["Part-Time", "Full Time", "Contract", "All", "Currently not looking"];
 
 export const WORK_PREFERENCE_OPTIONS = ["Remote", "Willing to relocate", "Both"];
 
-export const RESIDENCY_STATUS_OPTIONS = [
-  "Lawful Permanent Resident (Green Card holder)",
-  "Authorized to work in the U.S. (no sponsorship required)",
-  "Authorized to work in the U.S. (sponsorship required now or in the future)",
-  "Not authorized to work in the U.S.",
-  "Prefer not to disclose",
-];
+//these will come down in the dropdown of the core values options that can be attached to company profile
+export const CORE_VALUES = ["Integrity", "Innovation", "Teamwork", 
+  "Customer-First", "Excellence", "Diversity and Inclusion","Collaboration", "Adaptability"];
 
-export const DEGREE_OPTIONS = [
-  "Associates",
-  "Bachelors",
-  "Masters",
-  "PHD",
-  "Professional Doctorate (MD/JD/etc.)",
-  "Certificate",
-  "Other",
-];
+//setting a constant here should only be able to have 5
+export const MAX_CORE_VALUES = 5;
+
+//for the ACCOUNT SECTION
+export const ACCOUNT_PRIVACY_OPTIONS = ["Privacy", "Profile View", "Description"];
+
+export const ACCOUNT_DETAIL_OPTIONS = ["Premium", "Details", "Summary", "Subscription"];
+
+export const THEME_OPTIONS = ["Light Mode", "Dark Mode"];
+
+//make it max 500 words
+export const MISSION_STATEMENT_MAX_LENGTH = 500;
+
+//benefits summary also max 500 words
+export const BENEFITS_SUM_MAX_LENGTH = 500;
+
+//management style summary/PTO
+export const MANAGE_STYLE_MAX_LENGTH = 500;
