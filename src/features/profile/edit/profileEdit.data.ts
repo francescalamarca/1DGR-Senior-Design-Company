@@ -13,7 +13,7 @@ export function mapDraftToApiPayload(draft: DraftProfile) {
 
   //THESE KEYS BEFORE THE : HIT THE DATABASE, LETS MAKE SURE COLUMNS MATCH ON BOTH SIDES
   return {
-    company_name: draft.legalFirstName ?? "",
+    company_name: draft.companyName ?? "",
     industry: draft.industry ?? "",
     business_age: draft.businessAge ?? "",
     work_type: draft.workType ?? "",

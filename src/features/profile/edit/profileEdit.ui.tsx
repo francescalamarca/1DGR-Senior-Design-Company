@@ -15,6 +15,7 @@ import {
 
 import { styles, UI } from "./profileEdit.styles";
 import { LLightText, BtnText } from "./profileEdit.components";
+import { MAX_CORE_VALUES, CORE_VALUES } from "./profileEdit.constants";
 
 // ---------- Types the screen expects ----------
 export type IndustryRow =
@@ -197,53 +198,59 @@ export function HookSection(props: { bio: string; onChangeBio: (v: string) => vo
   );
 }
 
-export function CoreValuesSection(props: { valuesText: string; onChangeValuesText: (v: string) => void }) {
-  const { valuesText, onChangeValuesText } = props;
+//this whole function changed to work for the core values being an array of size max 5
+export function CoreValuesSection(props: { 
+  coreValues: string[]; 
+  onPressAdd: () => void;
+  onRemove: (value: string) => void;
+}) {
+  const { coreValues, onPressAdd, onRemove } = props;
 
   return (
     <>
-      <LLightText style={[styles.sectionTitle, { marginTop: 14 }]}>Company Values</LLightText>
-      <LLightText style={[styles.sectionHelper, { marginTop: 4 }]}>Add one value per line. Optional format: Label: Value.</LLightText>
+      <LLightText style={[styles.sectionTitle, { marginTop: 14 }]}>Company Core Values</LLightText>
+      <LLightText style={[styles.sectionHelper, { marginTop: 4 }]}>Choose up to 5 core values.</LLightText>
 
-      <View style={styles.fieldStack}>
-        <TextInput
-          value={valuesText}
-          onChangeText={onChangeValuesText}
-          placeholder={"Worker happiness and support."}
-          placeholderTextColor={UI.hint}
-          style={styles.inputMultiline}
-          multiline
+      <GroupCard>
+        <PickerRow
+          title="Add Core Value"
+          subtitle={coreValues.length > 0 ? `${coreValues.length}/5 selected` : "Select"}
+          onPress={onPressAdd}
+          showDivider={coreValues.length > 0}
         />
-      </View>
+        {coreValues.map((value) => (
+          <Pressable key={value} onPress={() => onRemove(value)} style={[styles.rowPressable, { paddingVertical: 14 }]}>
+            <LLightText style={styles.rowTitle}>{value}</LLightText>
+            <LLightText style={[styles.rowTitle, { color: UI.danger }]}>Remove</LLightText>
+          </Pressable>
+        ))}
+      </GroupCard>
     </>
   );
 }
 
-export function IndustryTypeSection(props: { //changed this to type to categorize the company based on industry
-  workTypeSubtitle: string; //for a company this will be what kind of work is being done (tech, hands-on, construction,etc)
+export function IndustryTypeSection(props: {
+  workTypeSubtitle: string;
   companyAgeSubtitle: string;
   industrySubtitle: string;
-  citySubtitle: string;
-  hasCity: boolean;
+  locations: string[];
   onPressWorkType: () => void;
   onPressCompanyAge: () => void;
   onPressIndustry: () => void;
-  onPressCity: () => void;
-  onClearCity: () => void;
+  onPressAddLocation: () => void;
+  onRemoveLocation: (label: string) => void;
 }) {
   const {
     workTypeSubtitle,
     companyAgeSubtitle,
     industrySubtitle,
-    citySubtitle,
-    hasCity,
+    locations,
     onPressWorkType,
     onPressCompanyAge,
     onPressIndustry,
-    onPressCity,
-    onClearCity,
+    onPressAddLocation,
+    onRemoveLocation,
   } = props;
-
   return (
     <>
       <LLightText style={styles.sectionTitle}>Industry</LLightText>
@@ -258,12 +265,22 @@ export function IndustryTypeSection(props: { //changed this to type to categoriz
           showDivider
         />
         <PickerRow title="Industry Type" subtitle={industrySubtitle} onPress={onPressIndustry} showDivider />
-        <PickerRow title="City" subtitle={citySubtitle} onPress={onPressCity} showDivider={hasCity} />
-        {hasCity ? (
-          <Pressable onPress={onClearCity} style={[styles.rowPressable, { paddingVertical: 14 }]}>
-            <LLightText style={[styles.rowTitle, { color: UI.danger }]}>Clear City</LLightText>
+        <PickerRow 
+          title="Add Location" 
+          subtitle={locations.length > 0 ? `${locations.length} selected` : "Select"}
+          onPress={onPressAddLocation} 
+          showDivider={locations.length > 0} //i got this code from claud, i was unsure how to display the array in this function bc location is an array not single value
+        />
+        {locations.map((loc) => (
+          <Pressable 
+            key={loc} 
+            onPress={() => onRemoveLocation(loc)} 
+            style={[styles.rowPressable, { paddingVertical: 14 }]}
+          >
+            <LLightText style={styles.rowTitle}>{loc}</LLightText>
+            <LLightText style={[styles.rowTitle, { color: UI.danger }]}>Remove</LLightText>
           </Pressable>
-        ) : null}
+        ))}
       </GroupCard>
     </>
   );
@@ -627,19 +644,17 @@ export function IndustryPickerModal(props: {
 export function CityPickerModal(props: {
   visible: boolean;
   title?: string;
-
   citySearch: string;
   setCitySearch: (v: string) => void;
-
   data: CityRow[];
   selectedLabel: string;
+  selectedLabels?: string[];  // add this as optional so that user side is not messed up
   onSelect: (label: string) => void;
-
   canApply: boolean;
   onClose: () => void;
   onApply: () => void;
 }) {
-  const { visible, title = "Select City", citySearch, setCitySearch, data, selectedLabel, onSelect, canApply, onClose, onApply } =
+  const { visible, title = "Select City", citySearch, setCitySearch, data, (selectedLabel), onSelect, canApply, onClose, onApply } =
     props;
 
   return (
@@ -686,7 +701,7 @@ export function CityPickerModal(props: {
               windowSize={10}
               removeClippedSubviews={Platform.OS === "android"}
               renderItem={({ item }) => {
-                const selected = item.label === selectedLabel;
+                const selected = selectedLabels.includes === (item.label);
                 return (
                   <Pressable
                     onPress={() => onSelect(item.label)}
@@ -740,6 +755,79 @@ export function CityPickerModal(props: {
             </View>
           </View>
         </KeyboardAvoidingView>
+      </View>
+    </Modal>
+  );
+}
+
+//this was added - with claud help - to choose core values when the box is pressd from a dropdown
+export function CoreValuesPickerModal(props: {
+  visible: boolean;
+  selected: string[];
+  onToggle: (value: string) => void;
+  onClose: () => void;
+}) {
+  const { visible, selected, onToggle, onClose } = props;
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <View style={{
+          backgroundColor: UI.card,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          paddingBottom: 24,
+          maxHeight: "85%",
+          marginTop: "auto",
+        }}>
+          <LLightText style={{ fontSize: 18, fontWeight: "800" }}>Core Values</LLightText>
+          <LLightText style={{ opacity: 0.6, marginTop: 4 }}>Choose up to 5.</LLightText>
+
+          <FlatList
+            data={CORE_VALUES} //from the constants file, will have to import
+            keyExtractor={(item) => item}
+            style={{ marginTop: 12, marginBottom: 12 }}
+            renderItem={({ item }) => {
+              const checked = selected.includes(item);
+              const maxReached = selected.length >= MAX_CORE_VALUES && !checked; //MAX CORE VALUES REFERRED TO FROM CONSTANTS SO CAN BE EASILY CHANGED LATER AS ONE VARIABLE ASSIGNMENT
+
+              return (
+                <Pressable
+                  onPress={() => onToggle(item)}
+                  disabled={maxReached}
+                  style={{
+                    paddingVertical: 12,
+                    paddingHorizontal: 12,
+                    borderWidth: 1,
+                    borderColor: checked ? UI.text : UI.border,
+                    borderRadius: 12,
+                    marginBottom: 8,
+                    backgroundColor: UI.card,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    opacity: maxReached ? 0.4 : 1,
+                  }}
+                >
+                  <LLightText style={{ fontSize: 14, fontWeight: checked ? "800" : "500" }}>{item}</LLightText>
+                  <LLightText style={{ opacity: 0.6 }}>{checked ? "✓" : ""}</LLightText>
+                </Pressable>
+              );
+            }}
+          />
+
+          <Pressable onPress={onClose} style={{
+            paddingVertical: 12,
+            borderWidth: 1,
+            borderColor: UI.borderStrong,
+            borderRadius: 12,
+            alignItems: "center",
+          }}>
+            <LLightText style={{ fontWeight: "800" }}>Done</LLightText>
+          </Pressable>
+        </View>
       </View>
     </Modal>
   );

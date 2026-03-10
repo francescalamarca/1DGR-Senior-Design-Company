@@ -239,12 +239,34 @@ export function useProfileEditController() {
   });
   }
 
-  function deleteLocation(city: CityRow) {
+  function removeLocation(label: string) { //this is cleaner than passing in CityRow
     setDraft((p) => ({
     ...p,
-    locations: (p.locations ?? []).filter((l) => l !== city.label),
+    locations: (p.locations ?? []).filter((l) => l !== label),
   }));
   }
+
+  //adding functionality for core values similar to add location with different list reference in the constants
+  //referencing core_values
+  function addCoreValue(value: string) {
+  setDraft((p) => {
+    const current = p.coreValues ?? [];
+    if (current.length >= 5) return p; // enforce max
+    if (current.includes(value)) return p; // prevent duplicates
+    return { ...p, coreValues: [...current, value] };
+  });
+}
+
+function removeCoreValue(value: string) {
+  setDraft((p) => ({
+    ...p,
+    core_values: (p.coreValues ?? []).filter((v) => v !== value),
+  }));
+}
+
+function openCoreValuesPicker() {
+  //function will open the core values picker dropdown
+}
 
   async function onPickAvatarImage() {
     try {
@@ -511,7 +533,10 @@ export function useProfileEditController() {
     openIndustryPicker,
     openCityPicker,
     addLocation, //added for locations
-    deleteLocation, //added for locations
+    removeLocation, //added for locations
+    addCoreValue,
+    removeCoreValue,
+    openCoreValuesPicker, //referenced in profileEdit,screen
     mediaVideoUri,
     mediaThumbUri,
     mediaCaption,
