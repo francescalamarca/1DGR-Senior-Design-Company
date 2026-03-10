@@ -83,7 +83,7 @@ export default function ProfileEditScreen() {
     setCitySearch,
     filteredCities,
     addLocation,
-    deleteLocation,
+    removeLocation,
     singlePickerVisible,
     setSinglePickerVisible,
     singlePickerTitle,
@@ -91,6 +91,9 @@ export default function ProfileEditScreen() {
     singlePickerTempValue,
     setSinglePickerTempValue,
     singlePickerOnSelect,
+    addCoreValue,
+    removeCoreValue,
+    openCoreValuesPicker,
   } = useProfileEditController();
 
   const workTypeSubtitle = React.useMemo(() => {
@@ -148,7 +151,11 @@ export default function ProfileEditScreen() {
           onChangeCompanyName={(v: string) => setDraft((p) => ({ ...p, companyName: v }))}
         />
 
-        <CoreValuesSection valuesText={valuesText} onChangeValuesText={onChangeValuesText} /> {/* this is referencing the core values made in profile edit.ui*/}
+        <CoreValuesSection
+          coreValues={draft.coreValues ?? []}
+          onPressAdd={openCoreValuesPicker}
+          onRemove={removeCoreValue}
+        /> {/* this is referencing the core values made in profile edit.ui*/}
 
         <HookSection bio={draft.bio ?? ""} onChangeBio={(v: string) => setDraft((p) => ({ ...p, bio: v }))} />
 
@@ -156,20 +163,19 @@ export default function ProfileEditScreen() {
           workTypeSubtitle={workTypeSubtitle}
           companyAgeSubtitle={draft.industryExperience?.trim() ? draft.industryExperience : "Select"}
           industrySubtitle={summarizeIndustries(draft.industryInterests ?? [])}
-          citySubtitle={draft.geographicLocation?.trim() ? draft.geographicLocation : "Select"}
-          hasCity={!!draft.geographicLocation?.trim()}
+          locations={draft.locations ?? []}
+          onPressAddLocation={openCityPicker}
+          onRemoveLocation={removeLocation}
           onPressWorkType={openWorkTypePicker}
-          onPressExperience={() =>
+          onPressCompanyAge={() =>
             openSingleSelectPicker({
-              title: "Industry Experience",
-              options: COMPANY_AGE_OPTIONS,
-              value: draft.industryExperience ?? "",
-              onSelect: (val: string) => setDraft((p) => ({ ...p, industryExperience: val })),
+              title: "Business Age",
+              options: COMPANY_AGE_OPTIONS, //in years
+              value: draft.businessAge ?? "",
+              onSelect: (val: string) => setDraft((p) => ({ ...p, businessAge: val })),
             })
           }
           onPressIndustry={openIndustryPicker}
-          onPressCity={openCityPicker}
-          onClearCity={City}
         />
 
 
@@ -208,14 +214,15 @@ export default function ProfileEditScreen() {
 
         <CityPickerModal
           visible={cityPickerVisible}
+          title="Add Location"
           citySearch={citySearch}
           setCitySearch={setCitySearch}
           data={filteredCities}
-          selectedLabel={citySelected}
-          onSelect={(label: string) => setCityTempSelected(label)}
-          canApply={!!cityTempSelected.trim()}
+          selectedLabel=""        // not relevant anymore, can pass empty string
+          onSelect={(label) => addLocation(city.label)}  // immediately adds, modal stays open
+          canApply={false}        // hide apply button
           onClose={() => setCityPickerVisible(false)}
-          onApply={applyCity}
+          onApply={() => setCityPickerVisible(false)} // just closes
         />
 
         <SinglePickerModal
