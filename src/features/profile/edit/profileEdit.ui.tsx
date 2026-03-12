@@ -641,124 +641,124 @@ export function IndustryPickerModal(props: {
   );
 }
 
-export function CityPickerModal(props: {
-  visible: boolean;
-  title?: string;
-  citySearch: string;
-  setCitySearch: (v: string) => void;
-  data: CityRow[];
-  selectedLabel: string;
-  selectedLabels?: string[];  // add this as optional so that user side is not messed up
-  onSelect: (label: string) => void;
-  canApply: boolean;
-  onClose: () => void;
-  onApply: () => void;
-}) {
-  const { visible, title = "Select City", citySearch, setCitySearch, data, (selectedLabel), onSelect, canApply, onClose, onApply } =
-    props;
+// export function CityPickerModal(props: {
+//   visible: boolean;
+//   title?: string;
+//   citySearch: string;
+//   setCitySearch: (v: string) => void;
+//   data: CityRow[];
+//   selectedLabel: string;
+//   selectedLabels?: string[];  // add this as optional so that user side is not messed up
+//   onSelect: (label: string) => void;
+//   canApply: boolean;
+//   onClose: () => void;
+//   onApply: () => void;
+// }) {
+//   const { visible, title = "Select City", citySearch, setCitySearch, data, (selectedLabel), onSelect, canApply, onClose, onApply } =
+//     props;
 
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
-        <KeyboardAvoidingView
-          style={{ flex: 1, justifyContent: "flex-end" }}
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={MODAL_KB_OFFSET_IOS}
-        >
-          <View
-            style={{
-              backgroundColor: UI.card,
-              borderTopLeftRadius: 20,
-              borderTopRightRadius: 20,
-              paddingHorizontal: 16,
-              paddingTop: 16,
-              paddingBottom: 24,
-              maxHeight: "85%",
-            }}
-          >
-            <LLightText style={{ fontSize: 18, fontWeight: "800" }}>{title}</LLightText>
+//   return (
+//     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+//       <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+//         <KeyboardAvoidingView
+//           style={{ flex: 1, justifyContent: "flex-end" }}
+//           behavior={Platform.OS === "ios" ? "padding" : "height"}
+//           keyboardVerticalOffset={MODAL_KB_OFFSET_IOS}
+//         >
+//           <View
+//             style={{
+//               backgroundColor: UI.card,
+//               borderTopLeftRadius: 20,
+//               borderTopRightRadius: 20,
+//               paddingHorizontal: 16,
+//               paddingTop: 16,
+//               paddingBottom: 24,
+//               maxHeight: "85%",
+//             }}
+//           >
+//             <LLightText style={{ fontSize: 18, fontWeight: "800" }}>{title}</LLightText>
 
-            <TextInput
-              value={citySearch}
-              onChangeText={setCitySearch}
-              placeholder='Search (e.g. "san", "austin")'
-              placeholderTextColor={UI.hint}
-              style={[styles.input, { borderRadius: 12, marginTop: 12 }]}
-              autoCorrect={false}
-              autoCapitalize="none"
-              clearButtonMode="while-editing"
-            />
+//             <TextInput
+//               value={citySearch}
+//               onChangeText={setCitySearch}
+//               placeholder='Search (e.g. "san", "austin")'
+//               placeholderTextColor={UI.hint}
+//               style={[styles.input, { borderRadius: 12, marginTop: 12 }]}
+//               autoCorrect={false}
+//               autoCapitalize="none"
+//               clearButtonMode="while-editing"
+//             />
 
-            <FlatList
-              data={data}
-              keyExtractor={(item) => item.id}
-              keyboardShouldPersistTaps="handled"
-              keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
-              contentContainerStyle={{ paddingBottom: MODAL_LIST_BOTTOM_PADDING }}
-              style={{ marginTop: 12, marginBottom: 12 }}
-              initialNumToRender={18}
-              maxToRenderPerBatch={24}
-              windowSize={10}
-              removeClippedSubviews={Platform.OS === "android"}
-              renderItem={({ item }) => {
-                const selected = selectedLabels.includes === (item.label);
-                return (
-                  <Pressable
-                    onPress={() => onSelect(item.label)}
-                    style={{
-                      paddingVertical: 12,
-                      paddingHorizontal: 12,
-                      borderWidth: 1,
-                      borderColor: selected ? UI.text : UI.border,
-                      borderRadius: 12,
-                      marginBottom: 8,
-                      backgroundColor: UI.card,
-                    }}
-                  >
-                    <LLightText style={{ fontSize: 14, fontWeight: selected ? "800" : "700" }}>{item.label}</LLightText>
-                  </Pressable>
-                );
-              }}
-              ListEmptyComponent={<LLightText style={{ paddingVertical: 16, opacity: 0.6 }}>No matches.</LLightText>}
-            />
+//             <FlatList
+//               data={data}
+//               keyExtractor={(item) => item.id}
+//               keyboardShouldPersistTaps="handled"
+//               keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+//               contentContainerStyle={{ paddingBottom: MODAL_LIST_BOTTOM_PADDING }}
+//               style={{ marginTop: 12, marginBottom: 12 }}
+//               initialNumToRender={18}
+//               maxToRenderPerBatch={24}
+//               windowSize={10}
+//               removeClippedSubviews={Platform.OS === "android"}
+//               renderItem={({ item }) => {
+//                 const selected = selectedLabels.includes === (item.label);
+//                 return (
+//                   <Pressable
+//                     onPress={() => onSelect(item.label)}
+//                     style={{
+//                       paddingVertical: 12,
+//                       paddingHorizontal: 12,
+//                       borderWidth: 1,
+//                       borderColor: selected ? UI.text : UI.border,
+//                       borderRadius: 12,
+//                       marginBottom: 8,
+//                       backgroundColor: UI.card,
+//                     }}
+//                   >
+//                     <LLightText style={{ fontSize: 14, fontWeight: selected ? "800" : "700" }}>{item.label}</LLightText>
+//                   </Pressable>
+//                 );
+//               }}
+//               ListEmptyComponent={<LLightText style={{ paddingVertical: 16, opacity: 0.6 }}>No matches.</LLightText>}
+//             />
 
-            <View style={{ flexDirection: "row", gap: 10 }}>
-              <Pressable
-                onPress={onClose}
-                style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  borderWidth: 1,
-                  borderColor: UI.borderStrong,
-                  borderRadius: 12,
-                  alignItems: "center",
-                }}
-              >
-                <LLightText style={{ fontWeight: "800" }}>Close</LLightText>
-              </Pressable>
+//             <View style={{ flexDirection: "row", gap: 10 }}>
+//               <Pressable
+//                 onPress={onClose}
+//                 style={{
+//                   flex: 1,
+//                   paddingVertical: 12,
+//                   borderWidth: 1,
+//                   borderColor: UI.borderStrong,
+//                   borderRadius: 12,
+//                   alignItems: "center",
+//                 }}
+//               >
+//                 <LLightText style={{ fontWeight: "800" }}>Close</LLightText>
+//               </Pressable>
 
-              <Pressable
-                onPress={onApply}
-                disabled={!canApply}
-                style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  borderWidth: 1,
-                  borderColor: UI.text,
-                  borderRadius: 12,
-                  alignItems: "center",
-                  opacity: canApply ? 1 : 0.4,
-                }}
-              >
-                <LLightText style={{ fontWeight: "800" }}>Apply</LLightText>
-              </Pressable>
-            </View>
-          </View>
-        </KeyboardAvoidingView>
-      </View>
-    </Modal>
-  );
-}
+//               <Pressable
+//                 onPress={onApply}
+//                 disabled={!canApply}
+//                 style={{
+//                   flex: 1,
+//                   paddingVertical: 12,
+//                   borderWidth: 1,
+//                   borderColor: UI.text,
+//                   borderRadius: 12,
+//                   alignItems: "center",
+//                   opacity: canApply ? 1 : 0.4,
+//                 }}
+//               >
+//                 <LLightText style={{ fontWeight: "800" }}>Apply</LLightText>
+//               </Pressable>
+//             </View>
+//           </View>
+//         </KeyboardAvoidingView>
+//       </View>
+//     </Modal>
+//   );
+// }
 
 //this was added - with claud help - to choose core values when the box is pressd from a dropdown
 export function CoreValuesPickerModal(props: {

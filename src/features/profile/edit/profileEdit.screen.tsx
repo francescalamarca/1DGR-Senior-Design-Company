@@ -21,7 +21,7 @@ import {
   VideoLibrarySection,
   ProfileMediaResetSection,
   IndustryPickerModal,
-  CityPickerModal,
+  //CityPickerModal,
   SinglePickerModal,
   WorkTypePickerModal,
 } from "./profileEdit.ui";
@@ -212,7 +212,7 @@ export default function ProfileEditScreen() {
           onApply={applyIndustrySelection}
         />
 
-        <CityPickerModal
+        {/* <CityPickerModal
           visible={cityPickerVisible}
           title="Add Location"
           citySearch={citySearch}
@@ -223,7 +223,7 @@ export default function ProfileEditScreen() {
           canApply={false}        // hide apply button
           onClose={() => setCityPickerVisible(false)}
           onApply={() => setCityPickerVisible(false)} // just closes
-        />
+        /> */}
 
         <SinglePickerModal
           visible={singlePickerVisible}
