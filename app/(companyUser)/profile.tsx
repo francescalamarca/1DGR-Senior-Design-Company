@@ -38,7 +38,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// ✅ MUST match EXACT keys from your useFonts(...)
+// MUST match EXACT keys from your useFonts(...)
 const FONTS = {
   LEXEND_LIGHT: "Lexend-Light",
   LEXEND_REGULAR: "Lexend-Regular",
@@ -50,11 +50,11 @@ const FONTS = {
   CRIMSON_SEMIBOLD: "CrimsonText-SemiBold",
 } as const;
 
-// ✅ Backgrounds
+// Backgrounds
 const BG = "#fbfbfb";
 const WHITE = "#FFFFFF";
 
-// ✅ Brand neutrals
+// Brand neutrals
 const TEXT = "#202020";
 const HINT = "#9bb4c0";
 const BORDER = "#d9d9d9";
@@ -96,7 +96,7 @@ function toCloudFrontUrl(urlOrKey: string): string {
   return urlOrKey;
 }
 
-/** ✅ helper: normalize "field of study" */
+/** helper: normalize "field of study" */
 function normalizeFieldOfStudy(e: any): string {
   return String(
     e?.fieldOfStudy ?? e?.field_of_study ?? e?.field_of_study_name ?? "",
@@ -164,27 +164,6 @@ function formatBusinessLocationLine(e: any): string {
   if (directLocation) return directLocation;
 
   return "";
-}
-
-/**
- * ✅ Split a raw label like:
- * "California State University-Los Angeles, Los Angeles, California, USA"
- * into:
- *   school = "California State University-Los Angeles"
- *   location = "Los Angeles, California, USA"
- */
-function splitSchoolAndLocationFromLabel(label: string): {
-  school: string;
-  location: string;
-} {
-  const raw = String(label ?? "").trim();
-  if (!raw) return { school: "", location: "" };
-  const idx = raw.indexOf(",");
-  if (idx === -1) return { school: raw, location: "" };
-  return {
-    school: raw.slice(0, idx).trim(),
-    location: raw.slice(idx + 1).trim(),
-  };
 }
 
 /** Render a benefits row's value. If it's a list (universities), add spacing between items. */
@@ -2011,11 +1990,11 @@ export default function ProfileScreen() {
               </Animated.View>
             </Pressable>
 
-            {/* ✅ Premium animated reveal container */}
+            {/* Premium animated reveal container */}
             <Animated.View
               style={{ height: benefitsHeight, overflow: "hidden" }}
             >
-              {/* ✅ Hidden measurer */}
+              {/* Hidden measurer */}
               <View
                 pointerEvents="none"
                 style={{ opacity: 0, position: "absolute", left: 0, right: 0 }}
@@ -2190,7 +2169,7 @@ export default function ProfileScreen() {
                 </Animated.View>
               ) : null}
             </Animated.View>
-          </View>{" "}
+          </View>
           {/*end benefits return block*/}
 
           <View style={{ height: 1, backgroundColor: BORDER }} />

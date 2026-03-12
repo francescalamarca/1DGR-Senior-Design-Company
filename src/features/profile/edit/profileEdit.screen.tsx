@@ -21,9 +21,10 @@ import {
   VideoLibrarySection,
   ProfileMediaResetSection,
   IndustryPickerModal,
-  //CityPickerModal,
+  CityPickerModal,
   SinglePickerModal,
   WorkTypePickerModal,
+  CoreValuesPickerModal,
 } from "./profileEdit.ui";
 
 const MODAL_KB_OFFSET_IOS = 12;
@@ -94,6 +95,8 @@ export default function ProfileEditScreen() {
     addCoreValue,
     removeCoreValue,
     openCoreValuesPicker,
+    coreValuesPickerVisible,
+    setCoreValuesPickerVisible,
   } = useProfileEditController();
 
   const workTypeSubtitle = React.useMemo(() => {
@@ -155,7 +158,14 @@ export default function ProfileEditScreen() {
           coreValues={draft.coreValues ?? []}
           onPressAdd={openCoreValuesPicker}
           onRemove={removeCoreValue}
-        /> {/* this is referencing the core values made in profile edit.ui*/}
+        />
+
+        <CoreValuesPickerModal
+          visible={coreValuesPickerVisible}
+          selected={draft.coreValues ?? []}
+          onToggle={addCoreValue}
+          onClose={() => setCoreValuesPickerVisible(false)}
+        />
 
         <HookSection bio={draft.bio ?? ""} onChangeBio={(v: string) => setDraft((p) => ({ ...p, bio: v }))} />
 
@@ -212,18 +222,19 @@ export default function ProfileEditScreen() {
           onApply={applyIndustrySelection}
         />
 
-        {/* <CityPickerModal
+        <CityPickerModal
           visible={cityPickerVisible}
           title="Add Location"
           citySearch={citySearch}
           setCitySearch={setCitySearch}
           data={filteredCities}
-          selectedLabel=""        // not relevant anymore, can pass empty string
-          onSelect={(label) => addLocation(city.label)}  // immediately adds, modal stays open
-          canApply={false}        // hide apply button
+          selectedLabel=""
+          selectedLabels={draft.locations ?? []}
+          onSelect={(label) => addLocation(label)}
+          canApply={false}
           onClose={() => setCityPickerVisible(false)}
-          onApply={() => setCityPickerVisible(false)} // just closes
-        /> */}
+          onApply={() => setCityPickerVisible(false)}
+        />
 
         <SinglePickerModal
           visible={singlePickerVisible}
