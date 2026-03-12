@@ -51,6 +51,10 @@ export function useProfileEditController() {
   const [thumbOptions, setThumbOptions] = useState<string[]>([]);
   const [addingLibraryVideo, setAddingLibraryVideo] = useState(false);
 
+  const [coreValuePicker, setCoreValuePicker] = useState(false);
+  const [coreValuesPickerVisible, setCoreValuesPickerVisible] = useState(false);
+
+
 
   const avatarPreviewUri = useMemo(() => {
     if (avatarLocalUri) return avatarLocalUri;
@@ -231,11 +235,11 @@ export function useProfileEditController() {
     setCityPickerVisible(true);
   }
 
-  function addLocation(city: CityRow) { //passing this in to get an instance of CityRow
+  function addLocation(label: string) { //passing this in to get an instance of CityRow
     setDraft((p) => {
       const current = p.locations ?? []; //takes the current city that was tapped in the setDraft, gets current array, empty if nothing in it yet
-      if (current.includes(city.label)) return p; // prevent duplicates, if already there, does not add
-      return { ...p, locations: [...current, city.label] }; //appends to existing array
+      if (current.includes(label)) return p; // prevent duplicates, if already there, does not add
+      return { ...p, locations: [...current, label] }; //appends to existing array
   });
   }
 
@@ -266,7 +270,9 @@ function removeCoreValue(value: string) {
 
 function openCoreValuesPicker() {
   //function will open the core values picker dropdown
+  setCoreValuesPickerVisible(true);
 }
+
 
   async function onPickAvatarImage() {
     try {
@@ -537,6 +543,10 @@ function openCoreValuesPicker() {
     addCoreValue,
     removeCoreValue,
     openCoreValuesPicker, //referenced in profileEdit,screen
+    coreValuesPickerVisible,
+    coreValuePicker,
+    setCoreValuePicker,
+    setCoreValuesPickerVisible,
     mediaVideoUri,
     mediaThumbUri,
     mediaCaption,

@@ -198,37 +198,6 @@ export function HookSection(props: { bio: string; onChangeBio: (v: string) => vo
   );
 }
 
-//this whole function changed to work for the core values being an array of size max 5
-export function CoreValuesSection(props: { 
-  coreValues: string[]; 
-  onPressAdd: () => void;
-  onRemove: (value: string) => void;
-}) {
-  const { coreValues, onPressAdd, onRemove } = props;
-
-  return (
-    <>
-      <LLightText style={[styles.sectionTitle, { marginTop: 14 }]}>Company Core Values</LLightText>
-      <LLightText style={[styles.sectionHelper, { marginTop: 4 }]}>Choose up to 5 core values.</LLightText>
-
-      <GroupCard>
-        <PickerRow
-          title="Add Core Value"
-          subtitle={coreValues.length > 0 ? `${coreValues.length}/5 selected` : "Select"}
-          onPress={onPressAdd}
-          showDivider={coreValues.length > 0}
-        />
-        {coreValues.map((value) => (
-          <Pressable key={value} onPress={() => onRemove(value)} style={[styles.rowPressable, { paddingVertical: 14 }]}>
-            <LLightText style={styles.rowTitle}>{value}</LLightText>
-            <LLightText style={[styles.rowTitle, { color: UI.danger }]}>Remove</LLightText>
-          </Pressable>
-        ))}
-      </GroupCard>
-    </>
-  );
-}
-
 export function IndustryTypeSection(props: {
   workTypeSubtitle: string;
   companyAgeSubtitle: string;
@@ -641,126 +610,126 @@ export function IndustryPickerModal(props: {
   );
 }
 
-// export function CityPickerModal(props: {
-//   visible: boolean;
-//   title?: string;
-//   citySearch: string;
-//   setCitySearch: (v: string) => void;
-//   data: CityRow[];
-//   selectedLabel: string;
-//   selectedLabels?: string[];  // add this as optional so that user side is not messed up
-//   onSelect: (label: string) => void;
-//   canApply: boolean;
-//   onClose: () => void;
-//   onApply: () => void;
-// }) {
-//   const { visible, title = "Select City", citySearch, setCitySearch, data, (selectedLabel), onSelect, canApply, onClose, onApply } =
-//     props;
+export function CityPickerModal(props: {
+  visible: boolean;
+  title?: string;
+  citySearch: string;
+  setCitySearch: (v: string) => void;
+  data: CityRow[];
+  selectedLabel: string;
+  selectedLabels?: string[];  // add this as optional
+  onSelect: (label: string) => void;
+  canApply: boolean;
+  onClose: () => void;
+  onApply: () => void;
+}) {
+  const { visible, title = "Select City", citySearch, setCitySearch, data, selectedLabel, selectedLabels, onSelect, canApply, onClose, onApply } = props;
 
-//   return (
-//     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-//       <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
-//         <KeyboardAvoidingView
-//           style={{ flex: 1, justifyContent: "flex-end" }}
-//           behavior={Platform.OS === "ios" ? "padding" : "height"}
-//           keyboardVerticalOffset={MODAL_KB_OFFSET_IOS}
-//         >
-//           <View
-//             style={{
-//               backgroundColor: UI.card,
-//               borderTopLeftRadius: 20,
-//               borderTopRightRadius: 20,
-//               paddingHorizontal: 16,
-//               paddingTop: 16,
-//               paddingBottom: 24,
-//               maxHeight: "85%",
-//             }}
-//           >
-//             <LLightText style={{ fontSize: 18, fontWeight: "800" }}>{title}</LLightText>
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1, justifyContent: "flex-end" }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={MODAL_KB_OFFSET_IOS}
+        >
+          <View
+            style={{
+              backgroundColor: UI.card,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              paddingHorizontal: 16,
+              paddingTop: 16,
+              paddingBottom: 24,
+              maxHeight: "85%",
+            }}
+          >
+            <LLightText style={{ fontSize: 18, fontWeight: "800" }}>{title}</LLightText>
 
-//             <TextInput
-//               value={citySearch}
-//               onChangeText={setCitySearch}
-//               placeholder='Search (e.g. "san", "austin")'
-//               placeholderTextColor={UI.hint}
-//               style={[styles.input, { borderRadius: 12, marginTop: 12 }]}
-//               autoCorrect={false}
-//               autoCapitalize="none"
-//               clearButtonMode="while-editing"
-//             />
+            <TextInput
+              value={citySearch}
+              onChangeText={setCitySearch}
+              placeholder='Search (e.g. "san", "austin")'
+              placeholderTextColor={UI.hint}
+              style={[styles.input, { borderRadius: 12, marginTop: 12 }]}
+              autoCorrect={false}
+              autoCapitalize="none"
+              clearButtonMode="while-editing"
+            />
 
-//             <FlatList
-//               data={data}
-//               keyExtractor={(item) => item.id}
-//               keyboardShouldPersistTaps="handled"
-//               keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
-//               contentContainerStyle={{ paddingBottom: MODAL_LIST_BOTTOM_PADDING }}
-//               style={{ marginTop: 12, marginBottom: 12 }}
-//               initialNumToRender={18}
-//               maxToRenderPerBatch={24}
-//               windowSize={10}
-//               removeClippedSubviews={Platform.OS === "android"}
-//               renderItem={({ item }) => {
-//                 const selected = selectedLabels.includes === (item.label);
-//                 return (
-//                   <Pressable
-//                     onPress={() => onSelect(item.label)}
-//                     style={{
-//                       paddingVertical: 12,
-//                       paddingHorizontal: 12,
-//                       borderWidth: 1,
-//                       borderColor: selected ? UI.text : UI.border,
-//                       borderRadius: 12,
-//                       marginBottom: 8,
-//                       backgroundColor: UI.card,
-//                     }}
-//                   >
-//                     <LLightText style={{ fontSize: 14, fontWeight: selected ? "800" : "700" }}>{item.label}</LLightText>
-//                   </Pressable>
-//                 );
-//               }}
-//               ListEmptyComponent={<LLightText style={{ paddingVertical: 16, opacity: 0.6 }}>No matches.</LLightText>}
-//             />
+            <FlatList
+              data={data}
+              keyExtractor={(item) => item.id}
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
+              contentContainerStyle={{ paddingBottom: MODAL_LIST_BOTTOM_PADDING }}
+              style={{ marginTop: 12, marginBottom: 12 }}
+              initialNumToRender={18}
+              maxToRenderPerBatch={24}
+              windowSize={10}
+              removeClippedSubviews={Platform.OS === "android"}
+              renderItem={({ item }) => {
+                const selected = selectedLabels //checks if prop is passed in at all
+                  ? selectedLabels.includes(item.label)  // company: check against array
+                  : item.label === selectedLabel;         // user: check against single string
+                return (
+                  <Pressable
+                    onPress={() => onSelect(item.label)}
+                    style={{
+                      paddingVertical: 12,
+                      paddingHorizontal: 12,
+                      borderWidth: 1,
+                      borderColor: selected ? UI.text : UI.border,
+                      borderRadius: 12,
+                      marginBottom: 8,
+                      backgroundColor: UI.card,
+                    }}
+                  >
+                    <LLightText style={{ fontSize: 14, fontWeight: selected ? "800" : "700" }}>{item.label}</LLightText>
+                  </Pressable>
+                );
+              }}
+              ListEmptyComponent={<LLightText style={{ paddingVertical: 16, opacity: 0.6 }}>No matches.</LLightText>}
+            />
 
-//             <View style={{ flexDirection: "row", gap: 10 }}>
-//               <Pressable
-//                 onPress={onClose}
-//                 style={{
-//                   flex: 1,
-//                   paddingVertical: 12,
-//                   borderWidth: 1,
-//                   borderColor: UI.borderStrong,
-//                   borderRadius: 12,
-//                   alignItems: "center",
-//                 }}
-//               >
-//                 <LLightText style={{ fontWeight: "800" }}>Close</LLightText>
-//               </Pressable>
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Pressable
+                onPress={onClose}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: UI.borderStrong,
+                  borderRadius: 12,
+                  alignItems: "center",
+                }}
+              >
+                <LLightText style={{ fontWeight: "800" }}>Close</LLightText>
+              </Pressable>
 
-//               <Pressable
-//                 onPress={onApply}
-//                 disabled={!canApply}
-//                 style={{
-//                   flex: 1,
-//                   paddingVertical: 12,
-//                   borderWidth: 1,
-//                   borderColor: UI.text,
-//                   borderRadius: 12,
-//                   alignItems: "center",
-//                   opacity: canApply ? 1 : 0.4,
-//                 }}
-//               >
-//                 <LLightText style={{ fontWeight: "800" }}>Apply</LLightText>
-//               </Pressable>
-//             </View>
-//           </View>
-//         </KeyboardAvoidingView>
-//       </View>
-//     </Modal>
-//   );
-// }
+              <Pressable
+                onPress={onApply}
+                disabled={!canApply}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: UI.text,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  opacity: canApply ? 1 : 0.4,
+                }}
+              >
+                <LLightText style={{ fontWeight: "800" }}>Apply</LLightText>
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </View>
+    </Modal>
+  );
+}
 
-//this was added - with claud help - to choose core values when the box is pressd from a dropdown
 export function CoreValuesPickerModal(props: {
   visible: boolean;
   selected: string[];
@@ -786,13 +755,12 @@ export function CoreValuesPickerModal(props: {
           <LLightText style={{ opacity: 0.6, marginTop: 4 }}>Choose up to 5.</LLightText>
 
           <FlatList
-            data={CORE_VALUES} //from the constants file, will have to import
+            data={CORE_VALUES}
             keyExtractor={(item) => item}
             style={{ marginTop: 12, marginBottom: 12 }}
             renderItem={({ item }) => {
               const checked = selected.includes(item);
-              const maxReached = selected.length >= MAX_CORE_VALUES && !checked; //MAX CORE VALUES REFERRED TO FROM CONSTANTS SO CAN BE EASILY CHANGED LATER AS ONE VARIABLE ASSIGNMENT
-
+              const maxReached = selected.length >= 5 && !checked;
               return (
                 <Pressable
                   onPress={() => onToggle(item)}
@@ -804,7 +772,6 @@ export function CoreValuesPickerModal(props: {
                     borderColor: checked ? UI.text : UI.border,
                     borderRadius: 12,
                     marginBottom: 8,
-                    backgroundColor: UI.card,
                     flexDirection: "row",
                     alignItems: "center",
                     justifyContent: "space-between",
@@ -832,6 +799,37 @@ export function CoreValuesPickerModal(props: {
     </Modal>
   );
 }
+
+export function CoreValuesSection(props: {
+  coreValues: string[];
+  onPressAdd: () => void;
+  onRemove: (value: string) => void;
+}) {
+  const { coreValues, onPressAdd, onRemove } = props;
+
+  return (
+    <>
+      <LLightText style={[styles.sectionTitle, { marginTop: 14 }]}>Core Values</LLightText>
+      <LLightText style={[styles.sectionHelper, { marginTop: 4 }]}>Choose up to 5.</LLightText>
+      <GroupCard>
+        <PickerRow
+          title="Add Core Value"
+          subtitle={coreValues.length > 0 ? `${coreValues.length}/5 selected` : "Select"}
+          onPress={onPressAdd}
+          showDivider={coreValues.length > 0}
+        />
+        {coreValues.map((value) => (
+          <Pressable key={value} onPress={() => onRemove(value)} style={[styles.rowPressable, { paddingVertical: 14 }]}>
+            <LLightText style={styles.rowTitle}>{value}</LLightText>
+            <LLightText style={[styles.rowTitle, { color: UI.danger }]}>Remove</LLightText>
+          </Pressable>
+        ))}
+      </GroupCard>
+    </>
+  );
+}
+
+
 
 export function SinglePickerModal(props: {
   visible: boolean;

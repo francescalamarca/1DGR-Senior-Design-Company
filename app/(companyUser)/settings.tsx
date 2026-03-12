@@ -67,11 +67,6 @@ function MText(props: React.ComponentProps<typeof Text>) {
   return <Text {...rest} style={[{ fontFamily: FONTS.DM_MONO_LIGHT }, style]} />;
 }
 
-const MAX_SHARE_LINKS = 3;
-
-function makeId() {
-  return Math.random().toString(36).slice(2) + Date.now().toString(36);
-}
 
 function formatPhone(input: string) {
   let digits = (input || "").replace(/\D/g, "");
