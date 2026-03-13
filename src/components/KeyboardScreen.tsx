@@ -20,6 +20,7 @@ type KeyboardScreenProps = {
   children: React.ReactNode;
   header?: React.ReactNode;
   scroll?: boolean;
+  footer?: React.ReactNode; //added for contact info at bottom
 
   /** ✅ NEW: allow parent screens to control ScrollView (scrollTo, etc.) */
   scrollRef?: React.RefObject<ScrollView | null>;
@@ -63,6 +64,7 @@ export function useKeyboardVisible() {
 export default function KeyboardScreen({
   children,
   header,
+  footer,
   scroll = false,
   scrollRef, // ✅ NEW
   contentBottomPadding = 0,
@@ -114,6 +116,8 @@ export default function KeyboardScreen({
       ) : (
         <View style={[{ flex: 1 }, contentContainerStyle]}>{children}</View>
       )}
+
+      {footer ? <View>{footer}</View> : null} 
 
       {shouldShowBottomBar ? (
         <View style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}>{bottomBar}</View>

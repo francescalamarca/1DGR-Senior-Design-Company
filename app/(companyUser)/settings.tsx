@@ -114,6 +114,7 @@ const RADII = {
 
 const SPACING = {
   screenPad: 16,
+  footerPad: 12,
   headerPad: 12,
   rowPadX: 16,
   rowPadY: 16,
@@ -608,7 +609,7 @@ export default function SettingsScreen() {
   const scrollRef = useRef<ScrollView>(null);
   const { profile, setProfile } = useProfile();
 
-  type SectionKey = "share" | "profile" | "account";
+  type SectionKey = "account" | "profile" | "support" | "about";
   const [openSection, setOpenSection] = useState<SectionKey | null>(null);
 
   useEffect(() => {
@@ -634,6 +635,7 @@ export default function SettingsScreen() {
     },
   }));
 
+  //these are all transferable to company, all components stay
   const [editingAccountInfo, setEditingAccountInfo] = useState(false);
   const [draftEmail, setDraftEmail] = useState(profile.email ?? "");
   const [draftPhone, setDraftPhone] = useState(() => formatPhone(profile.phoneNumber ?? ""));
@@ -781,18 +783,17 @@ export default function SettingsScreen() {
     setEditingAccountInfo(false);
   }
 
-  const showPreferred = draftSettings.nameDisplaySettings.showPreferredName;
-  const showLegal = draftSettings.nameDisplaySettings.showLegalName;
-  const bothOn = showPreferred && showLegal;
+  const showCompanyName = draftSettings.nameDisplaySettings.showCompanyName;
 
   const showEmailPublic = !!draftSettings.contactDisplaySettings.showEmail;
   const showPhonePublic = !!draftSettings.contactDisplaySettings.showPhoneNumber;
   const showUrl1Public = !!draftSettings.contactDisplaySettings.showUrl1;
   const showUrl2Public = !!draftSettings.contactDisplaySettings.showUrl2;
 
-  function setNameToggles(nextPreferred: boolean, nextLegal: boolean) {
-    if (!nextPreferred && !nextLegal) {
-      Alert.alert("Name display", "At least one name must be enabled.");
+  function setNameToggles(companyFull: boolean) {
+    //this is the correct logic because company name MUST be shown - always up
+    if (!companyFull) {
+      Alert.alert("Name display", "Company name must be enabled.");
       return;
     }
 
@@ -800,36 +801,9 @@ export default function SettingsScreen() {
       ...d,
       nameDisplaySettings: {
         ...d.nameDisplaySettings,
-        showPreferredName: nextPreferred,
-        showLegalName: nextLegal,
+        showCompanyName: companyFull,
       },
     }));
-  }
-
-  function openDisplayFirstPicker() {
-    if (!bothOn) return;
-
-    const setFirst = (pick: "preferred" | "legal") =>
-      setDraftSettings((d) => ({
-        ...d,
-        nameDisplaySettings: { ...d.nameDisplaySettings, firstWhenBothOn: pick },
-      }));
-
-    const options = ["Preferred name", "Legal name", "Cancel"];
-    const cancelButtonIndex = 2;
-
-    if (Platform.OS === "ios") {
-      ActionSheetIOS.showActionSheetWithOptions({ options, cancelButtonIndex }, (buttonIndex) => {
-        if (buttonIndex === 0) setFirst("preferred");
-        if (buttonIndex === 1) setFirst("legal");
-      });
-    } else {
-      Alert.alert("Display first", "Choose which name shows first when both are enabled.", [
-        { text: "Preferred name", onPress: () => setFirst("preferred") },
-        { text: "Legal name", onPress: () => setFirst("legal") },
-        { text: "Cancel", style: "cancel" },
-      ]);
-    }
   }
 
   function setContactToggles(nextShowEmail: boolean, nextShowPhone: boolean, nextShowUrl1: boolean, nextShowUrl2: boolean) {
@@ -844,7 +818,6 @@ export default function SettingsScreen() {
       },
     }));
   }
-
 
   const Header = (
     <View style={styles.header}>
@@ -912,6 +885,77 @@ export default function SettingsScreen() {
     </View>
   );
 
+  /**
+   * I am making this on my own because I need a footer that has the contact information at all times
+   * want this to be clean format as is on Figma
+   */
+  const Footer = (
+    <View style={styles.footer}>
+      <Pressable
+        onPress={() => {
+          setDraftSettings({
+            nameDisplaySettings: profile.nameDisplaySettings,
+            contactDisplaySettings:
+              profile.contactDisplaySettings ?? {
+                showEmail: false,
+                showPhoneNumber: false,
+                showUrl1: false,
+                showUrl2: false,
+              },
+          });
+
+          setDraftEmail(profile.email ?? "");
+          setDraftPhone(formatPhone(profile.phoneNumber ?? ""));
+          setDraftContactUrl1(profileContactUrl1);
+          setDraftContactUrl2(profileContactUrl2);
+          setDraftContactUrl1Label(profileContactUrl1Label);
+          setDraftContactUrl2Label(profileContactUrl2Label);
+          setEditingAccountInfo(false);
+
+          router.replace("/(companyUser)/profile");
+        }}
+        style={styles.headerLeft}
+        hitSlop={10}
+        accessibilityRole="button"
+        accessibilityLabel="Cancel settings"
+      >
+        <LText style={styles.headerActionText}>Cancel</LText>
+      </Pressable>
+
+      <LLText pointerEvents="none" style={styles.headerTitle}>
+        Settings & Privacy
+      </LLText>
+
+      <Pressable
+        onPress={() => {
+          setProfile((p) => ({
+            ...p,
+            nameDisplaySettings: draftSettings.nameDisplaySettings,
+            contactDisplaySettings: draftSettings.contactDisplaySettings,
+            email: draftEmail.trim().toLowerCase(),
+            phoneNumber: draftPhone.trim(),
+            contactUrl1: draftContactUrl1.trim(),
+            contactUrl2: draftContactUrl2.trim(),
+            contactUrl1Label: draftContactUrl1Label.trim() || "URL 1",
+            contactUrl2Label: draftContactUrl2Label.trim() || "URL 2",
+          }));
+
+          setEditingAccountInfo(false);
+          router.replace("/(companyUser)/profile");
+        }}
+        disabled={!canSaveTop}
+        style={[styles.headerRight, { opacity: canSaveTop ? 1 : 0.4 }]}
+        hitSlop={10}
+        accessibilityRole="button"
+        accessibilityLabel="Save settings"
+        accessibilityHint={canSaveTop ? "Saves your changes" : "No changes to save"}
+      >
+        <LText style={styles.headerActionText}>Save</LText>
+      </Pressable>
+    </View>
+  );
+  )
+
   return (
     <>
       <RequireUserType type="company" />
@@ -926,9 +970,9 @@ export default function SettingsScreen() {
       >
         <View style={styles.groupCard}>
           <AccordionHeader
-            title="SHARE PROFILE SNAPSHOTS"
-            open={openSection === "share"}
-            onToggle={() => toggleSection("share")}
+            title="ACCOUNT"
+            open={openSection === "account"}
+            onToggle={() => toggleSection("account")}
             isFirst
           />                 
                  
@@ -939,38 +983,17 @@ export default function SettingsScreen() {
           <Collapsible open={openSection === "profile"} openBg>
             <FullWidthStack>
               <SwitchRowLL
-                title="Show preferred name"
-                subtitle="Displays your preferred name first."
-                value={showPreferred}
-                onValueChange={(v) => setNameToggles(v, showLegal)}
-                accessibilityLabel="Show preferred name"
-              />
-
-              <SwitchRowLL
-                title="Show legal name"
-                subtitle="Displays your legal first and last name."
-                value={showLegal}
-                onValueChange={(v) => setNameToggles(showPreferred, v)}
-                accessibilityLabel="Show legal name"
-              />
-
-              <PressRowLL
-                title="Display first"
-                subtitle={
-                  !bothOn
-                    ? "Turn on both names to change this"
-                    : "Choose which name shows first when both are enabled"
-                }
-                valueText={draftSettings.nameDisplaySettings.firstWhenBothOn === "legal" ? "Legal name" : "Preferred name"}
-                disabled={!bothOn}
-                onPress={openDisplayFirstPicker}
-                accessibilityLabel="Choose which name shows first"
+                title="Show company name"
+                subtitle="Displays your company name."
+                value={showCompanyName}
+                onValueChange={(v) => setNameToggles(v)} //idk about that one
+                accessibilityLabel="Show company name"
               />
 
               <View style={[styles.row, { justifyContent: "space-between" }]}>
                 <LLText style={styles.labelTiny}>Preview</LLText>
                 <LLText style={[styles.previewName, { textAlign: "right" }]} numberOfLines={1}>
-                  {profile.name}
+                  {profile.companyName}
                 </LLText>
               </View>
             </FullWidthStack>
@@ -1162,18 +1185,9 @@ export default function SettingsScreen() {
                 />
               </View>
 
-              {/* 10) DOB info row */}
-              <View style={[styles.linkItemWrap, styles.linkItemDivider]}>
-                <InfoRowLL
-                  label="Date of birth"
-                  value={profile.dateOfBirth || "Not set"}
-                  helper="Private — used only for age verification."
-                />
-              </View>
             </FullWidthStack>
           </Collapsible>
         </View>
-
       </KeyboardScreen>
     </>
   );
@@ -1207,6 +1221,31 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   headerActionText: {
+    fontFamily: FONTS.LEXEND_LIGHT,
+    fontSize: 14,
+    fontWeight: "400",
+    letterSpacing: 0.2,
+    color: COLORS.text,
+  },
+
+  /** Footer (taller like the sample) */
+  footer: {
+    height: 76,
+    paddingHorizontal: SPACING.footerPad,
+    justifyContent: "center",
+    borderTopWidth: 1, //change for footer
+    borderTopColor: "rgba(0,0,0,0.06)", //changes for footer
+    backgroundColor: COLORS.bg,
+  },
+  footerLeft: { position: "absolute", left: SPACING.headerPad, zIndex: 2 },
+  footerRight: { position: "absolute", right: SPACING.headerPad, zIndex: 2 },
+  footerTitle: {
+    fontSize: 20,
+    fontWeight: "400",
+    textAlign: "center",
+    zIndex: 1,
+  },
+  footerActionText: {
     fontFamily: FONTS.LEXEND_LIGHT,
     fontSize: 14,
     fontWeight: "400",
