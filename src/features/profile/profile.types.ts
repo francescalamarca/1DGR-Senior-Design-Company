@@ -52,21 +52,12 @@ export type ContactDisplaySettings = {
   showUrl2?: boolean;
 };
 
-/**
- * adapted to the company side with CORE values
- */
-export type CoreValueSummaryItem = {
-  key: string;
-  label: string;
-  value: string;
-};
-
 export type Profile = {
   companyName: string;
 
-  mission: string;
+  missionStatement: string;
 
-  coreValues: CoreValueSummaryItem[]; //corevalues
+  coreValues: string[]; //corevalues
 
   /**
    * leaving this as avatar naming but this is COMPANY LOGO image placeholder
@@ -103,7 +94,6 @@ export type Profile = {
   contactUrl2Label?: string;
 
   workType?: string;
-  workPreference?: string;
   industry: string;
   businessAge: string;
 

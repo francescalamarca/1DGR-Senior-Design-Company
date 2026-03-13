@@ -954,7 +954,6 @@ export default function SettingsScreen() {
       </Pressable>
     </View>
   );
-  )
 
   return (
     <>

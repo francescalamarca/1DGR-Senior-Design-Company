@@ -288,51 +288,12 @@ export default function ProfileScreen() {
   // ===== Name toggle (preserved) =====
   const [showCompanyNow, setShowCompanyNow] = useState(false);
 
-  const showPreferred = profile.nameDisplaySettings.showPreferredName;
-  const showLegal = profile.nameDisplaySettings.showLegalName;
-  const bothEnabled = showPreferred && showLegal;
+  const showCompanyName = profile.nameDisplaySettings.showCompanyName;
 
-  const legalFullName = useMemo(() => {
-    const first = profile.legalFirstName?.trim() ?? "";
-    const last = profile.legalLastName?.trim() ?? "";
-    const middle = profile.legalMiddleName?.trim() ?? "";
-    return `${first}${middle ? ` ${middle}` : ""}${last ? ` ${last}` : ""}`.trim();
-  }, [profile.legalFirstName, profile.legalMiddleName, profile.legalLastName]);
-
-  const preferredName = (profile.preferredName ?? "").trim();
-  const preferredOk = preferredName.length > 0;
-  const legalOk = legalFullName.length > 0;
-
-  const canToggleName = bothEnabled && preferredOk && legalOk;
 
   const displayName = useMemo(() => {
-    if (bothEnabled) {
-      if (showLegalNow) return legalFullName || preferredName || profile.name;
-      return preferredName || legalFullName || profile.name;
-    }
-    return profile.name;
-  }, [bothEnabled, showLegalNow, legalFullName, preferredName, profile.name]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (bothEnabled) {
-        const first = profile.nameDisplaySettings.firstWhenBothOn;
-
-        if (first === "legal" && legalOk) setShowLegalNow(true);
-        else if (first === "preferred" && preferredOk) setShowLegalNow(false);
-        else if (preferredOk) setShowLegalNow(false);
-        else if (legalOk) setShowLegalNow(true);
-        else setShowLegalNow(false);
-      } else {
-        setShowLegalNow(false);
-      }
-    }, [
-      bothEnabled,
-      preferredOk,
-      legalOk,
-      profile.nameDisplaySettings.firstWhenBothOn,
-    ]),
-  );
+    return profile.companyName;
+  }, [profile.companyName]);
 
   // ===== Styles =====
   const s = useMemo(() => {
@@ -610,9 +571,7 @@ export default function ProfileScreen() {
       setProfile((prev: any) => {
         return {
           ...prev,
-          legalFirstName: user?.legal_first_name ?? "",
-          legalLastName: user?.legal_last_name ?? "",
-          legalMiddleName: user?.legal_middle_name ?? "",
+          companyName: user?.company_name ?? "",
           email: user?.email ?? "",
           phoneNumber: user?.phone_number ?? "",
           contactUrl1:
@@ -635,8 +594,7 @@ export default function ProfileScreen() {
             user?.contactUrl2Label ??
             (prev as any)?.contactUrl2Label ??
             "URL 2",
-          preferredName: user?.preferred_name ?? "",
-          bio: user?.bio ?? "",
+          missionStatement: user?.missionStatement ?? "",
           workType:
             user?.work_type ?? user?.workType ?? user?.employment_type ?? "",
           workPreference:
@@ -644,26 +602,11 @@ export default function ProfileScreen() {
             user?.workPreference ??
             user?.work_location_preference ??
             "",
-          residencyStatus: user?.residency ?? "",
-          geographicLocation: user?.location ?? "",
+          locations: Array.isArray((user as any)?.locations)
+            ? (user as any).locations.map((loc: any) => String(loc ?? "").trim()).filter(Boolean)
+            : ((prev as any)?.locations ?? []),
           industryExperience: user?.experience ?? "",
           industryInterests: user?.industry_interests ?? [],
-          valuesSummary: Array.isArray((user as any)?.values_summary)
-            ? (user as any).values_summary
-                .map((item: any, idx: number) => {
-                  const label = String(item?.label ?? "").trim();
-                  const value = String(item?.value ?? "").trim();
-                  if (!label && !value) return null;
-                  return {
-                    key:
-                      String(item?.key ?? `value_${idx + 1}`).trim() ||
-                      `value_${idx + 1}`,
-                    label,
-                    value: value || label,
-                  };
-                })
-                .filter(Boolean)
-            : ((prev as any)?.valuesSummary ?? []),
           avatarImageUri: toCloudFrontUrl(
             user?.avatar_image_url ?? user?.avatar_image_key,
           ),
@@ -720,7 +663,7 @@ export default function ProfileScreen() {
   });
 
   // ===== mission + headline mapping =====
-  const missionText = (profile.bio ?? "").trim();
+  const missionText = (profile.missionStatement ?? "").trim();
   const headlineText =
     String(
       (profile as any).headline ??
@@ -1048,7 +991,7 @@ export default function ProfileScreen() {
     const workType = dashIfEmpty(
       [workTypePrimary, workTypeSecondary].filter(Boolean).join(" · "),
     );
-    const location = dashIfEmpty(profile.geographicLocation);
+    const location = dashIfEmpty(profile.locations);
 
     return [
       { label: "Work type", value: workType },
@@ -1057,21 +1000,19 @@ export default function ProfileScreen() {
   }, [profile]);
 
   const benefitsCol2: benefitsRow[] = useMemo(() => {
-    const residency = dashIfEmpty(profile.residencyStatus);
-    const experience = dashIfEmpty(profile.industryExperience);
+    const age = dashIfEmpty(profile.businessAge);
 
-    const funFacts = (profile.additionalDetails ?? "")
+    const coreValues = (profile.coreValues ?? "")
       .split(/\r?\n/)
       .map((s) => s.trim())
       .filter(Boolean)
       .slice(0, 3);
 
     return [
-      { label: "Residency status", value: residency },
-      { label: "Industry experience", value: experience },
+      { label: "Business Age", value: age },
       {
         label: "Fun facts",
-        value: funFacts.length ? funFacts.join("\n") : "—",
+        value: missionText.length ? missionText.join("\n") : "—",
       },
     ];
   }, [profile]);
