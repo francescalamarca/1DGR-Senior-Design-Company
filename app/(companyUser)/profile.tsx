@@ -286,7 +286,7 @@ export default function ProfileScreen() {
   const didFetchOnceRef = useRef(false);
 
   // ===== Name toggle (preserved) =====
-  const [showLegalNow, setShowLegalNow] = useState(false);
+  const [showCompanyNow, setShowCompanyNow] = useState(false);
 
   const showPreferred = profile.nameDisplaySettings.showPreferredName;
   const showLegal = profile.nameDisplaySettings.showLegalName;

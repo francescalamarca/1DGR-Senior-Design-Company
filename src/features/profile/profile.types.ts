@@ -37,25 +37,12 @@ export type LibraryVideo = {
   createdAt: number; // epoch ms
 };
 
-
-/**
- * Higher education entry attached to a profile.
- * Displayed in the About section (max entries enforced in UI).
- */
-export type HigherEdEntry = {
-  unitid: string;
-  label: string; // "[School], [City], [State], USA"
-  degrees: string[]; // e.g. ["Bachelor", "Master"]
-};
-
 /**
  * Controls how a user's name is displayed publicly.
  * Supports preferred/legal names and toggle priority.
  */
 export type NameDisplaySettings = {
-  showPreferredName: boolean;
-  showLegalName: boolean;
-  firstWhenBothOn: "preferred" | "legal";
+  showCompanyName: boolean;
 };
 
 export type ContactDisplaySettings = {
@@ -65,17 +52,25 @@ export type ContactDisplaySettings = {
   showUrl2?: boolean;
 };
 
-export type ValueSummaryItem = {
+/**
+ * adapted to the company side with CORE values
+ */
+export type CoreValueSummaryItem = {
   key: string;
   label: string;
   value: string;
 };
 
 export type Profile = {
-  name: string;
+  companyName: string;
 
-  bio: string;
+  mission: string;
 
+  coreValues: CoreValueSummaryItem[]; //corevalues
+
+  /**
+   * leaving this as avatar naming but this is COMPANY LOGO image placeholder
+   */
   avatarImageUri: string;
   avatarVideoUri: string;
 
@@ -97,38 +92,27 @@ export type Profile = {
    */
   deletedVideoLibrary: LibraryVideo[];
 
-  legalFirstName: string;
-  legalLastName: string;
-  legalMiddleName: string;
-  preferredName: string;
-
   nameDisplaySettings: NameDisplaySettings;
-
-  dateOfBirth: string;
 
   phoneNumber: string;
   email: string;
-  linkedinUrl: string;
+  //linkedinUrl: string; this may not apply here
   contactUrl1?: string;
   contactUrl2?: string;
   contactUrl1Label?: string;
   contactUrl2Label?: string;
 
-  residencyStatus: string;
   workType?: string;
   workPreference?: string;
-  industryInterests: string[];
-  industryExperience: string;
-  geographicLocation: string;
-  highestEducationCompleted: string;
+  industry: string;
+  businessAge: string;
 
   /**
-   * Higher Education (up to 8 entries enforced in UI)
+   * Locations that the business is located in
    */
-  higherEducation: HigherEdEntry[];
+  locations: string[];
 
-  additionalDetails: string;
-  valuesSummary?: ValueSummaryItem[];
+  benefitsSummary: string;
 
   contactDisplaySettings: ContactDisplaySettings;
 
