@@ -18,7 +18,14 @@
  */
 import { aws_config } from "@/constants/aws-config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import type {
   ContactDisplaySettings,
   HigherEdEntry,
@@ -285,20 +292,12 @@ async function saveVideoLibraries(
 }
 
 const initialProfile: Profile = {
-  name: "Your Name",
+  companyName: "Your Name",
   ...initialProfileBase,
 
-  legalFirstName: "",
-  legalLastName: "",
-  legalMiddleName: "",
-  preferredName: "Your Name",
   nameDisplaySettings: {
-    showPreferredName: true,
-    showLegalName: false,
-    firstWhenBothOn: "preferred",
+    showCompanyName: true,
   },
-
-  dateOfBirth: "",
 
   phoneNumber: "",
   email: "",
@@ -306,16 +305,12 @@ const initialProfile: Profile = {
   contactUrl2: "",
   contactUrl1Label: "URL 1",
   contactUrl2Label: "URL 2",
-  linkedinUrl: "",
 
   residencyStatus: "",
   industryInterests: [],
   industryExperience: "",
   geographicLocation: "",
   highestEducationCompleted: "",
-
-  // ✅ NEW
-  higherEducation: [],
 
   additionalDetails: "",
   valuesSummary: [],
@@ -326,10 +321,9 @@ const initialProfile: Profile = {
     showUrl1: false,
     showUrl2: false,
   },
-
 };
 
-initialProfile.name = getDisplayName(initialProfile);
+initialProfile.companyName = getDisplayName(initialProfile);
 
 /** ======================
  *  Context types
@@ -731,7 +725,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         // ✅ Active + Deleted libraries
         videoLibrary: mappedLibrary,
         deletedVideoLibrary: mappedDeletedLibrary,
-
       };
 
       console.log("MAPPED HIGHER EDUCATION:", mappedHigherEducation);
@@ -795,7 +788,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
             ? serverAvatarImage
             : prev.avatarImageUri,
 
-
           higherEducation: mergedHigherEducation,
         };
       });
@@ -806,12 +798,15 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const value = useMemo(() => ({
-    profile,
-    setProfile: updateProfileState,
-    refreshProfile,
-    isLoading,
-  }), [profile, isLoading]);
+  const value = useMemo(
+    () => ({
+      profile,
+      setProfile: updateProfileState,
+      refreshProfile,
+      isLoading,
+    }),
+    [profile, isLoading],
+  );
 
   return (
     <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>
