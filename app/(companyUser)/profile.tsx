@@ -881,13 +881,6 @@ export default function ProfileScreen() {
         easing: Easing.out(Easing.cubic),
         useNativeDriver: false,
       }),
-      // Reset slider back to page 0 while collapsing
-      Animated.timing(pageX, {
-        toValue: 0,
-        duration: 160,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
     ]).start(() => {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setBenefitsPage(0);
@@ -896,7 +889,6 @@ export default function ProfileScreen() {
     });
   }, [
     benefitsOpen,
-    pageX,
     benefitsChevron,
     benefitsHeight,
     benefitsOpacity,
@@ -908,114 +900,25 @@ export default function ProfileScreen() {
     return closebenefits();
   }, [benefitsOpen, openbenefits, closebenefits]);
 
-  const togglebenefitsPage = useCallback(() => {
-    if (!benefitsOpen) return;
-    if (closingBenefitsRef.current || openingBenefitsRef.current) return;
-
-    const next: 0 | 1 = benefitsPage === 0 ? 1 : 0;
-    setBenefitsPage(next);
-
-    Animated.spring(pageX, {
-      toValue: next === 1 ? -1 : 0,
-      damping: 26,
-      stiffness: 240,
-      mass: 1,
-      overshootClamping: true,
-      useNativeDriver: true,
-    }).start();
-  }, [pageX, benefitsPage, benefitsOpen]);
-
-  const benefitsSwipeResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gestureState) => {
-          if (
-            !benefitsOpen ||
-            closingBenefitsRef.current ||
-            openingBenefitsRef.current
-          )
-            return false;
-          const dx = Math.abs(gestureState.dx);
-          const dy = Math.abs(gestureState.dy);
-          return dx > 10 && dx > dy;
-        },
-        onPanResponderRelease: (_, gestureState) => {
-          if (
-            !benefitsOpen ||
-            closingBenefitsRef.current ||
-            openingBenefitsRef.current
-          )
-            return;
-          const { dx } = gestureState;
-          if (dx < -35 && benefitsPage === 0) {
-            setBenefitsPage(1);
-            Animated.spring(pageX, {
-              toValue: -1,
-              damping: 26,
-              stiffness: 240,
-              mass: 1,
-              overshootClamping: true,
-              useNativeDriver: true,
-            }).start();
-            return;
-          }
-          if (dx > 35 && benefitsPage === 1) {
-            setBenefitsPage(0);
-            Animated.spring(pageX, {
-              toValue: 0,
-              damping: 26,
-              stiffness: 240,
-              mass: 1,
-              overshootClamping: true,
-              useNativeDriver: true,
-            }).start();
-          }
-        },
-      }),
-    [pageX, benefitsOpen, benefitsPage],
-  );
 
   const benefitsCol1: benefitsRow[] = useMemo(() => {
-    const workTypePrimary = String(
-      (profile as any).workType ??
-        (profile as any).work_type ??
-        (profile as any).employmentType ??
-        "",
-    ).trim();
-    const workTypeSecondary = String(
-      (profile as any).workPreference ??
-        (profile as any).work_preference ??
-        (profile as any).work_location_preference ??
-        "",
-    ).trim();
-    const workType = dashIfEmpty(
-      [workTypePrimary, workTypeSecondary].filter(Boolean).join(" · "),
-    );
-    const location = dashIfEmpty(profile.locations);
+  const workType = dashIfEmpty((profile as any).work_type ?? "");
+  const location = dashIfEmpty(
+    Array.isArray(profile.locations) && profile.locations.length 
+      ? profile.locations.join(" · ") 
+      : ""
+  );
+  const age = dashIfEmpty((profile as any).business_age ?? "");
+  const benefits = dashIfEmpty((profile as any).benefits_summary ?? "");
 
-    return [
-      { label: "Work type", value: workType },
-      { label: "Location", value: location },
-    ];
-  }, [profile]);
+  return [
+    { label: "Work Type", value: workType },
+    { label: "Locations", value: location },
+    { label: "Business Age", value: age },
+    { label: "Benefits", value: benefits },
+  ];
+}, [profile]);
 
-  const benefitsCol2: benefitsRow[] = useMemo(() => {
-    const age = dashIfEmpty(profile.businessAge);
-
-    const coreValues = (profile.coreValues ?? "")
-      .split(/\r?\n/)
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .slice(0, 3);
-
-    return [
-      { label: "Business Age", value: age },
-      {
-        label: "Fun facts",
-        value: missionText.length ? missionText.join("\n") : "—",
-      },
-    ];
-  }, [profile]);
 
   //=========== COMPANY COLUMN ====================
   // Keep container height synced if content height changes while open (ex: fetch updates)
@@ -1157,106 +1060,18 @@ export default function ProfileScreen() {
     return closecompany();
   }, [companyOpen, opencompany, closecompany]);
 
-  const togglecompanyPage = useCallback(() => {
-    if (!companyOpen) return;
-    if (closingCompanyRef.current || openingCompanyRef.current) return;
-
-    const next: 0 | 1 = companyPage === 0 ? 1 : 0;
-    setCompanyPage(next);
-
-    Animated.spring(pageX, {
-      toValue: next === 1 ? -1 : 0,
-      damping: 26,
-      stiffness: 240,
-      mass: 1,
-      overshootClamping: true,
-      useNativeDriver: true,
-    }).start();
-  }, [pageX, companyPage, companyOpen]);
-
-  const companySwipeResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gestureState) => {
-          if (
-            !companyOpen ||
-            closingCompanyRef.current ||
-            openingCompanyRef.current
-          )
-            return false;
-          const dx = Math.abs(gestureState.dx);
-          const dy = Math.abs(gestureState.dy);
-          return dx > 10 && dx > dy;
-        },
-        onPanResponderRelease: (_, gestureState) => {
-          if (
-            !companyOpen ||
-            closingCompanyRef.current ||
-            openingCompanyRef.current
-          )
-            return;
-          const { dx } = gestureState;
-          if (dx < -35 && companyPage === 0) {
-            setCompanyPage(1);
-            Animated.spring(pageX, {
-              toValue: -1,
-              damping: 26,
-              stiffness: 240,
-              mass: 1,
-              overshootClamping: true,
-              useNativeDriver: true,
-            }).start();
-            return;
-          }
-          if (dx > 35 && companyPage === 1) {
-            setCompanyPage(0);
-            Animated.spring(pageX, {
-              toValue: 0,
-              damping: 26,
-              stiffness: 240,
-              mass: 1,
-              overshootClamping: true,
-              useNativeDriver: true,
-            }).start();
-          }
-        },
-      }),
-    [pageX, companyOpen, companyPage],
+  const companyCol1: companyRow[] = useMemo(() => {
+  const location = dashIfEmpty(
+    Array.isArray(profile.locations) && profile.locations.length 
+      ? profile.locations.join(" · ") 
+      : ""
   );
 
-  const companyCol1: companyRow[] = useMemo(() => {
-    const workTypePrimary = String(
-      (profile as any).workType ??
-        (profile as any).work_type ??
-        (profile as any).employmentType ??
-        "",
-    ).trim();
-    const workTypeSecondary = String(
-      (profile as any).workPreference ??
-        (profile as any).work_preference ??
-        (profile as any).work_location_preference ??
-        "",
-    ).trim();
-    const workType = dashIfEmpty(
-      [workTypePrimary, workTypeSecondary].filter(Boolean).join(" · "),
-    );
-    const location = dashIfEmpty(profile.geographicLocation);
+  return [
+    { label: "Locations", value: location },
+  ];
+}, [profile]);
 
-    return [
-      { label: "Work type", value: workType },
-      { label: "Location", value: location },
-    ];
-  }, [profile]);
-
-  const companyCol2: companyRow[] = useMemo(() => {
-    const residency = dashIfEmpty(profile.residencyStatus);
-    const experience = dashIfEmpty(profile.industryExperience);
-
-    return [
-      { label: "Residency status", value: residency },
-      { label: "Industry experience", value: experience },
-    ];
-  }, [profile]);
 
   //========= end company set up blocks
 
@@ -1468,36 +1283,14 @@ export default function ProfileScreen() {
   );
 
   const employeeCol1: employeeRow[] = useMemo(() => {
-    const workTypePrimary = String(
-      (profile as any).workType ??
-        (profile as any).work_type ??
-        (profile as any).employmentType ??
-        "",
-    ).trim();
-    const workTypeSecondary = String(
-      (profile as any).workPreference ??
-        (profile as any).work_preference ??
-        (profile as any).work_location_preference ??
-        "",
-    ).trim();
-    const workType = dashIfEmpty(
-      [workTypePrimary, workTypeSecondary].filter(Boolean).join(" · "),
+    const employees = dashIfEmpty(
+      Array.isArray(profile.currentEmployees) && profile.currentEmployees.length 
+      ? profile.currentEmployees.join(" · ") 
+      : ""
     );
-    const location = dashIfEmpty(profile.geographicLocation);
 
     return [
-      { label: "Work type", value: workType },
-      { label: "Location", value: location },
-    ];
-  }, [profile]);
-
-  const employeeCol2: employeeRow[] = useMemo(() => {
-    const residency = dashIfEmpty(profile.residencyStatus);
-    const experience = dashIfEmpty(profile.industryExperience);
-
-    return [
-      { label: "Residency status", value: residency },
-      { label: "Industry experience", value: experience },
+      { label: "Employees", value: employees },
     ];
   }, [profile]);
 
@@ -1871,10 +1664,8 @@ export default function ProfileScreen() {
             </Pressable>
 
             <Pressable
-              disabled={!canToggleName}
               onPress={() => {
-                if (!canToggleName) return;
-                setShowLegalNow((v) => !v);
+                setShowCompanyNow((v) => !v);
               }}
               style={{ alignSelf: "center", marginTop: 12 }}
               hitSlop={10}
