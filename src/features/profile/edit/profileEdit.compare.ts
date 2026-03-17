@@ -32,7 +32,7 @@ import type { Profile} from "@/src/features/profile/profile.types";
 //these values will match the draft.___ variables in the profileEdit.data file
 export type DraftProfile = Profile & {
   companyName?: string;
-  industry?: string;
+  industry?: string[];
   businessAge?: string;
   workType?: string;
   locations?: string[]; //this is an array of strings that will be populated by the companies choice of cities that they operate in
@@ -50,7 +50,7 @@ export function normalizeForCompare(p: DraftProfile) {
 
   return {
     companyName: (p.companyName ?? "").trim(),
-    industry: (p.industry ?? "").trim(),
+    industry: (p.industry ?? []).map((s) => s.trim()).filter(Boolean).sort(), 
     businessAge:(p.businessAge ?? "").trim(),
     workType: (p.workType ?? "").trim(),
     locations: (p.locations ?? []).map((s) => s.trim()).filter(Boolean).sort(), //same as the coreValues array functionality for checking change

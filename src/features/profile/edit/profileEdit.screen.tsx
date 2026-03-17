@@ -16,7 +16,7 @@ import {
   AvatarSection,
   NameSection,
   CoreValuesSection,
-  HookSection,
+  MissionSection,
   IndustryTypeSection,
   VideoLibrarySection,
   ProfileMediaResetSection,
@@ -167,12 +167,12 @@ export default function ProfileEditScreen() {
           onClose={() => setCoreValuesPickerVisible(false)}
         />
 
-        <HookSection bio={draft.bio ?? ""} onChangeBio={(v: string) => setDraft((p) => ({ ...p, bio: v }))} />
+        <MissionSection mission={draft.missionStatement ?? ""} onChangeMission={(v: string) => setDraft((p) => ({ ...p, missionStatement: v }))} />
 
         <IndustryTypeSection
           workTypeSubtitle={workTypeSubtitle}
-          companyAgeSubtitle={draft.industryExperience?.trim() ? draft.industryExperience : "Select"}
-          industrySubtitle={summarizeIndustries(draft.industryInterests ?? [])}
+          companyAgeSubtitle={draft.businessAge?.trim() ? draft.businessAge : "Select"}
+          industrySubtitle={summarizeIndustries(draft.industry ?? [])}
           locations={draft.locations ?? []}
           onPressAddLocation={openCityPicker}
           onRemoveLocation={removeLocation}

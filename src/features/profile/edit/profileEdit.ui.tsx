@@ -92,8 +92,8 @@ export function AvatarSection(props: {
 
   return (
     <>
-      <LLightText style={[styles.sectionTitle, { marginTop: 17 }]}>Avatar</LLightText>
-      <LLightText style={styles.sectionHelper}>Add a profile image.</LLightText>
+      <LLightText style={[styles.sectionTitle, { marginTop: 17 }]}>Logo</LLightText>
+      <LLightText style={styles.sectionHelper}>Add a company logo image here.</LLightText>
 
       <View style={[styles.inlineCard, { marginTop: 14, flexDirection: "row", alignItems: "center", gap: 14 }]}>
         <View
@@ -176,8 +176,8 @@ export function NameSection(props: {
   );
 }
 
-export function HookSection(props: { bio: string; onChangeBio: (v: string) => void }) {
-  const { bio, onChangeBio } = props;
+export function MissionSection(props: { mission: string; onChangeMission: (v: string) => void }) {
+  const { mission, onChangeMission } = props;
 
   return (
     <>
@@ -186,8 +186,8 @@ export function HookSection(props: { bio: string; onChangeBio: (v: string) => vo
 
       <View style={styles.fieldStack}>
         <TextInput
-          value={bio?.trim().length ? bio : ""}
-          onChangeText={onChangeBio}
+          value={mission?.trim().length ? mission : ""}
+          onChangeText={onChangeMission}
           placeholder="Write something about the mission…"
           placeholderTextColor={UI.hint}
           style={styles.inputMultiline}
@@ -485,7 +485,7 @@ export function IndustryPickerModal(props: {
               maxHeight: "85%",
             }}
           >
-            <LLightText style={{ fontSize: 18, fontWeight: "800" }}>Industry Interests</LLightText>
+            <LLightText style={{ fontSize: 18, fontWeight: "800" }}>Industry Type</LLightText>
 
             <TextInput
               value={industrySearch}
