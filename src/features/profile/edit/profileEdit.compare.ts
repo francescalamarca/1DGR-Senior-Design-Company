@@ -39,6 +39,7 @@ export type DraftProfile = Profile & {
   missionStatement?: string;
   coreValues?: string[];
   currentEmployees?: string[]; //added to keep track of current employees to display on profile
+  openRoles?: string[];
   benefitsSummary?: string;
   customBackgroundColor?: string;
   logoImageURI?: string;
@@ -57,6 +58,7 @@ export function normalizeForCompare(p: DraftProfile) {
     coreValues: (p.coreValues ?? []).map((s) => s.trim()).filter(Boolean).sort(), //the sort is important bc will read as different wityh the same words in different order
     currentEmployees: (p.currentEmployees ?? []).map((s) => s.trim()).filter(Boolean).sort(),
     benefitsSummary: (p.benefitsSummary ?? "").trim(),
+    openRoles:(p.openRoles ?? []).map((s) => s.trim()).filter(Boolean).sort(),
     customBackgroundColor: (p.customBackgroundColor ?? "").trim(),
     logoImageURI: (p.logoImageURI ?? "").trim(),
   };
