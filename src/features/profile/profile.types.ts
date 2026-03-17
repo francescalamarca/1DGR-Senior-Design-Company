@@ -94,7 +94,6 @@ export type Profile = {
   contactUrl2Label?: string;
 
   workType?: string;
-  industry: string;
   businessAge: string;
 
   /**
@@ -102,6 +101,9 @@ export type Profile = {
    */
   locations: string[];
   currentEmployees: string [];
+
+  //adding industry as array
+  industry: string[];
 
   openRoles: string [];
 

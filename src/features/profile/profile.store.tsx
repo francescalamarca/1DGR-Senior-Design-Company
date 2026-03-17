@@ -98,6 +98,7 @@ const initialProfileBase = {
   coreValues: [],
   locations: [],
   currentEmployees: [],
+  industry: [],
   benefitsSummary: "",
   openRoles: [],
   avatarImageUri: "",
@@ -228,7 +229,7 @@ const initialProfile: Profile = {
   contactUrl1Label: "URL 1",
   contactUrl2Label: "URL 2",
 
-  industry: "",
+  industry: [],
   businessAge: "",
   locations: [],
 
