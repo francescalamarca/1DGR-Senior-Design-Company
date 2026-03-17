@@ -69,18 +69,6 @@ export function useProfileEditController() {
   const hasAvatar = !!(avatarLocalUri || (draft.avatarImageUri ?? "").trim());
 
   const changed = hasProfileChanged((profile as any) as DraftProfile, draft);
-  const legalMiddleName = (draft as any).legalMiddleName;
-
-  const canSave = useMemo(() => {
-    const preferredOk = (draft.preferredName ?? "").trim().length > 0;
-    const legalOk =
-      (draft.legalFirstName?.trim().length ?? 0) > 0 ||
-      (legalMiddleName?.trim().length ?? 0) > 0 ||
-      (draft.legalLastName?.trim().length ?? 0) > 0;
-
-    return (preferredOk || legalOk) && changed;
-  }, [draft.preferredName, draft.legalFirstName, legalMiddleName, draft.legalLastName, changed]);
-
 
   const canUploadToLibrary =
     !!mediaVideoUri && !!mediaThumbUri && mediaCaption.trim().length > 0 && !addingLibraryVideo && !isSaving;
@@ -195,7 +183,7 @@ export function useProfileEditController() {
   }
 
   function openIndustryPicker() {
-    const current = new Set<string>((draft.industryInterests ?? []).map((s) => s.trim()).filter(Boolean));
+    const current = new Set<string>((draft.industry ?? ""));
     setIndustryTempSelected(current);
     setIndustryCustomInput("");
     setIndustrySearch("");
@@ -526,7 +514,7 @@ function openCoreValuesPicker() {
     setDraft,
     isSaving,
     setIsSaving,
-    canSave,
+    //canSave,
     handleCancel,
     handleSave,
     avatarPreviewUri,
