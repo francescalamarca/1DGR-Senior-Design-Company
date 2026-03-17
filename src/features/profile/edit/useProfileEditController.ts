@@ -452,6 +452,12 @@ function openCoreValuesPicker() {
     }
   }
 
+  const canSave = useMemo(() => {
+    const companyName = (draft.companyName ?? "").trim().length > 0;
+    return (companyName && changed);
+  }, [draft.companyName, changed]);
+
+
   function resetProfileMediaOnly() {
     Alert.alert(
       "Reset profile videos?",
@@ -514,7 +520,7 @@ function openCoreValuesPicker() {
     setDraft,
     isSaving,
     setIsSaving,
-    //canSave,
+    canSave,
     handleCancel,
     handleSave,
     avatarPreviewUri,
