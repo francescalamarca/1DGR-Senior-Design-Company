@@ -101,6 +101,9 @@ export type Profile = {
    * Locations that the business is located in
    */
   locations: string[];
+  currentEmployees: string [];
+
+  openRoles: string [];
 
   benefitsSummary: string;
 

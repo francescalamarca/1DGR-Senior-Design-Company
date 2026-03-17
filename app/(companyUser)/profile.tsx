@@ -96,15 +96,6 @@ function toCloudFrontUrl(urlOrKey: string): string {
   return urlOrKey;
 }
 
-/** helper: normalize "field of study" */
-function normalizeFieldOfStudy(e: any): string {
-  return String(
-    e?.fieldOfStudy ?? e?.field_of_study ?? e?.field_of_study_name ?? "",
-  )
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
 function dashIfEmpty(v: any) {
   const s = String(v ?? "").trim();
   return s.length ? s : "—";
@@ -1504,36 +1495,13 @@ export default function ProfileScreen() {
   );
 
   const rolesCol1: rolesRow[] = useMemo(() => {
-    const workTypePrimary = String(
-      (profile as any).workType ??
-        (profile as any).work_type ??
-        (profile as any).employmentType ??
+    const roles = String(
+      (profile as any).openRoles ??
         "",
     ).trim();
-    const workTypeSecondary = String(
-      (profile as any).workPreference ??
-        (profile as any).work_preference ??
-        (profile as any).work_location_preference ??
-        "",
-    ).trim();
-    const workType = dashIfEmpty(
-      [workTypePrimary, workTypeSecondary].filter(Boolean).join(" · "),
-    );
-    const location = dashIfEmpty(profile.geographicLocation);
 
     return [
-      { label: "Work type", value: workType },
-      { label: "Location", value: location },
-    ];
-  }, [profile]);
-
-  const rolesCol2: rolesRow[] = useMemo(() => {
-    const residency = dashIfEmpty(profile.residencyStatus);
-    const experience = dashIfEmpty(profile.industryExperience);
-
-    return [
-      { label: "Residency status", value: residency },
-      { label: "Industry experience", value: experience },
+      { label: "Roles", value: roles },
     ];
   }, [profile]);
 
@@ -1711,21 +1679,14 @@ export default function ProfileScreen() {
               <Text style={s.benefitsHeader}>
                 BENEFITS SUMMARY - management style, PTO
               </Text>
-
-              <Animated.View
-                style={{
-                  transform: [{ rotate: benefitsChevronRotate }],
-                  marginRight: 6,
-                }}
-              >
+              <Animated.View style={{ transform: [{ rotate: benefitsChevronRotate }], marginRight: 6 }}>
                 <Feather name="chevron-down" size={24} color={HINT} />
               </Animated.View>
             </Pressable>
 
-            {/* Premium animated reveal container */}
-            <Animated.View
-              style={{ height: benefitsHeight, overflow: "hidden" }}
-            >
+            {/* Animated reveal container */}
+            <Animated.View style={{ height: benefitsHeight, overflow: "hidden" }}>
+
               {/* Hidden measurer */}
               <View
                 pointerEvents="none"
@@ -1737,67 +1698,13 @@ export default function ProfileScreen() {
                 }}
               >
                 <View style={{ marginTop: 14 }}>
-                  <View style={{ overflow: "hidden" }}>
-                    <View style={{ width: panelW * 2, flexDirection: "row" }}>
-                      <View style={{ width: panelW }}>
-                        <View style={{ gap: 14 }}>
-                          {benefitsCol1.map((row) => (
-                            <View
-                              key={row.label}
-                              style={{ gap: 4, paddingRight: benefits_RIGHT_GUTTER }}
-                            >
-                              <Text style={s.benefitsLabel}>{row.label}</Text>
-                              <BenefitsValue
-                                value={row.value}
-                                textStyle={s.BenefitsValue}
-                              />
-                            </View>
-                          ))}
-                        </View>
+                  <View style={{ gap: 14 }}>
+                    {benefitsCol1.map((row) => (
+                      <View key={row.label} style={{ gap: 4, paddingRight: benefits_RIGHT_GUTTER }}>
+                        <Text style={s.benefitsLabel}>{row.label}</Text>
+                        <BenefitsValue value={row.value} textStyle={s.BenefitsValue} />
                       </View>
-
-                      <View style={{ width: panelW }}>
-                        <View style={{ gap: 14 }}>
-                          {benefitsCol2.map((row) => (
-                            <View
-                              key={row.label}
-                              style={{ gap: 4, paddingRight: benefits_RIGHT_GUTTER }}
-                            >
-                              <Text style={s.benefitsLabel}>{row.label}</Text>
-                              <BenefitsValue
-                                value={row.value}
-                                textStyle={s.BenefitsValue}
-                              />
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-
-                  <View
-                    style={{
-                      marginTop: 14,
-                      flexDirection: "row",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {[0, 1].map((idx) => {
-                      const active = benefitsPage === idx;
-                      return (
-                        <View
-                          key={`benefits-dot-measure-${idx}`}
-                          style={{
-                            width: 5,
-                            height: 5,
-                            borderRadius: 999,
-                            marginHorizontal: 3.5,
-                            backgroundColor: active ? "#202020" : HINT,
-                            opacity: active ? 1 : 0.95,
-                          }}
-                        />
-                      );
-                    })}
+                    ))}
                   </View>
                 </View>
               </View>
@@ -1811,95 +1718,18 @@ export default function ProfileScreen() {
                   }}
                 >
                   <View style={{ marginTop: 14 }}>
-                    <View
-                      style={{ overflow: "hidden" }}
-                      {...benefitsSwipeResponder.panHandlers}
-                    >
-                      <Animated.View
-                        style={{
-                          width: panelW * 2,
-                          flexDirection: "row",
-                          transform: [{ translateX: pageTranslateX }],
-                        }}
-                      >
-                        <View style={{ width: panelW }}>
-                          <View style={{ gap: 14 }}>
-                            {benefitsCol1.map((row) => (
-                              <View
-                                key={row.label}
-                                style={{ gap: 4, paddingRight: benefits_RIGHT_GUTTER }}
-                              >
-                                <Text style={s.benefitsLabel}>{row.label}</Text>
-                                <BenefitsValue
-                                  value={row.value}
-                                  textStyle={s.BenefitsValue}
-                                />
-                              </View>
-                            ))}
-                          </View>
+                    <View style={{ gap: 14 }}>
+                      {benefitsCol1.map((row) => (
+                        <View key={row.label} style={{ gap: 4, paddingRight: benefits_RIGHT_GUTTER }}>
+                          <Text style={s.benefitsLabel}>{row.label}</Text>
+                          <BenefitsValue value={row.value} textStyle={s.BenefitsValue} />
                         </View>
-
-                        <View style={{ width: panelW }}>
-                          <View style={{ gap: 14 }}>
-                            {benefitsCol2.map((row) => (
-                              <View
-                                key={row.label}
-                                style={{ gap: 4, paddingRight: benefits_RIGHT_GUTTER }}
-                              >
-                                <Text style={s.benefitsLabel}>{row.label}</Text>
-                                <BenefitsValue
-                                  value={row.value}
-                                  textStyle={s.BenefitsValue}
-                                />
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-                      </Animated.View>
-
-                      {/* Page toggle button */}
-                      <Pressable
-                        onPress={togglebenefitsPage}
-                        hitSlop={10}
-                        style={{
-                          position: "absolute",
-                          right: 0,
-                          top: 0,
-                          bottom: 0,
-                          width: benefits_PAGE_BUTTON_W,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      />
-                    </View>
-
-                    <View
-                      style={{
-                        marginTop: 14,
-                        flexDirection: "row",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {[0, 1].map((idx) => {
-                        const active = benefitsPage === idx;
-                        return (
-                          <View
-                            key={`benefits-dot-${idx}`}
-                            style={{
-                              width: 5,
-                              height: 5,
-                              borderRadius: 999,
-                              marginHorizontal: 3.5,
-                              backgroundColor: active ? "#202020" : HINT,
-                              opacity: active ? 1 : 0.95,
-                            }}
-                          />
-                        );
-                      })}
+                      ))}
                     </View>
                   </View>
                 </Animated.View>
               ) : null}
+
             </Animated.View>
           </View>
           {/*end benefits return block*/}
@@ -1964,48 +1794,7 @@ export default function ProfileScreen() {
                         </View>
                       </View>
 
-                      <View style={{ width: panelW }}>
-                        <View style={{ gap: 14 }}>
-                          {companyCol2.map((row) => (
-                            <View
-                              key={row.label}
-                              style={{ gap: 4, paddingRight: company_RIGHT_GUTTER }}
-                            >
-                              <Text style={s.companyLabel}>{row.label}</Text>
-                              <CompanyValue
-                                value={row.value}
-                                textStyle={s.CompanyValue}
-                              />
-                            </View>
-                          ))}
-                        </View>
-                      </View>
                     </View>
-                  </View>
-
-                  <View
-                    style={{
-                      marginTop: 14,
-                      flexDirection: "row",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {[0, 1].map((idx) => {
-                      const active = companyPage === idx;
-                      return (
-                        <View
-                          key={`benefits-dot-measure-${idx}`}
-                          style={{
-                            width: 5,
-                            height: 5,
-                            borderRadius: 999,
-                            marginHorizontal: 3.5,
-                            backgroundColor: active ? "#202020" : HINT,
-                            opacity: active ? 1 : 0.95,
-                          }}
-                        />
-                      );
-                    })}
                   </View>
                 </View>
               </View>
@@ -2019,97 +1808,19 @@ export default function ProfileScreen() {
                   }}
                 >
                   <View style={{ marginTop: 14 }}>
-                    <View
-                      style={{ overflow: "hidden" }}
-                      {...companySwipeResponder.panHandlers}
-                    >
-                      <Animated.View
-                        style={{
-                          width: panelW * 2,
-                          flexDirection: "row",
-                          transform: [{ translateX: pageTranslateX }],
-                        }}
-                      >
-                        <View style={{ width: panelW }}>
-                          <View style={{ gap: 14 }}>
-                            {companyCol1.map((row) => (
-                              <View
-                                key={row.label}
-                                style={{ gap: 4, paddingRight: company_RIGHT_GUTTER }}
-                              >
-                                <Text style={s.companyLabel}>{row.label}</Text>
-                                <BenefitsValue
-                                  value={row.value}
-                                  textStyle={s.CompanyValue}
-                                />
-                              </View>
-                            ))}
-                          </View>
+                    <View style={{ gap: 14 }}>
+                      {companyCol1.map((row) => (
+                        <View key={row.label} style={{ gap: 4, paddingRight: company_RIGHT_GUTTER }}>
+                          <Text style={s.companyLabel}>{row.label}</Text>
+                          <BenefitsValue value={row.value} textStyle={s.CompanyValue} />
                         </View>
-
-                        <View style={{ width: panelW }}>
-                          <View style={{ gap: 14 }}>
-                            {companyCol2.map((row) => (
-                              <View
-                                key={row.label}
-                                style={{ gap: 4, paddingRight: company_RIGHT_GUTTER }}
-                              >
-                                <Text style={s.companyLabel}>{row.label}</Text>
-                                <BenefitsValue
-                                  value={row.value}
-                                  textStyle={s.CompanyValue}
-                                />
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-                      </Animated.View>
-
-                      {/* Page toggle button */}
-                      <Pressable
-                        onPress={togglecompanyPage}
-                        hitSlop={10}
-                        style={{
-                          position: "absolute",
-                          right: 0,
-                          top: 0,
-                          bottom: 0,
-                          width: company_PAGE_BUTTON_W,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      />
-                    </View>
-
-                    <View
-                      style={{
-                        marginTop: 14,
-                        flexDirection: "row",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {[0, 1].map((idx) => {
-                        const active = companyPage === idx;
-                        return (
-                          <View
-                            key={`benefits-dot-${idx}`}
-                            style={{
-                              width: 5,
-                              height: 5,
-                              borderRadius: 999,
-                              marginHorizontal: 3.5,
-                              backgroundColor: active ? "#202020" : HINT,
-                              opacity: active ? 1 : 0.95,
-                            }}
-                          />
-                        );
-                      })}
+                      ))}
                     </View>
                   </View>
                 </Animated.View>
-              ) : null}
-            </Animated.View>
-          </View>{" "}
+                ) : null}
+              </Animated.View>
+          </View>
           {/* end block for company location */}
 
           <View style={{ height: 1, backgroundColor: BORDER }} />
@@ -2173,49 +1884,7 @@ export default function ProfileScreen() {
                           ))}
                         </View>
                       </View>
-
-                      <View style={{ width: panelW }}>
-                        <View style={{ gap: 14 }}>
-                          {employeeCol2.map((row) => (
-                            <View
-                              key={row.label}
-                              style={{ gap: 4, paddingRight: employee_RIGHT_GUTTER }}
-                            >
-                              <Text style={s.employeeLabel}>{row.label}</Text>
-                              <EmployeeValue
-                                value={row.value}
-                                textStyle={s.EmployeeValue}
-                              />
-                            </View>
-                          ))}
-                        </View>
-                      </View>
                     </View>
-                  </View>
-
-                  <View
-                    style={{
-                      marginTop: 14,
-                      flexDirection: "row",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {[0, 1].map((idx) => {
-                      const active = employeePage === idx;
-                      return (
-                        <View
-                          key={`benefits-dot-measure-${idx}`}
-                          style={{
-                            width: 5,
-                            height: 5,
-                            borderRadius: 999,
-                            marginHorizontal: 3.5,
-                            backgroundColor: active ? "#202020" : HINT,
-                            opacity: active ? 1 : 0.95,
-                          }}
-                        />
-                      );
-                    })}
                   </View>
                 </View>
               </View>
@@ -2243,23 +1912,6 @@ export default function ProfileScreen() {
                         <View style={{ width: panelW }}>
                           <View style={{ gap: 14 }}>
                             {employeeCol1.map((row) => (
-                              <View
-                                key={row.label}
-                                style={{ gap: 4, paddingRight: employee_RIGHT_GUTTER }}
-                              >
-                                <Text style={s.employeeLabel}>{row.label}</Text>
-                                <EmployeeValue
-                                  value={row.value}
-                                  textStyle={s.EmployeeValue}
-                                />
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-
-                        <View style={{ width: panelW }}>
-                          <View style={{ gap: 14 }}>
-                            {employeeCol2.map((row) => (
                               <View
                                 key={row.label}
                                 style={{ gap: 4, paddingRight: employee_RIGHT_GUTTER }}
@@ -2450,49 +2102,7 @@ export default function ProfileScreen() {
                           ))}
                         </View>
                       </View>
-
-                      <View style={{ width: panelW }}>
-                        <View style={{ gap: 14 }}>
-                          {rolesCol2.map((row) => (
-                            <View
-                              key={row.label}
-                              style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
-                            >
-                              <Text style={s.rolesLabel}>{row.label}</Text>
-                              <RolesValue
-                                value={row.value}
-                                textStyle={s.RolesValue}
-                              />
-                            </View>
-                          ))}
-                        </View>
-                      </View>
                     </View>
-                  </View>
-
-                  <View
-                    style={{
-                      marginTop: 14,
-                      flexDirection: "row",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {[0, 1].map((idx) => {
-                      const active = rolesPage === idx;
-                      return (
-                        <View
-                          key={`roles-dot-measure-${idx}`}
-                          style={{
-                            width: 5,
-                            height: 5,
-                            borderRadius: 999,
-                            marginHorizontal: 3.5,
-                            backgroundColor: active ? "#202020" : HINT,
-                            opacity: active ? 1 : 0.95,
-                          }}
-                        />
-                      );
-                    })}
                   </View>
                 </View>
               </View>
@@ -2506,97 +2116,25 @@ export default function ProfileScreen() {
                   }}
                 >
                   <View style={{ marginTop: 14 }}>
-                    <View
-                      style={{ overflow: "hidden" }}
-                      {...rolesSwipeResponder.panHandlers}
-                    >
-                      <Animated.View
-                        style={{
-                          width: panelW * 2,
-                          flexDirection: "row",
-                          transform: [{ translateX: pageTranslateX }],
-                        }}
-                      >
-                        <View style={{ width: panelW }}>
-                          <View style={{ gap: 14 }}>
-                            {rolesCol1.map((row) => (
-                              <View
-                                key={row.label}
-                                style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
-                              >
-                                <Text style={s.rolesLabel}>{row.label}</Text>
-                                <RolesValue
-                                  value={row.value}
-                                  textStyle={s.RolesValue}
-                                />
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-
-                        <View style={{ width: panelW }}>
-                          <View style={{ gap: 14 }}>
-                            {rolesCol2.map((row) => (
-                              <View
-                                key={row.label}
-                                style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
-                              >
-                                <Text style={s.rolesLabel}>{row.label}</Text>
-                                <RolesValue
-                                  value={row.value}
-                                  textStyle={s.RolesValue}
-                                />
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-                      </Animated.View>
-
-                      {/* Page toggle button */}
-                      <Pressable
-                        onPress={togglerolesPage}
-                        hitSlop={10}
-                        style={{
-                          position: "absolute",
-                          right: 0,
-                          top: 0,
-                          bottom: 0,
-                          width: roles_PAGE_BUTTON_W,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      />
-                    </View>
-
-                    <View
-                      style={{
-                        marginTop: 14,
-                        flexDirection: "row",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {[0, 1].map((idx) => {
-                        const active = rolesPage === idx;
-                        return (
+                      <View style={{ gap: 14 }}>
+                        {rolesCol1.map((row) => (
                           <View
-                            key={`benefits-dot-${idx}`}
-                            style={{
-                              width: 5,
-                              height: 5,
-                              borderRadius: 999,
-                              marginHorizontal: 3.5,
-                              backgroundColor: active ? "#202020" : HINT,
-                              opacity: active ? 1 : 0.95,
-                            }}
-                          />
-                        );
-                      })}
-                    </View>
-                  </View>
-                </Animated.View>
-              ) : null}
+                            key={row.label}
+                            style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
+                            >
+                            <Text style={s.rolesLabel}>{row.label}</Text>
+                            <RolesValue
+                              value={row.value}
+                              textStyle={s.RolesValue}
+                              />
+                            </View>
+                            ))}
+                          </View>
+                        </View>
+                      </Animated.View>  
+                    ) : null }
             </Animated.View>
-          </View>{" "}
+          </View>      
           {/*end roles return block*/}
 
           {/* =========== Block F - contact us ============= */}
