@@ -1,67 +1,21 @@
 import { router, useFocusEffect } from "expo-router";
 import * as VideoThumbnails from "expo-video-thumbnails";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, FlatList, ScrollView } from "react-native";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { Alert, ScrollView } from "react-native";
 
 import { aws_config } from "@/constants/aws-config";
 import { useProfile } from "@/src/features/profile/profile.store";
 import { useSession } from "@/src/state/session";
 import { updateUserProfile } from "@/src/utils/update_api";
 
-import { hasProfileChanged, normalizeFieldOfStudy, type DraftProfile } from "./profileEdit.compare";
+import { hasProfileChanged, type DraftProfile } from "./profileEdit.compare";
 import { INDUSTRIES } from "./profileEdit.constants";
 import { mapDraftToApiPayload } from "./profileEdit.data";
-import { sanitizeHigherEdEntry, type DegreeDetail, type HigherEdEntryDraftStrict } from "./profileEdit.higherEd";
-import { filterCitiesByQuery, filterUniversitiesByQuery, mapCitiesFromJson, mapUniversitiesFromJson } from "./profileEdit.mappers";
+import { filterCitiesByQuery, mapCitiesFromJson } from "./profileEdit.mappers"; //label is defined in this map function
 import { buildCdnUrlFromKey, pickImageFromLibrary, pickVideoFromLibrary, uploadToS3 } from "./profileEdit.media";
-import { type UniversityRow } from "./profileEdit.search";
 import { type CityRow, type IndustryRow } from "./profileEdit.ui";
 
-const MAX_HIGHER_ED = 8;
 
-type ValueSummaryRow = { key?: string; label?: string; value?: string };
-
-function parseValuesSummaryFromInput(input: string): ValueSummaryRow[] {
-  const lines = String(input ?? "").split(/\r?\n/);
-
-  return lines
-    .map((line, idx) => {
-      if (!line.trim()) return null;
-
-      const colonIdx = line.indexOf(":");
-      if (colonIdx >= 0) {
-        const label = line.slice(0, colonIdx).trim();
-        const value = line.slice(colonIdx + 1);
-        if (!label && !value) return null;
-        return {
-          key: `value_${idx + 1}`,
-          label,
-          value: value || label,
-        };
-      }
-
-      return {
-        key: `value_${idx + 1}`,
-        label: "",
-        value: line,
-      };
-    })
-    .filter(Boolean) as ValueSummaryRow[];
-}
-
-function formatValuesSummaryForInput(valuesSummary: unknown): string {
-  if (!Array.isArray(valuesSummary)) return "";
-
-  return valuesSummary
-    .map((item) => {
-      const label = String((item as any)?.label ?? "").trim();
-      const value = String((item as any)?.value ?? "").trim();
-      if (!label && !value) return "";
-      return value || label;
-    })
-    .filter(Boolean)
-    .join("\n");
-}
 
 export function useProfileEditController() {
   const { profile, setProfile, refreshProfile } = useProfile();
@@ -83,7 +37,6 @@ export function useProfileEditController() {
 
   const [cityPickerVisible, setCityPickerVisible] = useState(false);
   const [citySearch, setCitySearch] = useState("");
-  const [cityTempSelected, setCityTempSelected] = useState<string>("");
 
   const [singlePickerVisible, setSinglePickerVisible] = useState(false);
   const [singlePickerTitle, setSinglePickerTitle] = useState("");
@@ -98,17 +51,6 @@ export function useProfileEditController() {
   const [thumbOptions, setThumbOptions] = useState<string[]>([]);
   const [addingLibraryVideo, setAddingLibraryVideo] = useState(false);
 
-  const [higherEdPickerVisible, setHigherEdPickerVisible] = useState(false);
-  const [higherEdSearch, setHigherEdSearch] = useState("");
-  const higherEdListRef = useRef<FlatList<UniversityRow> | null>(null);
-
-  const [degreePickerVisible, setDegreePickerVisible] = useState(false);
-  const [degreePickerUniversity, setDegreePickerUniversity] = useState<{ unitid: string; label: string } | null>(null);
-
-  const [degreeTempSelected, setDegreeTempSelected] = useState<Set<string>>(new Set());
-  const [degreeTempFields, setDegreeTempFields] = useState<Record<string, string>>({});
-  const [degreeTempGraduation, setDegreeTempGraduation] = useState("");
-  const [valuesInputText, setValuesInputText] = useState("");
 
   const avatarPreviewUri = useMemo(() => {
     if (avatarLocalUri) return avatarLocalUri;
@@ -135,12 +77,10 @@ export function useProfileEditController() {
     return (preferredOk || legalOk) && changed;
   }, [draft.preferredName, draft.legalFirstName, legalMiddleName, draft.legalLastName, changed]);
 
-  const higherEdEntries = useMemo(() => (draft.higherEducation ?? []) as HigherEdEntryDraftStrict[], [draft.higherEducation]);
 
   const canUploadToLibrary =
     !!mediaVideoUri && !!mediaThumbUri && mediaCaption.trim().length > 0 && !addingLibraryVideo && !isSaving;
 
-  const valuesText = valuesInputText;
 
   const predefinedIndustrySet = useMemo(() => {
     const s = new Set<string>();
@@ -166,6 +106,7 @@ export function useProfileEditController() {
     return rows;
   }, [industrySearch]);
 
+  //this is a call to get the cities in their city row form from the UI section so they present well
   const cities: CityRow[] = useMemo(() => {
     try {
       const raw = require("@/src/data/uscities.json");
@@ -177,22 +118,7 @@ export function useProfileEditController() {
 
   const filteredCities = useMemo(() => filterCitiesByQuery(cities, citySearch), [cities, citySearch]);
 
-  const universities: UniversityRow[] = useMemo(() => {
-    const raw = require("@/src/data/usuniversities.json");
-    return mapUniversitiesFromJson(raw);
-  }, []);
-
-  const filteredUniversities: UniversityRow[] = useMemo(
-    () => filterUniversitiesByQuery(universities, higherEdSearch),
-    [universities, higherEdSearch]
-  );
-
-  useEffect(() => {
-    requestAnimationFrame(() => {
-      higherEdListRef.current?.scrollToOffset?.({ offset: 0, animated: false });
-    });
-  }, [higherEdSearch]);
-
+  
   const profileRef = useRef(profile);
   profileRef.current = profile;
   
@@ -207,10 +133,6 @@ export function useProfileEditController() {
       setThumbOptions([]);
       setGeneratingThumbs(false);
       setAddingLibraryVideo(false);
-      setHigherEdPickerVisible(false);
-      setDegreePickerVisible(false);
-      setHigherEdSearch("");
-      setValuesInputText(formatValuesSummaryForInput((p as any).valuesSummary));
       requestAnimationFrame(() => {
         scrollRef.current?.scrollTo?.({ y: 0, animated: false });
       });
@@ -218,12 +140,12 @@ export function useProfileEditController() {
   );
   function handleCancel() {
     if (!changed) {
-      router.replace("/(homeUser)/profile");
+      router.replace("/(companyUser)/profile");
       return;
     }
     Alert.alert("Discard changes?", "You have unsaved edits.", [
       { text: "Keep editing", style: "cancel" },
-      { text: "Discard", style: "destructive", onPress: () => router.replace("/(homeUser)/profile") },
+      { text: "Discard", style: "destructive", onPress: () => router.replace("/(companyUser)/profile") },
     ]);
   }
 
@@ -232,19 +154,19 @@ export function useProfileEditController() {
 
     setIsSaving(true);
     try {
-      const apiPayload = mapDraftToApiPayload(draft);
+      const apiPayload = mapDraftToApiPayload(draft); //this is where that functionn I just changed the variables to match company db is being called
       const json = JSON.stringify(apiPayload);
       if (json.length > 200_000) {
         Alert.alert(
           "Error",
-          "Payload too large. Higher Ed data may be saving the full university row object instead of just {unitid,label,degrees,...}."
+          "Payload too large."
         );
         return;
       }
 
       await updateUserProfile(apiPayload as any, accessToken);
       setProfile((p: any) => ({ ...p, ...draft }));
-      router.replace("/(homeUser)/profile");
+      router.replace("/(companyUser)/profile");
     } catch (err) {
       console.error(err);
       Alert.alert("Error", "Failed to save profile.");
@@ -300,27 +222,28 @@ export function useProfileEditController() {
     setIndustryPickerVisible(false);
   }
 
+  //THESE WILL CHANGE FOR COMPANY TO ADAPT TO CHOOSING MULTIPLE LOCATIONS
+  //don't need a temprorary placeholder
+
+  //clears the search bar and opens the modal
   function openCityPicker() {
     setCitySearch("");
-    setCityTempSelected(draft.geographicLocation ?? "");
     setCityPickerVisible(true);
   }
 
-  function applyCity() {
-    setDraft((p) => ({ ...p, geographicLocation: cityTempSelected }));
-    setCityPickerVisible(false);
+  function addLocation(city: CityRow) { //passing this in to get an instance of CityRow
+    setDraft((p) => {
+      const current = p.locations ?? []; //takes the current city that was tapped in the setDraft, gets current array, empty if nothing in it yet
+      if (current.includes(city.label)) return p; // prevent duplicates, if already there, does not add
+      return { ...p, locations: [...current, city.label] }; //appends to existing array
+  });
   }
 
-  function clearCity() {
-    setDraft((p) => ({ ...p, geographicLocation: "" }));
-  }
-
-  function onChangeValuesText(input: string) {
-    setValuesInputText(input);
-    setDraft((p: any) => ({
-      ...p,
-      valuesSummary: parseValuesSummaryFromInput(input),
-    }));
+  function deleteLocation(city: CityRow) {
+    setDraft((p) => ({
+    ...p,
+    locations: (p.locations ?? []).filter((l) => l !== city.label),
+  }));
   }
 
   async function onPickAvatarImage() {
@@ -359,116 +282,6 @@ export function useProfileEditController() {
         },
       },
     ]);
-  }
-
-  function openHigherEdPicker() {
-    setHigherEdSearch("");
-    setHigherEdPickerVisible(true);
-    requestAnimationFrame(() => higherEdListRef.current?.scrollToOffset?.({ offset: 0, animated: false }));
-  }
-
-  function upsertHigherEducationEntry(entry: Partial<HigherEdEntryDraftStrict>) {
-    const clean = sanitizeHigherEdEntry(entry);
-
-    setDraft((p) => {
-      const current = (p.higherEducation ?? []) as HigherEdEntryDraftStrict[];
-      const idx = current.findIndex((e) => String(e.unitid) === String(clean.unitid));
-      if (idx === -1 && current.length >= MAX_HIGHER_ED) return p;
-
-      const next = [...current];
-      if (idx === -1) next.push(clean);
-      else next[idx] = clean;
-
-      return { ...p, higherEducation: next };
-    });
-  }
-
-  function removeHigherEducationEntry(unitid: string) {
-    setDraft((p: any) => ({
-      ...p,
-      higherEducation: (p.higherEducation ?? []).filter((e: any) => String(e.unitid) !== String(unitid)),
-    }));
-  }
-
-  function clearAllHigherEducation() {
-    setDraft((p: any) => ({ ...p, higherEducation: [] }));
-  }
-
-  function openDegreePickerForUniversity(u: { unitid: string; label: string }) {
-    const existing = higherEdEntries.find((e) => String(e.unitid) === String(u.unitid));
-
-    const selectedDegrees = new Set<string>(existing?.degrees ?? []);
-    setDegreeTempSelected(selectedDegrees);
-
-    const fields: Record<string, string> = {};
-    if (existing?.degreeDetails?.length) {
-      for (const d of existing.degreeDetails) {
-        if (!d?.degree) continue;
-        fields[d.degree] = String(d.fieldOfStudy ?? "").trim();
-      }
-    } else if ((existing as any)?.fieldOfStudy) {
-      for (const deg of selectedDegrees) fields[deg] = String((existing as any).fieldOfStudy ?? "").trim();
-    }
-    setDegreeTempFields(fields);
-
-    setDegreeTempGraduation(String((existing as any)?.estimatedGraduation ?? "").trim());
-
-    setDegreePickerUniversity(u);
-    setHigherEdPickerVisible(false);
-    setDegreePickerVisible(true);
-  }
-
-  function toggleDegree(deg: string) {
-    setDegreeTempSelected((prev) => {
-      const next = new Set(prev);
-      const willAdd = !next.has(deg);
-
-      if (willAdd) {
-        next.add(deg);
-        setDegreeTempFields((m) => (m[deg] !== undefined ? m : { ...m, [deg]: "" }));
-      } else {
-        next.delete(deg);
-        setDegreeTempFields((m) => {
-          const copy = { ...m };
-          delete copy[deg];
-          return copy;
-        });
-      }
-      return next;
-    });
-  }
-
-  function setDegreeField(deg: string, value: string) {
-    // Keep raw typing behavior (including in-progress spaces). Sanitize on apply/save.
-    setDegreeTempFields((m) => ({ ...m, [deg]: value }));
-  }
-
-  function applyDegreeSelection() {
-    if (!degreePickerUniversity) return;
-
-    const degrees = Array.from(degreeTempSelected).sort((a, b) => a.localeCompare(b));
-    if (degrees.length === 0) {
-      Alert.alert("Degree required", "Select at least one degree to save this university.");
-      return;
-    }
-
-    const estimatedGraduation = degreeTempGraduation.trim();
-
-    const degreeDetails: DegreeDetail[] = degrees.map((deg) => {
-      const field = normalizeFieldOfStudy(degreeTempFields[deg] ?? "");
-      return { degree: deg, fieldOfStudy: field || undefined };
-    });
-
-    upsertHigherEducationEntry({
-      unitid: degreePickerUniversity.unitid,
-      label: degreePickerUniversity.label,
-      degrees,
-      degreeDetails,
-      estimatedGraduation: estimatedGraduation || undefined,
-    });
-
-    setDegreePickerVisible(false);
-    setDegreePickerUniversity(null);
   }
 
   function scrollToBottomSoon() {
@@ -680,7 +493,6 @@ export function useProfileEditController() {
   }
 
   return {
-    MAX_HIGHER_ED,
     scrollRef,
     draft,
     setDraft,
@@ -698,12 +510,8 @@ export function useProfileEditController() {
     openSingleSelectPicker,
     openIndustryPicker,
     openCityPicker,
-    clearCity,
-    higherEdEntries,
-    openHigherEdPicker,
-    openDegreePickerForUniversity,
-    removeHigherEducationEntry,
-    clearAllHigherEducation,
+    addLocation, //added for locations
+    deleteLocation, //added for locations
     mediaVideoUri,
     mediaThumbUri,
     mediaCaption,
@@ -711,8 +519,6 @@ export function useProfileEditController() {
     generatingThumbs,
     thumbOptions,
     canUploadToLibrary,
-    valuesText,
-    onChangeValuesText,
     addingLibraryVideo,
     onPickMediaVideo,
     onPickMediaThumb,
@@ -737,9 +543,6 @@ export function useProfileEditController() {
     citySearch,
     setCitySearch,
     filteredCities,
-    cityTempSelected,
-    setCityTempSelected,
-    applyCity,
     singlePickerVisible,
     setSinglePickerVisible,
     singlePickerTitle,
@@ -747,21 +550,5 @@ export function useProfileEditController() {
     singlePickerTempValue,
     setSinglePickerTempValue,
     singlePickerOnSelect,
-    higherEdPickerVisible,
-    setHigherEdPickerVisible,
-    higherEdSearch,
-    setHigherEdSearch,
-    higherEdListRef,
-    filteredUniversities,
-    degreePickerVisible,
-    setDegreePickerVisible,
-    degreePickerUniversity,
-    degreeTempSelected,
-    toggleDegree,
-    degreeTempFields,
-    setDegreeField,
-    degreeTempGraduation,
-    setDegreeTempGraduation,
-    applyDegreeSelection,
   };
 }

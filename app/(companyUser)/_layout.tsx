@@ -124,7 +124,7 @@ export default function CompanyUserLayout() {
 
           {/* ───────────── Visible bottom tabs ───────────── */}
           <Tabs.Screen name="candidates" options={{ title: "Companies" }} />
-          <Tabs.Screen name="message-inbox" options={{ title: "Networks" }} />
+          <Tabs.Screen name="message-inbox" options={{ title: "Messaging" }} />
           <Tabs.Screen name="explore" options={{ title: "Explore" }} />
           <Tabs.Screen name="record" options={{ title: "Record" }} />
           <Tabs.Screen name="profile" options={{ title: "Profile" }} />

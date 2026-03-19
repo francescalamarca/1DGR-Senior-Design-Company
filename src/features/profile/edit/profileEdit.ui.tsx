@@ -15,7 +15,6 @@ import {
 
 import { styles, UI } from "./profileEdit.styles";
 import { LLightText, BtnText } from "./profileEdit.components";
-import type { HigherEdEntry } from "@/src/features/profile/profile.types";
 
 // ---------- Types the screen expects ----------
 export type IndustryRow =
@@ -32,13 +31,6 @@ export type CityRow = {
   cityLower: string;
 };
 
-type DegreeDetail = { degree: string; fieldOfStudy?: string };
-
-export type HigherEdEntryDraft = HigherEdEntry & {
-  estimatedGraduation?: string;
-  degreeDetails?: DegreeDetail[];
-  fieldOfStudy?: string; // back-compat
-};
 
 // ---------- Modal layout constants ----------
 const MODAL_KB_OFFSET_IOS = 12;
@@ -154,25 +146,14 @@ export function AvatarSection(props: {
   );
 }
 
+//altered to fit the name we need here which is company only
 export function NameSection(props: {
-  preferredName: string;
-  legalFirstName: string;
-  legalMiddleName: string;
-  legalLastName: string;
-  onChangePreferredName: (v: string) => void;
-  onChangeLegalFirst: (v: string) => void;
-  onChangeLegalMiddle: (v: string) => void;
-  onChangeLegalLast: (v: string) => void;
+  companyName: string;
+  onChangeCompanyName: (v: string) => void;
 }) {
   const {
-    preferredName,
-    legalFirstName,
-    legalMiddleName,
-    legalLastName,
-    onChangePreferredName,
-    onChangeLegalFirst,
-    onChangeLegalMiddle,
-    onChangeLegalLast,
+    companyName,
+    onChangeCompanyName,
   } = props;
 
   return (
@@ -183,44 +164,9 @@ export function NameSection(props: {
       <View style={styles.fieldStack}>
         <LLightText style={styles.label}>Preferred Name</LLightText>
         <TextInput
-          value={preferredName}
-          onChangeText={onChangePreferredName}
-          placeholder="Preferred name"
-          placeholderTextColor={UI.hint}
-          style={styles.input}
-        />
-      </View>
-
-      <View style={styles.twoColRow}>
-        <View style={styles.col}>
-          <LLightText style={styles.label}>Legal First</LLightText>
-          <TextInput
-            value={legalFirstName}
-            onChangeText={onChangeLegalFirst}
-            placeholder="First"
-            placeholderTextColor={UI.hint}
-            style={styles.input}
-          />
-        </View>
-
-        <View style={styles.col}>
-          <LLightText style={styles.label}>Legal Middle</LLightText>
-          <TextInput
-            value={legalMiddleName}
-            onChangeText={onChangeLegalMiddle}
-            placeholder="Middle"
-            placeholderTextColor={UI.hint}
-            style={styles.input}
-          />
-        </View>
-      </View>
-
-      <View style={styles.full}>
-        <LLightText style={styles.label}>Legal Last</LLightText>
-        <TextInput
-          value={legalLastName}
-          onChangeText={onChangeLegalLast}
-          placeholder="Last"
+          value={companyName}
+          onChangeText={onChangeCompanyName}
+          placeholder="Company Name"
           placeholderTextColor={UI.hint}
           style={styles.input}
         />
@@ -234,14 +180,14 @@ export function HookSection(props: { bio: string; onChangeBio: (v: string) => vo
 
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Hook</LLightText>
-      <LLightText style={styles.sectionHelper}>A short, compelling headline for your profile.</LLightText>
+      <LLightText style={styles.sectionTitle}>Company Mission</LLightText>
+      <LLightText style={styles.sectionHelper}>The mission of the company.</LLightText>
 
       <View style={styles.fieldStack}>
         <TextInput
           value={bio?.trim().length ? bio : ""}
           onChangeText={onChangeBio}
-          placeholder="Write something about yourself…"
+          placeholder="Write something about the mission…"
           placeholderTextColor={UI.hint}
           style={styles.inputMultiline}
           multiline
@@ -251,19 +197,19 @@ export function HookSection(props: { bio: string; onChangeBio: (v: string) => vo
   );
 }
 
-export function ValuesSection(props: { valuesText: string; onChangeValuesText: (v: string) => void }) {
+export function CoreValuesSection(props: { valuesText: string; onChangeValuesText: (v: string) => void }) {
   const { valuesText, onChangeValuesText } = props;
 
   return (
     <>
-      <LLightText style={[styles.sectionTitle, { marginTop: 14 }]}>Values</LLightText>
+      <LLightText style={[styles.sectionTitle, { marginTop: 14 }]}>Company Values</LLightText>
       <LLightText style={[styles.sectionHelper, { marginTop: 4 }]}>Add one value per line. Optional format: Label: Value.</LLightText>
 
       <View style={styles.fieldStack}>
         <TextInput
           value={valuesText}
           onChangeText={onChangeValuesText}
-          placeholder={"Product-minded software engineer"}
+          placeholder={"Worker happiness and support."}
           placeholderTextColor={UI.hint}
           style={styles.inputMultiline}
           multiline
@@ -273,30 +219,26 @@ export function ValuesSection(props: { valuesText: string; onChangeValuesText: (
   );
 }
 
-export function IndustryStatusSection(props: {
-  workTypeSubtitle: string;
-  residencySubtitle: string;
-  experienceSubtitle: string;
+export function IndustryTypeSection(props: { //changed this to type to categorize the company based on industry
+  workTypeSubtitle: string; //for a company this will be what kind of work is being done (tech, hands-on, construction,etc)
+  companyAgeSubtitle: string;
   industrySubtitle: string;
   citySubtitle: string;
   hasCity: boolean;
   onPressWorkType: () => void;
-  onPressResidency: () => void;
-  onPressExperience: () => void;
+  onPressCompanyAge: () => void;
   onPressIndustry: () => void;
   onPressCity: () => void;
   onClearCity: () => void;
 }) {
   const {
     workTypeSubtitle,
-    residencySubtitle,
-    experienceSubtitle,
+    companyAgeSubtitle,
     industrySubtitle,
     citySubtitle,
     hasCity,
     onPressWorkType,
-    onPressResidency,
-    onPressExperience,
+    onPressCompanyAge,
     onPressIndustry,
     onPressCity,
     onClearCity,
@@ -304,118 +246,23 @@ export function IndustryStatusSection(props: {
 
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Industry & Status</LLightText>
-      <LLightText style={styles.sectionHelper}>Residency, experience, interests, and location.</LLightText>
+      <LLightText style={styles.sectionTitle}>Industry</LLightText>
+      <LLightText style={styles.sectionHelper}>Residency requirements, company age, work, and location.</LLightText>
 
       <GroupCard>
         <PickerRow title="Work Type" subtitle={workTypeSubtitle} onPress={onPressWorkType} showDivider />
-        <PickerRow title="Residency Status" subtitle={residencySubtitle} onPress={onPressResidency} showDivider />
         <PickerRow
-          title="Industry Experience (years)"
-          subtitle={experienceSubtitle}
-          onPress={onPressExperience}
+          title="Company Age (years)"
+          subtitle={companyAgeSubtitle}
+          onPress={onPressCompanyAge}
           showDivider
         />
-        <PickerRow title="Industry Interests" subtitle={industrySubtitle} onPress={onPressIndustry} showDivider />
+        <PickerRow title="Industry Type" subtitle={industrySubtitle} onPress={onPressIndustry} showDivider />
         <PickerRow title="City" subtitle={citySubtitle} onPress={onPressCity} showDivider={hasCity} />
         {hasCity ? (
           <Pressable onPress={onClearCity} style={[styles.rowPressable, { paddingVertical: 14 }]}>
             <LLightText style={[styles.rowTitle, { color: UI.danger }]}>Clear City</LLightText>
           </Pressable>
-        ) : null}
-      </GroupCard>
-    </>
-  );
-}
-
-export function HigherEducationSection(props: {
-  max: number;
-  entries: HigherEdEntryDraft[];
-  onOpenPicker: () => void;
-  onEdit: (unitid: string, label: string) => void;
-  onRemove: (unitid: string) => void;
-  onClearAll: () => void;
-}) {
-  const { max, entries, onOpenPicker, onEdit, onRemove, onClearAll } = props;
-
-  return (
-    <>
-      <LLightText style={styles.sectionTitle}>Higher Education</LLightText>
-      <LLightText style={styles.sectionHelper}>Add up to {max} universities and select degrees.</LLightText>
-
-      <GroupCard>
-        <PickerRow
-          title="Add / Edit Universities"
-          subtitle={`${entries.length} selected`}
-          onPress={onOpenPicker}
-          showDivider={entries.length > 0}
-        />
-
-        {entries.length > 0 ? (
-          <View style={{ padding: 14, gap: 10 }}>
-            {entries.map((e) => {
-              const degrees = (e.degrees ?? []).slice().sort((a, b) => a.localeCompare(b));
-
-              const detailsMap = new Map<string, string>();
-              (e.degreeDetails ?? []).forEach((d) => {
-                if (d.degree) detailsMap.set(d.degree, String(d.fieldOfStudy ?? "").trim());
-              });
-
-              return (
-                <View
-                  key={String(e.unitid)}
-                  style={{
-                    borderWidth: 1,
-                    borderColor: UI.border,
-                    borderRadius: 12,
-                    padding: 12,
-                    backgroundColor: UI.card,
-                    gap: 6,
-                  }}
-                >
-                  <LLightText style={{ fontSize: 14, fontWeight: "800" }}>{String(e.label)}</LLightText>
-
-                  {degrees.length ? (
-                    <View style={{ gap: 4 }}>
-                      {degrees.map((deg) => {
-                        const fs = detailsMap.get(deg);
-                        return (
-                          <LLightText key={deg} style={{ fontSize: 12, opacity: 0.65 }}>
-                            {deg}
-                            {fs ? ` — ${fs}` : ""}
-                          </LLightText>
-                        );
-                      })}
-                    </View>
-                  ) : (
-                    <LLightText style={{ fontSize: 12, opacity: 0.65 }}>Degrees: —</LLightText>
-                  )}
-
-                  {e.estimatedGraduation ? (
-                    <LLightText style={{ fontSize: 12, opacity: 0.65 }}>
-                      Graduation: {String(e.estimatedGraduation)}
-                    </LLightText>
-                  ) : null}
-
-                  <View style={{ flexDirection: "row", gap: 10, marginTop: 8 }}>
-                    <Pressable onPress={() => onEdit(String(e.unitid), String(e.label))} style={[styles.pill, { flex: 1 }]}>
-                      <BtnText>Edit</BtnText>
-                    </Pressable>
-                    <Pressable
-                      onPress={() => onRemove(String(e.unitid))}
-                      style={[styles.pill, { flex: 1, borderColor: UI.danger }]}
-                    >
-                      <BtnText style={{ color: UI.danger }}>Remove</BtnText>
-                    </Pressable>
-                  </View>
-                </View>
-              );
-            })}
-
-            <Pressable onPress={onClearAll} style={[styles.pill, { borderColor: UI.danger }]}>
-              <BtnText style={{ color: UI.danger }}>Clear All</BtnText>
-            </Pressable>
-          </View>
         ) : null}
       </GroupCard>
     </>

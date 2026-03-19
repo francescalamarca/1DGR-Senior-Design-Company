@@ -1,32 +1,29 @@
 import React from "react";
-import { View, Pressable, ActivityIndicator, Modal, FlatList, TextInput, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
+import { ActivityIndicator, Platform, Pressable, View } from "react-native";
 
 import { RequireUserType } from "@/src/components/RequireUserType";
 
-import { styles, UI } from "./profileEdit.styles";
-import { LLightText, KeyboardScreen } from "./profileEdit.components";
+import { KeyboardScreen, LLightText } from "./profileEdit.components";
 import {
   INDUSTRY_EXPERIENCE_OPTIONS,
-  RESIDENCY_STATUS_OPTIONS,
-  DEGREE_OPTIONS,
-  WORK_TYPE_OPTIONS,
   WORK_PREFERENCE_OPTIONS,
+  WORK_TYPE_OPTIONS,
 } from "./profileEdit.constants";
-import { useProfileEditController } from "./useProfileEditController";
+import { styles, UI } from "./profileEdit.styles";
 import {
   AvatarSection,
-  NameSection,
-  ValuesSection,
-  HookSection,
-  IndustryStatusSection,
-  HigherEducationSection,
-  VideoLibrarySection,
-  ProfileMediaResetSection,
-  IndustryPickerModal,
   CityPickerModal,
+  HookSection,
+  IndustryPickerModal,
+  IndustryTypeSection,
+  NameSection,
+  ProfileMediaResetSection,
   SinglePickerModal,
+  ValuesSection,
+  VideoLibrarySection,
   WorkTypePickerModal,
 } from "./profileEdit.ui";
+import { useProfileEditController } from "./useProfileEditController";
 
 const MODAL_KB_OFFSET_IOS = 12;
 const MODAL_LIST_BOTTOM_PADDING = Platform.OS === "ios" ? 280 : 320;
@@ -55,11 +52,6 @@ export default function ProfileEditScreen() {
     openIndustryPicker,
     openCityPicker,
     clearCity,
-    higherEdEntries,
-    openHigherEdPicker,
-    openDegreePickerForUniversity,
-    removeHigherEducationEntry,
-    clearAllHigherEducation,
     mediaVideoUri,
     mediaThumbUri,
     mediaCaption,
@@ -103,22 +95,6 @@ export default function ProfileEditScreen() {
     singlePickerTempValue,
     setSinglePickerTempValue,
     singlePickerOnSelect,
-    higherEdPickerVisible,
-    setHigherEdPickerVisible,
-    higherEdSearch,
-    setHigherEdSearch,
-    higherEdListRef,
-    filteredUniversities,
-    degreePickerVisible,
-    setDegreePickerVisible,
-    degreePickerUniversity,
-    degreeTempSelected,
-    toggleDegree,
-    degreeTempFields,
-    setDegreeField,
-    degreeTempGraduation,
-    setDegreeTempGraduation,
-    applyDegreeSelection,
   } = useProfileEditController();
 
   const workTypeSubtitle = React.useMemo(() => {
@@ -132,7 +108,7 @@ export default function ProfileEditScreen() {
     setWorkPreferenceTemp(String((draft as any).workPreference ?? ""));
     setWorkTypePickerVisible(true);
   }, [draft]);
-
+  //this header enables us to edit the profile and SAVE changes
   const Header = (
     <View style={styles.header}>
       <Pressable onPress={handleCancel} style={[styles.headerAction, styles.headerLeft]} hitSlop={10} disabled={isSaving}>
@@ -159,7 +135,7 @@ export default function ProfileEditScreen() {
 
   return (
     <>
-      <RequireUserType type="home" />
+      <RequireUserType type="company" />
 
       <KeyboardScreen scroll scrollRef={scrollRef} header={Header} backgroundColor={UI.bg} contentContainerStyle={styles.content}>
         <AvatarSection
@@ -186,22 +162,13 @@ export default function ProfileEditScreen() {
 
         <HookSection bio={draft.bio ?? ""} onChangeBio={(v: string) => setDraft((p) => ({ ...p, bio: v }))} />
 
-        <IndustryStatusSection
+        <IndustryTypeSection
           workTypeSubtitle={workTypeSubtitle}
-          residencySubtitle={draft.residencyStatus?.trim() ? draft.residencyStatus : "Select"}
-          experienceSubtitle={draft.industryExperience?.trim() ? draft.industryExperience : "Select"}
+          companyAgeSubtitle={draft.industryExperience?.trim() ? draft.industryExperience : "Select"}
           industrySubtitle={summarizeIndustries(draft.industryInterests ?? [])}
           citySubtitle={draft.geographicLocation?.trim() ? draft.geographicLocation : "Select"}
           hasCity={!!draft.geographicLocation?.trim()}
           onPressWorkType={openWorkTypePicker}
-          onPressResidency={() =>
-            openSingleSelectPicker({
-              title: "Residency Status",
-              options: RESIDENCY_STATUS_OPTIONS,
-              value: draft.residencyStatus ?? "",
-              onSelect: (val: string) => setDraft((p) => ({ ...p, residencyStatus: val })),
-            })
-          }
           onPressExperience={() =>
             openSingleSelectPicker({
               title: "Industry Experience",
@@ -215,14 +182,6 @@ export default function ProfileEditScreen() {
           onClearCity={clearCity}
         />
 
-        <HigherEducationSection
-          max={MAX_HIGHER_ED}
-          entries={higherEdEntries as any}
-          onOpenPicker={openHigherEdPicker}
-          onEdit={(unitid: string, label: string) => openDegreePickerForUniversity({ unitid, label })}
-          onRemove={(unitid: string) => removeHigherEducationEntry(unitid)}
-          onClearAll={clearAllHigherEducation}
-        />
 
         <VideoLibrarySection
           mediaVideoUri={mediaVideoUri}
@@ -301,248 +260,6 @@ export default function ProfileEditScreen() {
             setWorkTypePickerVisible(false);
           }}
         />
-
-        <Modal visible={higherEdPickerVisible} transparent animationType="slide" onRequestClose={() => setHigherEdPickerVisible(false)}>
-          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
-            <KeyboardAvoidingView
-              style={{ flex: 1, justifyContent: "flex-end" }}
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
-              keyboardVerticalOffset={MODAL_KB_OFFSET_IOS}
-            >
-              <View
-                style={{
-                  backgroundColor: UI.card,
-                  borderTopLeftRadius: 20,
-                  borderTopRightRadius: 20,
-                  paddingHorizontal: 16,
-                  paddingTop: 16,
-                  paddingBottom: 24,
-                  maxHeight: "85%",
-                }}
-              >
-                <View style={{ gap: 10, marginBottom: 12 }}>
-                  <LLightText style={{ fontSize: 18, fontWeight: "800" }}>
-                    Add University ({higherEdEntries.length}/{MAX_HIGHER_ED})
-                  </LLightText>
-
-                  <TextInput
-                    value={higherEdSearch}
-                    onChangeText={setHigherEdSearch}
-                    placeholder='Search (e.g. "ucla", "los angeles", "uc davis")'
-                    placeholderTextColor={UI.hint}
-                    style={[styles.input, { borderRadius: 12 }]}
-                    autoCorrect={false}
-                    autoCapitalize="none"
-                    clearButtonMode="while-editing"
-                  />
-                </View>
-
-                <FlatList
-                  ref={(r) => {
-                    higherEdListRef.current = r;
-                  }}
-                  data={filteredUniversities}
-                  keyExtractor={(item) => item.unitid || item.id}
-                  keyboardShouldPersistTaps="handled"
-                  keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
-                  contentContainerStyle={{ paddingBottom: MODAL_LIST_BOTTOM_PADDING }}
-                  style={{ marginBottom: 14 }}
-                  initialNumToRender={18}
-                  maxToRenderPerBatch={24}
-                  windowSize={10}
-                  removeClippedSubviews={Platform.OS === "android"}
-                  renderItem={({ item }) => {
-                    const alreadyAdded = higherEdEntries.some((e) => String(e.unitid) === String(item.unitid));
-                    const disabled = !alreadyAdded && higherEdEntries.length >= MAX_HIGHER_ED;
-
-                    return (
-                      <Pressable
-                        onPress={() => openDegreePickerForUniversity({ unitid: item.unitid, label: item.label })}
-                        disabled={disabled}
-                        style={{
-                          paddingVertical: 12,
-                          paddingHorizontal: 12,
-                          borderWidth: 1,
-                          borderColor: UI.border,
-                          borderRadius: 12,
-                          marginBottom: 8,
-                          opacity: disabled ? 0.4 : 1,
-                          backgroundColor: UI.card,
-                        }}
-                      >
-                        <LLightText style={{ fontSize: 14, fontWeight: alreadyAdded ? "800" : "500" }}>{item.label}</LLightText>
-
-                        {item.acronym?.length >= 3 ? (
-                          <LLightText style={{ marginTop: 4, fontSize: 12, opacity: 0.55 }}>Acronym: {item.acronym.toUpperCase()}</LLightText>
-                        ) : null}
-
-                        {alreadyAdded ? (
-                          <LLightText style={{ marginTop: 4, fontSize: 12, opacity: 0.6 }}>Already added (tap to edit degrees)</LLightText>
-                        ) : null}
-
-                        {disabled ? (
-                          <LLightText style={{ marginTop: 4, fontSize: 12, color: UI.danger, fontWeight: "700" }}>
-                            Cap reached (max {MAX_HIGHER_ED})
-                          </LLightText>
-                        ) : null}
-                      </Pressable>
-                    );
-                  }}
-                  ListEmptyComponent={
-                    <LLightText style={{ paddingVertical: 16, opacity: 0.6 }}>
-                      {higherEdSearch.trim().length < 2 ? "Type at least 2 letters to search schools." : "No matches found."}
-                    </LLightText>
-                  }
-                />
-
-                <View style={{ flexDirection: "row", gap: 10 }}>
-                  <Pressable
-                    onPress={() => setHigherEdPickerVisible(false)}
-                    style={{
-                      flex: 1,
-                      paddingVertical: 12,
-                      borderWidth: 1,
-                      borderColor: UI.borderStrong,
-                      borderRadius: 12,
-                      alignItems: "center",
-                    }}
-                  >
-                    <LLightText style={{ fontWeight: "800" }}>Close</LLightText>
-                  </Pressable>
-                </View>
-              </View>
-            </KeyboardAvoidingView>
-          </View>
-        </Modal>
-
-        <Modal visible={degreePickerVisible} transparent animationType="slide" onRequestClose={() => setDegreePickerVisible(false)}>
-          <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
-            <KeyboardAvoidingView
-              style={{ flex: 1, justifyContent: "flex-end" }}
-              behavior={Platform.OS === "ios" ? "padding" : "height"}
-              keyboardVerticalOffset={MODAL_KB_OFFSET_IOS}
-            >
-              <View
-                style={{
-                  backgroundColor: UI.card,
-                  borderTopLeftRadius: 20,
-                  borderTopRightRadius: 20,
-                  paddingHorizontal: 16,
-                  paddingTop: 16,
-                  paddingBottom: 24,
-                  maxHeight: "85%",
-                }}
-              >
-                <LLightText style={{ fontSize: 18, fontWeight: "800" }}>{degreePickerUniversity?.label ?? "Degrees"}</LLightText>
-
-                <LLightText style={{ marginTop: 10, opacity: 0.65, fontSize: 12 }}>
-                  Select degrees. Add a Field of Study for each selected degree.
-                </LLightText>
-
-                <ScrollView
-                  keyboardShouldPersistTaps="handled"
-                  keyboardDismissMode={Platform.OS === "ios" ? "interactive" : "on-drag"}
-                  style={{ marginTop: 14 }}
-                  contentContainerStyle={{ paddingBottom: MODAL_LIST_BOTTOM_PADDING }}
-                >
-                  <LLightText style={{ marginBottom: 8, fontSize: 12, opacity: 0.7 }}>Degrees</LLightText>
-
-                  {DEGREE_OPTIONS.map((deg) => {
-                    const checked = degreeTempSelected.has(deg);
-                    return (
-                      <Pressable
-                        key={deg}
-                        onPress={() => toggleDegree(deg)}
-                        style={{
-                          paddingVertical: 12,
-                          paddingHorizontal: 12,
-                          borderWidth: 1,
-                          borderColor: checked ? UI.text : UI.border,
-                          borderRadius: 12,
-                          backgroundColor: UI.card,
-                          flexDirection: "row",
-                          justifyContent: "space-between",
-                          alignItems: "center",
-                          marginBottom: 8,
-                        }}
-                      >
-                        <LLightText style={{ fontWeight: checked ? "800" : "500" }}>{deg}</LLightText>
-                        <LLightText style={{ opacity: 0.6 }}>{checked ? "✓" : ""}</LLightText>
-                      </Pressable>
-                    );
-                  })}
-
-                  {Array.from(degreeTempSelected).length > 0 ? (
-                    <View style={{ marginTop: 12, gap: 10 }}>
-                      <LLightText style={{ fontSize: 12, opacity: 0.7 }}>Field of Study (per degree)</LLightText>
-
-                      {Array.from(degreeTempSelected)
-                        .slice()
-                        .sort((a, b) => a.localeCompare(b))
-                        .map((deg) => (
-                          <View key={deg} style={{ gap: 6 }}>
-                            <LLightText style={{ fontSize: 12, opacity: 0.7 }}>{deg}</LLightText>
-                            <TextInput
-                              value={degreeTempFields[deg] ?? ""}
-                              onChangeText={(t) => setDegreeField(deg, t)}
-                              placeholder="Computer Science"
-                              placeholderTextColor={UI.hint}
-                              style={[styles.input, { borderRadius: 12 }]}
-                            />
-                          </View>
-                        ))}
-                    </View>
-                  ) : null}
-
-                  <LLightText style={{ marginTop: 14, fontSize: 12, opacity: 0.65 }}>Estimated graduation</LLightText>
-                  <TextInput
-                    value={degreeTempGraduation}
-                    onChangeText={setDegreeTempGraduation}
-                    placeholder="2027"
-                    placeholderTextColor={UI.hint}
-                    style={[styles.input, { marginTop: 8, borderRadius: 12 }]}
-                    keyboardType="number-pad"
-                  />
-                </ScrollView>
-
-                <View style={{ flexDirection: "row", gap: 10, marginTop: 12 }}>
-                  <Pressable
-                    onPress={() => {
-                      setDegreePickerVisible(false);
-                      setHigherEdPickerVisible(true);
-                    }}
-                    style={{
-                      flex: 1,
-                      paddingVertical: 12,
-                      borderWidth: 1,
-                      borderColor: UI.borderStrong,
-                      borderRadius: 12,
-                      alignItems: "center",
-                    }}
-                  >
-                    <LLightText style={{ fontWeight: "800" }}>Cancel</LLightText>
-                  </Pressable>
-
-                  <Pressable
-                    onPress={applyDegreeSelection}
-                    disabled={degreeTempSelected.size === 0}
-                    style={{
-                      flex: 1,
-                      paddingVertical: 12,
-                      borderWidth: 1,
-                      borderColor: UI.text,
-                      borderRadius: 12,
-                      alignItems: "center",
-                      opacity: degreeTempSelected.size === 0 ? 0.45 : 1,
-                    }}
-                  >
-                    <LLightText style={{ fontWeight: "800" }}>Apply</LLightText>
-                  </Pressable>
-                </View>
-              </View>
-            </KeyboardAvoidingView>
-          </View>
-        </Modal>
       </KeyboardScreen>
     </>
   );
