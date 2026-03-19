@@ -18,6 +18,8 @@
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
     "amazon-cognito-identity-js": "^6.3.16",
+    "aws-cdk-lib": "^2.243.0",
+    "constructs": "^10.5.1",
     "expo": "^55.0.5",
     "expo-av": "~16.0.8",
     "expo-camera": "~17.0.10",

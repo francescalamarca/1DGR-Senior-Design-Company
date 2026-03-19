@@ -2,7 +2,7 @@
 CREATE TABLE IF NOT EXISTS public.company_videos
 (
     id uuid NOT NULL DEFAULT gen_random_uuid(),
-    user_id uuid,
+    company_id uuid,
     title character varying(255) COLLATE pg_catalog."default" NOT NULL,
     description text COLLATE pg_catalog."default",
     s3_key character varying(500) COLLATE pg_catalog."default" NOT NULL,
@@ -13,10 +13,10 @@ CREATE TABLE IF NOT EXISTS public.company_videos
     deleted_at timestamp without time zone,
     expires_at timestamp without time zone,
     is_deleted boolean NOT NULL DEFAULT false,
-    CONSTRAINT user_videos_pkey PRIMARY KEY (id),
+    CONSTRAINT company_videos_pkey PRIMARY KEY (id),
     CONSTRAINT unique_user_slot UNIQUE (company_id, slot),
-    CONSTRAINT user_videos_user_id_fkey FOREIGN KEY (company_id)
-        REFERENCES public.company (id) MATCH SIMPLE
+    CONSTRAINT company_videos_company_id_fkey FOREIGN KEY (company_id)
+        REFERENCES public.company_profiles (user_id) MATCH SIMPLE
         ON UPDATE NO ACTION
         ON DELETE CASCADE
-)
+);
