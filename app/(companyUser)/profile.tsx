@@ -565,45 +565,28 @@ export default function ProfileScreen() {
           companyName: user?.company_name ?? "",
           email: user?.email ?? "",
           phoneNumber: user?.phone_number ?? "",
-          contactUrl1:
-            user?.contact_url_1 ??
-            user?.contactUrl1 ??
-            user?.website_url_1 ??
-            "",
-          contactUrl2:
-            user?.contact_url_2 ??
-            user?.contactUrl2 ??
-            user?.website_url_2 ??
-            "",
-          contactUrl1Label:
-            user?.contact_url_1_label ??
-            user?.contactUrl1Label ??
-            (prev as any)?.contactUrl1Label ??
-            "URL 1",
-          contactUrl2Label:
-            user?.contact_url_2_label ??
-            user?.contactUrl2Label ??
-            (prev as any)?.contactUrl2Label ??
-            "URL 2",
-          missionStatement: user?.missionStatement ?? "",
-          workType:
-            user?.work_type ?? user?.workType ?? user?.employment_type ?? "",
-          workPreference:
-            user?.work_preference ??
-            user?.workPreference ??
-            user?.work_location_preference ??
-            "",
-          locations: Array.isArray((user as any)?.locations)
-            ? (user as any).locations.map((loc: any) => String(loc ?? "").trim()).filter(Boolean)
-            : ((prev as any)?.locations ?? []),
-          industryExperience: user?.experience ?? "",
-          industryInterests: user?.industry_interests ?? [],
-          avatarImageUri: toCloudFrontUrl(
-            user?.avatar_image_url ?? user?.avatar_image_key,
-          ),
-          avatarVideoUri: toCloudFrontUrl(
-            user?.avatar_video_url ?? user?.avatar_video_key,
-          ),
+          contactUrl1: user?.contact_url_1 ?? user?.contactUrl1 ?? user?.website_url_1 ?? "",
+          contactUrl2: user?.contact_url_2 ?? user?.contactUrl2 ?? user?.website_url_2 ?? "",
+          contactUrl1Label: user?.contact_url_1_label ?? user?.contactUrl1Label ?? (prev as any)?.contactUrl1Label ?? "URL 1",
+          contactUrl2Label: user?.contact_url_2_label ?? user?.contactUrl2Label ?? (prev as any)?.contactUrl2Label ?? "URL 2",
+
+          // company fields - snake_case from DB
+          industry: Array.isArray(user?.industry) ? user.industry : [],
+          businessAge: user?.business_age ?? "",
+          workType: user?.work_type ?? user?.workType ?? "",
+          locations: Array.isArray(user?.locations)
+            ? user.locations.map((loc: any) => String(loc ?? "").trim()).filter(Boolean)
+            : (prev?.locations ?? []),
+          missionStatement: user?.mission_statement ?? "",  // fixed from camelCase
+          coreValues: Array.isArray(user?.core_values) ? user.core_values : (prev?.coreValues ?? []),
+          currentEmployees: Array.isArray(user?.current_employees) ? user.current_employees : (prev?.currentEmployees ?? []),
+          openRoles: Array.isArray(user?.open_roles) ? user.open_roles : (prev?.openRoles ?? []),
+          benefitsSummary: user?.benefits_summary ?? "",
+          customBackgroundColor: user?.custom_background_color ?? "",
+          logoImageURI: user?.logo_image_uri ?? user?.logo_image_key ?? "",
+
+          avatarImageUri: toCloudFrontUrl(user?.avatar_image_url ?? user?.avatar_image_key),
+          avatarVideoUri: toCloudFrontUrl(user?.avatar_video_url ?? user?.avatar_video_key),
           media: (Array.isArray(videoLibrary) ? videoLibrary : [])
             .filter((v: any) => v.slot !== null && v.slot !== undefined)
             .sort((a: any, b: any) => (a.slot ?? 0) - (b.slot ?? 0))
@@ -1444,56 +1427,6 @@ export default function ProfileScreen() {
     }).start();
   }, [pageX, rolesPage, rolesOpen]);
 
-  const rolesSwipeResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gestureState) => {
-          if (
-            !rolesOpen ||
-            closingrolesRef.current ||
-            rolesRef.current
-          )
-            return false;
-          const dx = Math.abs(gestureState.dx);
-          const dy = Math.abs(gestureState.dy);
-          return dx > 10 && dx > dy;
-        },
-        onPanResponderRelease: (_, gestureState) => {
-          if (
-            !rolesOpen ||
-            closingrolesRef.current ||
-            rolesRef.current
-          )
-            return;
-          const { dx } = gestureState;
-          if (dx < -35 && rolesPage === 0) {
-            setrolesPage(1);
-            Animated.spring(pageX, {
-              toValue: -1,
-              damping: 26,
-              stiffness: 240,
-              mass: 1,
-              overshootClamping: true,
-              useNativeDriver: true,
-            }).start();
-            return;
-          }
-          if (dx > 35 && rolesPage === 1) {
-            setrolesPage(0);
-            Animated.spring(pageX, {
-              toValue: 0,
-              damping: 26,
-              stiffness: 240,
-              mass: 1,
-              overshootClamping: true,
-              useNativeDriver: true,
-            }).start();
-          }
-        },
-      }),
-    [pageX, rolesOpen, rolesPage],
-  );
-
   const rolesCol1: rolesRow[] = useMemo(() => {
     const roles = String(
       (profile as any).openRoles ??
@@ -1545,10 +1478,10 @@ export default function ProfileScreen() {
     <>
       <RequireUserType type="company" />
 
-      <SafeAreaView
-        edges={["top", "left", "right"]}
-        style={{ flex: 1, backgroundColor: BG }}
-      >
+        <SafeAreaView
+          edges={["top", "left", "right"]}
+          style={{ flex: 1, backgroundColor: BG }}
+        >
         <Animated.ScrollView
           style={{ backgroundColor: BG }}
           contentContainerStyle={{ paddingBottom: 24 }}
