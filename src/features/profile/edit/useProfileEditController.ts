@@ -458,7 +458,7 @@ function openCoreValuesPicker() {
   }, [draft.companyName, changed]);
 
   function selectBackgroundColor(color: string) {
-  setDraft((p) => ({ ...p, customBackgroundColor: color }));
+    setDraft((p) => ({ ...p, customBackgroundColor: color }));
   }
 
 
