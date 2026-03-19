@@ -1,12 +1,17 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
 import { getDbClient } from "../utils/db-client.js";
 import { S3Client, DeleteObjectsCommand } from "@aws-sdk/client-s3";
+//Login functionality
+import { getCompanyId } from "../utils/get-company-id.js";
 
 const s3 = new S3Client({});
 
 export const handler: APIGatewayProxyHandler = async (event) => {
-  const companyId = event.requestContext.authorizer?.claims.sub;
-
+  //This is when login functionality is up and running
+  //const companyId = event.requestContext.authorizer?.claims.sub;
+  //LOGIN FUNCTIONALITY FOR DEV ONLY:
+  const companyId = getCompanyId(event);
+  
   if (!companyId) {
     return {
       statusCode: 401,
