@@ -51,6 +51,10 @@ export function useProfileEditController() {
   const [thumbOptions, setThumbOptions] = useState<string[]>([]);
   const [addingLibraryVideo, setAddingLibraryVideo] = useState(false);
 
+  const [coreValuePicker, setCoreValuePicker] = useState(false);
+  const [coreValuesPickerVisible, setCoreValuesPickerVisible] = useState(false);
+
+
 
   const avatarPreviewUri = useMemo(() => {
     if (avatarLocalUri) return avatarLocalUri;
@@ -65,18 +69,6 @@ export function useProfileEditController() {
   const hasAvatar = !!(avatarLocalUri || (draft.avatarImageUri ?? "").trim());
 
   const changed = hasProfileChanged((profile as any) as DraftProfile, draft);
-  const legalMiddleName = (draft as any).legalMiddleName;
-
-  const canSave = useMemo(() => {
-    const preferredOk = (draft.preferredName ?? "").trim().length > 0;
-    const legalOk =
-      (draft.legalFirstName?.trim().length ?? 0) > 0 ||
-      (legalMiddleName?.trim().length ?? 0) > 0 ||
-      (draft.legalLastName?.trim().length ?? 0) > 0;
-
-    return (preferredOk || legalOk) && changed;
-  }, [draft.preferredName, draft.legalFirstName, legalMiddleName, draft.legalLastName, changed]);
-
 
   const canUploadToLibrary =
     !!mediaVideoUri && !!mediaThumbUri && mediaCaption.trim().length > 0 && !addingLibraryVideo && !isSaving;
@@ -136,7 +128,7 @@ export function useProfileEditController() {
       requestAnimationFrame(() => {
         scrollRef.current?.scrollTo?.({ y: 0, animated: false });
       });
-    }, []) // ✅ empty deps - safe because we read profile via ref
+    }, [])
   );
   function handleCancel() {
     if (!changed) {
@@ -191,7 +183,7 @@ export function useProfileEditController() {
   }
 
   function openIndustryPicker() {
-    const current = new Set<string>((draft.industryInterests ?? []).map((s) => s.trim()).filter(Boolean));
+    const current = new Set<string>((draft.industry ?? ""));
     setIndustryTempSelected(current);
     setIndustryCustomInput("");
     setIndustrySearch("");
@@ -231,20 +223,44 @@ export function useProfileEditController() {
     setCityPickerVisible(true);
   }
 
-  function addLocation(city: CityRow) { //passing this in to get an instance of CityRow
+  function addLocation(label: string) { //passing this in to get an instance of CityRow
     setDraft((p) => {
       const current = p.locations ?? []; //takes the current city that was tapped in the setDraft, gets current array, empty if nothing in it yet
-      if (current.includes(city.label)) return p; // prevent duplicates, if already there, does not add
-      return { ...p, locations: [...current, city.label] }; //appends to existing array
+      if (current.includes(label)) return p; // prevent duplicates, if already there, does not add
+      return { ...p, locations: [...current, label] }; //appends to existing array
   });
   }
 
-  function deleteLocation(city: CityRow) {
+  function removeLocation(label: string) { //this is cleaner than passing in CityRow
     setDraft((p) => ({
     ...p,
-    locations: (p.locations ?? []).filter((l) => l !== city.label),
+    locations: (p.locations ?? []).filter((l) => l !== label),
   }));
   }
+
+  //adding functionality for core values similar to add location with different list reference in the constants
+  //referencing core_values
+  function addCoreValue(value: string) {
+  setDraft((p) => {
+    const current = p.coreValues ?? [];
+    if (current.length >= 5) return p; // enforce max
+    if (current.includes(value)) return p; // prevent duplicates
+    return { ...p, coreValues: [...current, value] };
+  });
+}
+
+function removeCoreValue(value: string) {
+  setDraft((p) => ({
+    ...p,
+    core_values: (p.coreValues ?? []).filter((v) => v !== value),
+  }));
+}
+
+function openCoreValuesPicker() {
+  //function will open the core values picker dropdown
+  setCoreValuesPickerVisible(true);
+}
+
 
   async function onPickAvatarImage() {
     try {
@@ -436,6 +452,12 @@ export function useProfileEditController() {
     }
   }
 
+  const canSave = useMemo(() => {
+    const companyName = (draft.companyName ?? "").trim().length > 0;
+    return (companyName && changed);
+  }, [draft.companyName, changed]);
+
+
   function resetProfileMediaOnly() {
     Alert.alert(
       "Reset profile videos?",
@@ -511,7 +533,14 @@ export function useProfileEditController() {
     openIndustryPicker,
     openCityPicker,
     addLocation, //added for locations
-    deleteLocation, //added for locations
+    removeLocation, //added for locations
+    addCoreValue,
+    removeCoreValue,
+    openCoreValuesPicker, //referenced in profileEdit,screen
+    coreValuesPickerVisible,
+    coreValuePicker,
+    setCoreValuePicker,
+    setCoreValuesPickerVisible,
     mediaVideoUri,
     mediaThumbUri,
     mediaCaption,

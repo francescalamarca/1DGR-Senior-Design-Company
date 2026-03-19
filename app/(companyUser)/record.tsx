@@ -4,11 +4,14 @@
  * - Each prompt button deep-links into camera-ui at a specific question.
  */
 
-import { useState } from "react";
-import { View, Text, Pressable } from "react-native";
-import { router } from "expo-router";
 import KeyboardScreen from "@/src/components/KeyboardScreen";
-import { CAMERA_PROMPTS, CAMERA_PROMPT_DESCRIPTIONS } from "./camera-prompts";
+import { router } from "expo-router";
+import { useState } from "react";
+import { Pressable, Text, View } from "react-native";
+import {
+  CAMERA_PROMPTS,
+  CAMERA_PROMPT_DESCRIPTIONS,
+} from "../../constants/camera-prompts"; //moved this to constants because that is what they are - modular
 
 const COLORS = {
   bg: "#fbfbfb",
@@ -39,10 +42,32 @@ export default function CameraScreen() {
         paddingBottom: 16,
       }}
     >
-      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
+      <View
+        style={{
+          flexDirection: "row",
+          alignItems: "center",
+          justifyContent: "space-between",
+          gap: 10,
+        }}
+      >
         <View style={{ flex: 1 }}>
-          <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, fontSize: 24, color: COLORS.text }}>Recording Studio</Text>
-          <Text style={{ fontFamily: FONTS.DMMONO_LIGHT, fontSize: 11, color: COLORS.subtext, marginTop: 6 }}>
+          <Text
+            style={{
+              fontFamily: FONTS.LEXEND_REGULAR,
+              fontSize: 32,
+              color: COLORS.text,
+            }}
+          >
+            Recording Studio
+          </Text>
+          <Text
+            style={{
+              fontFamily: FONTS.DMMONO_LIGHT,
+              fontSize: 20,
+              color: COLORS.subtext,
+              marginTop: 6,
+            }}
+          >
             Pick a prompt to start.
           </Text>
         </View>
@@ -65,7 +90,15 @@ export default function CameraScreen() {
             backgroundColor: COLORS.card,
           }}
         >
-          <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, fontSize: 12, color: COLORS.text }}>Video Library</Text>
+          <Text
+            style={{
+              fontFamily: FONTS.LEXEND_REGULAR,
+              fontSize: 12,
+              color: COLORS.text,
+            }}
+          >
+            Video Library
+          </Text>
         </Pressable>
       </View>
 
@@ -84,8 +117,24 @@ export default function CameraScreen() {
             justifyContent: "space-between",
           }}
         >
-            <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, fontSize: 13, color: COLORS.text }}>Guidance & Advice</Text>
-          <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, fontSize: 16, color: COLORS.subtext }}>{showTips ? "▾" : "▸"}</Text>
+          <Text
+            style={{
+              fontFamily: FONTS.LEXEND_REGULAR,
+              fontSize: 13,
+              color: COLORS.text,
+            }}
+          >
+            Guidance & Advice
+          </Text>
+          <Text
+            style={{
+              fontFamily: FONTS.LEXEND_REGULAR,
+              fontSize: 16,
+              color: COLORS.subtext,
+            }}
+          >
+            {showTips ? "▾" : "▸"}
+          </Text>
         </Pressable>
 
         {showTips ? (
@@ -101,50 +150,119 @@ export default function CameraScreen() {
               gap: 6,
             }}
           >
-            <Text style={{ fontFamily: FONTS.DMMONO_LIGHT, fontSize: 11, color: COLORS.subtext }}>1. Sit up straight and frame yourself from chest-up with your face centered.</Text>
-            <Text style={{ fontFamily: FONTS.DMMONO_LIGHT, fontSize: 11, color: COLORS.subtext }}>2. Use bright front lighting and reduce background noise.</Text>
-            <Text style={{ fontFamily: FONTS.DMMONO_LIGHT, fontSize: 11, color: COLORS.subtext }}>3. Keep answers focused: intro, one example, clear takeaway.</Text>
-            <Text style={{ fontFamily: FONTS.DMMONO_LIGHT, fontSize: 11, color: COLORS.subtext }}>4. Speak naturally, pause between points, and smile at the end.</Text>
+            <Text
+              style={{
+                fontFamily: FONTS.DMMONO_LIGHT,
+                fontSize: 11,
+                color: COLORS.subtext,
+              }}
+            >
+              1. Sit up straight and frame yourself from chest-up with your face
+              centered.
+            </Text>
+            <Text
+              style={{
+                fontFamily: FONTS.DMMONO_LIGHT,
+                fontSize: 11,
+                color: COLORS.subtext,
+              }}
+            >
+              2. Use bright front lighting and reduce background noise.
+            </Text>
+            <Text
+              style={{
+                fontFamily: FONTS.DMMONO_LIGHT,
+                fontSize: 11,
+                color: COLORS.subtext,
+              }}
+            >
+              3. Keep answers focused: intro, one example, clear takeaway.
+            </Text>
+            <Text
+              style={{
+                fontFamily: FONTS.DMMONO_LIGHT,
+                fontSize: 11,
+                color: COLORS.subtext,
+              }}
+            >
+              4. Speak naturally, pause between points, and smile at the end.
+            </Text>
           </View>
         ) : null}
       </View>
 
       <View style={{ marginTop: 10, gap: 8 }}>
-        {CAMERA_PROMPTS.map((prompt, idx) => (
-          <Pressable
-            key={`${idx}_${prompt}`}
-            onPress={() =>
-              router.push({
-                pathname: "/(companyUser)/camera-ui",
-                params: { promptIndex: String(idx), returnTo: "/(companyUser)/record" },
-              })
-            }
-            style={{
-              borderWidth: 1,
-              borderColor: COLORS.border,
-              borderRadius: 12,
-              backgroundColor: COLORS.card,
-              paddingHorizontal: 12,
-              paddingVertical: 9,
-              gap: 5,
-              justifyContent: "center",
-            }}
-          >
-            <Text style={{ fontFamily: FONTS.DMMONO_LIGHT, fontSize: 11, color: COLORS.accent }}>
-              PROMPT {idx + 1}
-            </Text>
+        {CAMERA_PROMPTS.map(
+          (
+            prompt,
+            idx, //called from the camera-prompts.ts file
+          ) => (
+            <Pressable
+              key={`${idx}_${prompt}`}
+              onPress={() =>
+                router.push({
+                  pathname: "/(companyUser)/camera-ui",
+                  params: {
+                    promptIndex: String(idx),
+                    returnTo: "/(companyUser)/record",
+                  },
+                })
+              }
+              style={{
+                borderWidth: 1,
+                borderColor: COLORS.border,
+                borderRadius: 12,
+                backgroundColor: COLORS.card,
+                paddingHorizontal: 12,
+                paddingVertical: 9,
+                gap: 5,
+                justifyContent: "center",
+              }}
+            >
+              <Text
+                style={{
+                  fontFamily: FONTS.DMMONO_LIGHT,
+                  fontSize: 11,
+                  color: COLORS.accent,
+                }}
+              >
+                PROMPT {idx + 1}
+              </Text>
 
-            <Text numberOfLines={2} style={{ fontFamily: FONTS.LEXEND_REGULAR, fontSize: 13.5, color: COLORS.text }}>
-              {prompt}
-            </Text>
+              <Text
+                numberOfLines={2}
+                style={{
+                  fontFamily: FONTS.LEXEND_REGULAR,
+                  fontSize: 13.5,
+                  color: COLORS.text,
+                }}
+              >
+                {prompt}
+              </Text>
 
-            <Text style={{ fontFamily: FONTS.DMMONO_LIGHT, fontSize: 10.5, color: COLORS.subtext, lineHeight: 15 }}>
-              {promptDescriptions[idx] ?? "Tap to record."}
-            </Text>
+              <Text
+                style={{
+                  fontFamily: FONTS.DMMONO_LIGHT,
+                  fontSize: 10.5,
+                  color: COLORS.subtext,
+                  lineHeight: 15,
+                }}
+              >
+                {promptDescriptions[idx] ?? "Tap to record."}
+              </Text>
 
-            <Text style={{ fontFamily: FONTS.DMMONO_LIGHT, fontSize: 10.5, color: COLORS.subtext }}>Tap to record</Text>
-          </Pressable>
-        ))}
+              <Text
+                style={{
+                  fontFamily: FONTS.DMMONO_LIGHT,
+                  fontSize: 10.5,
+                  color: COLORS.subtext,
+                }}
+              >
+                Tap to record
+              </Text>
+            </Pressable>
+          ),
+        )}
       </View>
     </KeyboardScreen>
   );

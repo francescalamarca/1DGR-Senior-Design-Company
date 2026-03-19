@@ -38,7 +38,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-// ✅ MUST match EXACT keys from your useFonts(...)
+// MUST match EXACT keys from your useFonts(...)
 const FONTS = {
   LEXEND_LIGHT: "Lexend-Light",
   LEXEND_REGULAR: "Lexend-Regular",
@@ -50,11 +50,11 @@ const FONTS = {
   CRIMSON_SEMIBOLD: "CrimsonText-SemiBold",
 } as const;
 
-// ✅ Backgrounds
+// Backgrounds
 const BG = "#fbfbfb";
 const WHITE = "#FFFFFF";
 
-// ✅ Brand neutrals
+// Brand neutrals
 const TEXT = "#202020";
 const HINT = "#9bb4c0";
 const BORDER = "#d9d9d9";
@@ -94,15 +94,6 @@ function toCloudFrontUrl(urlOrKey: string): string {
 
   if (domain) return `https://${domain}/${urlOrKey}`;
   return urlOrKey;
-}
-
-/** ✅ helper: normalize "field of study" */
-function normalizeFieldOfStudy(e: any): string {
-  return String(
-    e?.fieldOfStudy ?? e?.field_of_study ?? e?.field_of_study_name ?? "",
-  )
-    .replace(/\s+/g, " ")
-    .trim();
 }
 
 function dashIfEmpty(v: any) {
@@ -164,27 +155,6 @@ function formatBusinessLocationLine(e: any): string {
   if (directLocation) return directLocation;
 
   return "";
-}
-
-/**
- * ✅ Split a raw label like:
- * "California State University-Los Angeles, Los Angeles, California, USA"
- * into:
- *   school = "California State University-Los Angeles"
- *   location = "Los Angeles, California, USA"
- */
-function splitSchoolAndLocationFromLabel(label: string): {
-  school: string;
-  location: string;
-} {
-  const raw = String(label ?? "").trim();
-  if (!raw) return { school: "", location: "" };
-  const idx = raw.indexOf(",");
-  if (idx === -1) return { school: raw, location: "" };
-  return {
-    school: raw.slice(0, idx).trim(),
-    location: raw.slice(idx + 1).trim(),
-  };
 }
 
 /** Render a benefits row's value. If it's a list (universities), add spacing between items. */
@@ -307,53 +277,14 @@ export default function ProfileScreen() {
   const didFetchOnceRef = useRef(false);
 
   // ===== Name toggle (preserved) =====
-  const [showLegalNow, setShowLegalNow] = useState(false);
+  const [showCompanyNow, setShowCompanyNow] = useState(false);
 
-  const showPreferred = profile.nameDisplaySettings.showPreferredName;
-  const showLegal = profile.nameDisplaySettings.showLegalName;
-  const bothEnabled = showPreferred && showLegal;
+  const showCompanyName = profile.nameDisplaySettings.showCompanyName;
 
-  const legalFullName = useMemo(() => {
-    const first = profile.legalFirstName?.trim() ?? "";
-    const last = profile.legalLastName?.trim() ?? "";
-    const middle = profile.legalMiddleName?.trim() ?? "";
-    return `${first}${middle ? ` ${middle}` : ""}${last ? ` ${last}` : ""}`.trim();
-  }, [profile.legalFirstName, profile.legalMiddleName, profile.legalLastName]);
-
-  const preferredName = (profile.preferredName ?? "").trim();
-  const preferredOk = preferredName.length > 0;
-  const legalOk = legalFullName.length > 0;
-
-  const canToggleName = bothEnabled && preferredOk && legalOk;
 
   const displayName = useMemo(() => {
-    if (bothEnabled) {
-      if (showLegalNow) return legalFullName || preferredName || profile.name;
-      return preferredName || legalFullName || profile.name;
-    }
-    return profile.name;
-  }, [bothEnabled, showLegalNow, legalFullName, preferredName, profile.name]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (bothEnabled) {
-        const first = profile.nameDisplaySettings.firstWhenBothOn;
-
-        if (first === "legal" && legalOk) setShowLegalNow(true);
-        else if (first === "preferred" && preferredOk) setShowLegalNow(false);
-        else if (preferredOk) setShowLegalNow(false);
-        else if (legalOk) setShowLegalNow(true);
-        else setShowLegalNow(false);
-      } else {
-        setShowLegalNow(false);
-      }
-    }, [
-      bothEnabled,
-      preferredOk,
-      legalOk,
-      profile.nameDisplaySettings.firstWhenBothOn,
-    ]),
-  );
+    return profile.companyName;
+  }, [profile.companyName]);
 
   // ===== Styles =====
   const s = useMemo(() => {
@@ -631,9 +562,7 @@ export default function ProfileScreen() {
       setProfile((prev: any) => {
         return {
           ...prev,
-          legalFirstName: user?.legal_first_name ?? "",
-          legalLastName: user?.legal_last_name ?? "",
-          legalMiddleName: user?.legal_middle_name ?? "",
+          companyName: user?.company_name ?? "",
           email: user?.email ?? "",
           phoneNumber: user?.phone_number ?? "",
           contactUrl1:
@@ -656,8 +585,7 @@ export default function ProfileScreen() {
             user?.contactUrl2Label ??
             (prev as any)?.contactUrl2Label ??
             "URL 2",
-          preferredName: user?.preferred_name ?? "",
-          bio: user?.bio ?? "",
+          missionStatement: user?.missionStatement ?? "",
           workType:
             user?.work_type ?? user?.workType ?? user?.employment_type ?? "",
           workPreference:
@@ -665,26 +593,11 @@ export default function ProfileScreen() {
             user?.workPreference ??
             user?.work_location_preference ??
             "",
-          residencyStatus: user?.residency ?? "",
-          geographicLocation: user?.location ?? "",
+          locations: Array.isArray((user as any)?.locations)
+            ? (user as any).locations.map((loc: any) => String(loc ?? "").trim()).filter(Boolean)
+            : ((prev as any)?.locations ?? []),
           industryExperience: user?.experience ?? "",
           industryInterests: user?.industry_interests ?? [],
-          valuesSummary: Array.isArray((user as any)?.values_summary)
-            ? (user as any).values_summary
-                .map((item: any, idx: number) => {
-                  const label = String(item?.label ?? "").trim();
-                  const value = String(item?.value ?? "").trim();
-                  if (!label && !value) return null;
-                  return {
-                    key:
-                      String(item?.key ?? `value_${idx + 1}`).trim() ||
-                      `value_${idx + 1}`,
-                    label,
-                    value: value || label,
-                  };
-                })
-                .filter(Boolean)
-            : ((prev as any)?.valuesSummary ?? []),
           avatarImageUri: toCloudFrontUrl(
             user?.avatar_image_url ?? user?.avatar_image_key,
           ),
@@ -741,7 +654,7 @@ export default function ProfileScreen() {
   });
 
   // ===== mission + headline mapping =====
-  const missionText = (profile.bio ?? "").trim();
+  const missionText = (profile.missionStatement ?? "").trim();
   const headlineText =
     String(
       (profile as any).headline ??
@@ -959,13 +872,6 @@ export default function ProfileScreen() {
         easing: Easing.out(Easing.cubic),
         useNativeDriver: false,
       }),
-      // Reset slider back to page 0 while collapsing
-      Animated.timing(pageX, {
-        toValue: 0,
-        duration: 160,
-        easing: Easing.out(Easing.cubic),
-        useNativeDriver: true,
-      }),
     ]).start(() => {
       LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
       setBenefitsPage(0);
@@ -974,7 +880,6 @@ export default function ProfileScreen() {
     });
   }, [
     benefitsOpen,
-    pageX,
     benefitsChevron,
     benefitsHeight,
     benefitsOpacity,
@@ -986,116 +891,25 @@ export default function ProfileScreen() {
     return closebenefits();
   }, [benefitsOpen, openbenefits, closebenefits]);
 
-  const togglebenefitsPage = useCallback(() => {
-    if (!benefitsOpen) return;
-    if (closingBenefitsRef.current || openingBenefitsRef.current) return;
-
-    const next: 0 | 1 = benefitsPage === 0 ? 1 : 0;
-    setBenefitsPage(next);
-
-    Animated.spring(pageX, {
-      toValue: next === 1 ? -1 : 0,
-      damping: 26,
-      stiffness: 240,
-      mass: 1,
-      overshootClamping: true,
-      useNativeDriver: true,
-    }).start();
-  }, [pageX, benefitsPage, benefitsOpen]);
-
-  const benefitsSwipeResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gestureState) => {
-          if (
-            !benefitsOpen ||
-            closingBenefitsRef.current ||
-            openingBenefitsRef.current
-          )
-            return false;
-          const dx = Math.abs(gestureState.dx);
-          const dy = Math.abs(gestureState.dy);
-          return dx > 10 && dx > dy;
-        },
-        onPanResponderRelease: (_, gestureState) => {
-          if (
-            !benefitsOpen ||
-            closingBenefitsRef.current ||
-            openingBenefitsRef.current
-          )
-            return;
-          const { dx } = gestureState;
-          if (dx < -35 && benefitsPage === 0) {
-            setBenefitsPage(1);
-            Animated.spring(pageX, {
-              toValue: -1,
-              damping: 26,
-              stiffness: 240,
-              mass: 1,
-              overshootClamping: true,
-              useNativeDriver: true,
-            }).start();
-            return;
-          }
-          if (dx > 35 && benefitsPage === 1) {
-            setBenefitsPage(0);
-            Animated.spring(pageX, {
-              toValue: 0,
-              damping: 26,
-              stiffness: 240,
-              mass: 1,
-              overshootClamping: true,
-              useNativeDriver: true,
-            }).start();
-          }
-        },
-      }),
-    [pageX, benefitsOpen, benefitsPage],
-  );
 
   const benefitsCol1: benefitsRow[] = useMemo(() => {
-    const workTypePrimary = String(
-      (profile as any).workType ??
-        (profile as any).work_type ??
-        (profile as any).employmentType ??
-        "",
-    ).trim();
-    const workTypeSecondary = String(
-      (profile as any).workPreference ??
-        (profile as any).work_preference ??
-        (profile as any).work_location_preference ??
-        "",
-    ).trim();
-    const workType = dashIfEmpty(
-      [workTypePrimary, workTypeSecondary].filter(Boolean).join(" · "),
-    );
-    const location = dashIfEmpty(profile.geographicLocation);
+  const workType = dashIfEmpty((profile as any).work_type ?? "");
+  const location = dashIfEmpty(
+    Array.isArray(profile.locations) && profile.locations.length 
+      ? profile.locations.join(" · ") 
+      : ""
+  );
+  const age = dashIfEmpty((profile as any).business_age ?? "");
+  const benefits = dashIfEmpty((profile as any).benefits_summary ?? "");
 
-    return [
-      { label: "Work type", value: workType },
-      { label: "Location", value: location },
-    ];
-  }, [profile]);
+  return [
+    { label: "Work Type", value: workType },
+    { label: "Locations", value: location },
+    { label: "Business Age", value: age },
+    { label: "Benefits", value: benefits },
+  ];
+}, [profile]);
 
-  const benefitsCol2: benefitsRow[] = useMemo(() => {
-    const residency = dashIfEmpty(profile.residencyStatus);
-    const experience = dashIfEmpty(profile.industryExperience);
-
-    const funFacts = (profile.additionalDetails ?? "")
-      .split(/\r?\n/)
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .slice(0, 3);
-
-    return [
-      { label: "Residency status", value: residency },
-      { label: "Industry experience", value: experience },
-      {
-        label: "Fun facts",
-        value: funFacts.length ? funFacts.join("\n") : "—",
-      },
-    ];
-  }, [profile]);
 
   //=========== COMPANY COLUMN ====================
   // Keep container height synced if content height changes while open (ex: fetch updates)
@@ -1237,106 +1051,18 @@ export default function ProfileScreen() {
     return closecompany();
   }, [companyOpen, opencompany, closecompany]);
 
-  const togglecompanyPage = useCallback(() => {
-    if (!companyOpen) return;
-    if (closingCompanyRef.current || openingCompanyRef.current) return;
-
-    const next: 0 | 1 = companyPage === 0 ? 1 : 0;
-    setCompanyPage(next);
-
-    Animated.spring(pageX, {
-      toValue: next === 1 ? -1 : 0,
-      damping: 26,
-      stiffness: 240,
-      mass: 1,
-      overshootClamping: true,
-      useNativeDriver: true,
-    }).start();
-  }, [pageX, companyPage, companyOpen]);
-
-  const companySwipeResponder = useMemo(
-    () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_, gestureState) => {
-          if (
-            !companyOpen ||
-            closingCompanyRef.current ||
-            openingCompanyRef.current
-          )
-            return false;
-          const dx = Math.abs(gestureState.dx);
-          const dy = Math.abs(gestureState.dy);
-          return dx > 10 && dx > dy;
-        },
-        onPanResponderRelease: (_, gestureState) => {
-          if (
-            !companyOpen ||
-            closingCompanyRef.current ||
-            openingCompanyRef.current
-          )
-            return;
-          const { dx } = gestureState;
-          if (dx < -35 && companyPage === 0) {
-            setCompanyPage(1);
-            Animated.spring(pageX, {
-              toValue: -1,
-              damping: 26,
-              stiffness: 240,
-              mass: 1,
-              overshootClamping: true,
-              useNativeDriver: true,
-            }).start();
-            return;
-          }
-          if (dx > 35 && companyPage === 1) {
-            setCompanyPage(0);
-            Animated.spring(pageX, {
-              toValue: 0,
-              damping: 26,
-              stiffness: 240,
-              mass: 1,
-              overshootClamping: true,
-              useNativeDriver: true,
-            }).start();
-          }
-        },
-      }),
-    [pageX, companyOpen, companyPage],
+  const companyCol1: companyRow[] = useMemo(() => {
+  const location = dashIfEmpty(
+    Array.isArray(profile.locations) && profile.locations.length 
+      ? profile.locations.join(" · ") 
+      : ""
   );
 
-  const companyCol1: companyRow[] = useMemo(() => {
-    const workTypePrimary = String(
-      (profile as any).workType ??
-        (profile as any).work_type ??
-        (profile as any).employmentType ??
-        "",
-    ).trim();
-    const workTypeSecondary = String(
-      (profile as any).workPreference ??
-        (profile as any).work_preference ??
-        (profile as any).work_location_preference ??
-        "",
-    ).trim();
-    const workType = dashIfEmpty(
-      [workTypePrimary, workTypeSecondary].filter(Boolean).join(" · "),
-    );
-    const location = dashIfEmpty(profile.geographicLocation);
+  return [
+    { label: "Locations", value: location },
+  ];
+}, [profile]);
 
-    return [
-      { label: "Work type", value: workType },
-      { label: "Location", value: location },
-    ];
-  }, [profile]);
-
-  const companyCol2: companyRow[] = useMemo(() => {
-    const residency = dashIfEmpty(profile.residencyStatus);
-    const experience = dashIfEmpty(profile.industryExperience);
-
-    return [
-      { label: "Residency status", value: residency },
-      { label: "Industry experience", value: experience },
-    ];
-  }, [profile]);
 
   //========= end company set up blocks
 
@@ -1548,36 +1274,14 @@ export default function ProfileScreen() {
   );
 
   const employeeCol1: employeeRow[] = useMemo(() => {
-    const workTypePrimary = String(
-      (profile as any).workType ??
-        (profile as any).work_type ??
-        (profile as any).employmentType ??
-        "",
-    ).trim();
-    const workTypeSecondary = String(
-      (profile as any).workPreference ??
-        (profile as any).work_preference ??
-        (profile as any).work_location_preference ??
-        "",
-    ).trim();
-    const workType = dashIfEmpty(
-      [workTypePrimary, workTypeSecondary].filter(Boolean).join(" · "),
+    const employees = dashIfEmpty(
+      Array.isArray(profile.currentEmployees) && profile.currentEmployees.length 
+      ? profile.currentEmployees.join(" · ") 
+      : ""
     );
-    const location = dashIfEmpty(profile.geographicLocation);
 
     return [
-      { label: "Work type", value: workType },
-      { label: "Location", value: location },
-    ];
-  }, [profile]);
-
-  const employeeCol2: employeeRow[] = useMemo(() => {
-    const residency = dashIfEmpty(profile.residencyStatus);
-    const experience = dashIfEmpty(profile.industryExperience);
-
-    return [
-      { label: "Residency status", value: residency },
-      { label: "Industry experience", value: experience },
+      { label: "Employees", value: employees },
     ];
   }, [profile]);
 
@@ -1791,36 +1495,13 @@ export default function ProfileScreen() {
   );
 
   const rolesCol1: rolesRow[] = useMemo(() => {
-    const workTypePrimary = String(
-      (profile as any).workType ??
-        (profile as any).work_type ??
-        (profile as any).employmentType ??
+    const roles = String(
+      (profile as any).openRoles ??
         "",
     ).trim();
-    const workTypeSecondary = String(
-      (profile as any).workPreference ??
-        (profile as any).work_preference ??
-        (profile as any).work_location_preference ??
-        "",
-    ).trim();
-    const workType = dashIfEmpty(
-      [workTypePrimary, workTypeSecondary].filter(Boolean).join(" · "),
-    );
-    const location = dashIfEmpty(profile.geographicLocation);
 
     return [
-      { label: "Work type", value: workType },
-      { label: "Location", value: location },
-    ];
-  }, [profile]);
-
-  const rolesCol2: rolesRow[] = useMemo(() => {
-    const residency = dashIfEmpty(profile.residencyStatus);
-    const experience = dashIfEmpty(profile.industryExperience);
-
-    return [
-      { label: "Residency status", value: residency },
-      { label: "Industry experience", value: experience },
+      { label: "Roles", value: roles },
     ];
   }, [profile]);
 
@@ -1951,10 +1632,8 @@ export default function ProfileScreen() {
             </Pressable>
 
             <Pressable
-              disabled={!canToggleName}
               onPress={() => {
-                if (!canToggleName) return;
-                setShowLegalNow((v) => !v);
+                setShowCompanyNow((v) => !v);
               }}
               style={{ alignSelf: "center", marginTop: 12 }}
               hitSlop={10}
@@ -2000,22 +1679,15 @@ export default function ProfileScreen() {
               <Text style={s.benefitsHeader}>
                 BENEFITS SUMMARY - management style, PTO
               </Text>
-
-              <Animated.View
-                style={{
-                  transform: [{ rotate: benefitsChevronRotate }],
-                  marginRight: 6,
-                }}
-              >
+              <Animated.View style={{ transform: [{ rotate: benefitsChevronRotate }], marginRight: 6 }}>
                 <Feather name="chevron-down" size={24} color={HINT} />
               </Animated.View>
             </Pressable>
 
-            {/* ✅ Premium animated reveal container */}
-            <Animated.View
-              style={{ height: benefitsHeight, overflow: "hidden" }}
-            >
-              {/* ✅ Hidden measurer */}
+            {/* Animated reveal container */}
+            <Animated.View style={{ height: benefitsHeight, overflow: "hidden" }}>
+
+              {/* Hidden measurer */}
               <View
                 pointerEvents="none"
                 style={{ opacity: 0, position: "absolute", left: 0, right: 0 }}
@@ -2026,67 +1698,13 @@ export default function ProfileScreen() {
                 }}
               >
                 <View style={{ marginTop: 14 }}>
-                  <View style={{ overflow: "hidden" }}>
-                    <View style={{ width: panelW * 2, flexDirection: "row" }}>
-                      <View style={{ width: panelW }}>
-                        <View style={{ gap: 14 }}>
-                          {benefitsCol1.map((row) => (
-                            <View
-                              key={row.label}
-                              style={{ gap: 4, paddingRight: benefits_RIGHT_GUTTER }}
-                            >
-                              <Text style={s.benefitsLabel}>{row.label}</Text>
-                              <BenefitsValue
-                                value={row.value}
-                                textStyle={s.BenefitsValue}
-                              />
-                            </View>
-                          ))}
-                        </View>
+                  <View style={{ gap: 14 }}>
+                    {benefitsCol1.map((row) => (
+                      <View key={row.label} style={{ gap: 4, paddingRight: benefits_RIGHT_GUTTER }}>
+                        <Text style={s.benefitsLabel}>{row.label}</Text>
+                        <BenefitsValue value={row.value} textStyle={s.BenefitsValue} />
                       </View>
-
-                      <View style={{ width: panelW }}>
-                        <View style={{ gap: 14 }}>
-                          {benefitsCol2.map((row) => (
-                            <View
-                              key={row.label}
-                              style={{ gap: 4, paddingRight: benefits_RIGHT_GUTTER }}
-                            >
-                              <Text style={s.benefitsLabel}>{row.label}</Text>
-                              <BenefitsValue
-                                value={row.value}
-                                textStyle={s.BenefitsValue}
-                              />
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-
-                  <View
-                    style={{
-                      marginTop: 14,
-                      flexDirection: "row",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {[0, 1].map((idx) => {
-                      const active = benefitsPage === idx;
-                      return (
-                        <View
-                          key={`benefits-dot-measure-${idx}`}
-                          style={{
-                            width: 5,
-                            height: 5,
-                            borderRadius: 999,
-                            marginHorizontal: 3.5,
-                            backgroundColor: active ? "#202020" : HINT,
-                            opacity: active ? 1 : 0.95,
-                          }}
-                        />
-                      );
-                    })}
+                    ))}
                   </View>
                 </View>
               </View>
@@ -2100,97 +1718,20 @@ export default function ProfileScreen() {
                   }}
                 >
                   <View style={{ marginTop: 14 }}>
-                    <View
-                      style={{ overflow: "hidden" }}
-                      {...benefitsSwipeResponder.panHandlers}
-                    >
-                      <Animated.View
-                        style={{
-                          width: panelW * 2,
-                          flexDirection: "row",
-                          transform: [{ translateX: pageTranslateX }],
-                        }}
-                      >
-                        <View style={{ width: panelW }}>
-                          <View style={{ gap: 14 }}>
-                            {benefitsCol1.map((row) => (
-                              <View
-                                key={row.label}
-                                style={{ gap: 4, paddingRight: benefits_RIGHT_GUTTER }}
-                              >
-                                <Text style={s.benefitsLabel}>{row.label}</Text>
-                                <BenefitsValue
-                                  value={row.value}
-                                  textStyle={s.BenefitsValue}
-                                />
-                              </View>
-                            ))}
-                          </View>
+                    <View style={{ gap: 14 }}>
+                      {benefitsCol1.map((row) => (
+                        <View key={row.label} style={{ gap: 4, paddingRight: benefits_RIGHT_GUTTER }}>
+                          <Text style={s.benefitsLabel}>{row.label}</Text>
+                          <BenefitsValue value={row.value} textStyle={s.BenefitsValue} />
                         </View>
-
-                        <View style={{ width: panelW }}>
-                          <View style={{ gap: 14 }}>
-                            {benefitsCol2.map((row) => (
-                              <View
-                                key={row.label}
-                                style={{ gap: 4, paddingRight: benefits_RIGHT_GUTTER }}
-                              >
-                                <Text style={s.benefitsLabel}>{row.label}</Text>
-                                <BenefitsValue
-                                  value={row.value}
-                                  textStyle={s.BenefitsValue}
-                                />
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-                      </Animated.View>
-
-                      {/* Page toggle button */}
-                      <Pressable
-                        onPress={togglebenefitsPage}
-                        hitSlop={10}
-                        style={{
-                          position: "absolute",
-                          right: 0,
-                          top: 0,
-                          bottom: 0,
-                          width: benefits_PAGE_BUTTON_W,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      />
-                    </View>
-
-                    <View
-                      style={{
-                        marginTop: 14,
-                        flexDirection: "row",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {[0, 1].map((idx) => {
-                        const active = benefitsPage === idx;
-                        return (
-                          <View
-                            key={`benefits-dot-${idx}`}
-                            style={{
-                              width: 5,
-                              height: 5,
-                              borderRadius: 999,
-                              marginHorizontal: 3.5,
-                              backgroundColor: active ? "#202020" : HINT,
-                              opacity: active ? 1 : 0.95,
-                            }}
-                          />
-                        );
-                      })}
+                      ))}
                     </View>
                   </View>
                 </Animated.View>
               ) : null}
+
             </Animated.View>
-          </View>{" "}
+          </View>
           {/*end benefits return block*/}
 
           <View style={{ height: 1, backgroundColor: BORDER }} />
@@ -2253,48 +1794,7 @@ export default function ProfileScreen() {
                         </View>
                       </View>
 
-                      <View style={{ width: panelW }}>
-                        <View style={{ gap: 14 }}>
-                          {companyCol2.map((row) => (
-                            <View
-                              key={row.label}
-                              style={{ gap: 4, paddingRight: company_RIGHT_GUTTER }}
-                            >
-                              <Text style={s.companyLabel}>{row.label}</Text>
-                              <CompanyValue
-                                value={row.value}
-                                textStyle={s.CompanyValue}
-                              />
-                            </View>
-                          ))}
-                        </View>
-                      </View>
                     </View>
-                  </View>
-
-                  <View
-                    style={{
-                      marginTop: 14,
-                      flexDirection: "row",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {[0, 1].map((idx) => {
-                      const active = companyPage === idx;
-                      return (
-                        <View
-                          key={`benefits-dot-measure-${idx}`}
-                          style={{
-                            width: 5,
-                            height: 5,
-                            borderRadius: 999,
-                            marginHorizontal: 3.5,
-                            backgroundColor: active ? "#202020" : HINT,
-                            opacity: active ? 1 : 0.95,
-                          }}
-                        />
-                      );
-                    })}
                   </View>
                 </View>
               </View>
@@ -2308,97 +1808,19 @@ export default function ProfileScreen() {
                   }}
                 >
                   <View style={{ marginTop: 14 }}>
-                    <View
-                      style={{ overflow: "hidden" }}
-                      {...companySwipeResponder.panHandlers}
-                    >
-                      <Animated.View
-                        style={{
-                          width: panelW * 2,
-                          flexDirection: "row",
-                          transform: [{ translateX: pageTranslateX }],
-                        }}
-                      >
-                        <View style={{ width: panelW }}>
-                          <View style={{ gap: 14 }}>
-                            {companyCol1.map((row) => (
-                              <View
-                                key={row.label}
-                                style={{ gap: 4, paddingRight: company_RIGHT_GUTTER }}
-                              >
-                                <Text style={s.companyLabel}>{row.label}</Text>
-                                <BenefitsValue
-                                  value={row.value}
-                                  textStyle={s.CompanyValue}
-                                />
-                              </View>
-                            ))}
-                          </View>
+                    <View style={{ gap: 14 }}>
+                      {companyCol1.map((row) => (
+                        <View key={row.label} style={{ gap: 4, paddingRight: company_RIGHT_GUTTER }}>
+                          <Text style={s.companyLabel}>{row.label}</Text>
+                          <BenefitsValue value={row.value} textStyle={s.CompanyValue} />
                         </View>
-
-                        <View style={{ width: panelW }}>
-                          <View style={{ gap: 14 }}>
-                            {companyCol2.map((row) => (
-                              <View
-                                key={row.label}
-                                style={{ gap: 4, paddingRight: company_RIGHT_GUTTER }}
-                              >
-                                <Text style={s.companyLabel}>{row.label}</Text>
-                                <BenefitsValue
-                                  value={row.value}
-                                  textStyle={s.CompanyValue}
-                                />
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-                      </Animated.View>
-
-                      {/* Page toggle button */}
-                      <Pressable
-                        onPress={togglecompanyPage}
-                        hitSlop={10}
-                        style={{
-                          position: "absolute",
-                          right: 0,
-                          top: 0,
-                          bottom: 0,
-                          width: company_PAGE_BUTTON_W,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      />
-                    </View>
-
-                    <View
-                      style={{
-                        marginTop: 14,
-                        flexDirection: "row",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {[0, 1].map((idx) => {
-                        const active = companyPage === idx;
-                        return (
-                          <View
-                            key={`benefits-dot-${idx}`}
-                            style={{
-                              width: 5,
-                              height: 5,
-                              borderRadius: 999,
-                              marginHorizontal: 3.5,
-                              backgroundColor: active ? "#202020" : HINT,
-                              opacity: active ? 1 : 0.95,
-                            }}
-                          />
-                        );
-                      })}
+                      ))}
                     </View>
                   </View>
                 </Animated.View>
-              ) : null}
-            </Animated.View>
-          </View>{" "}
+                ) : null}
+              </Animated.View>
+          </View>
           {/* end block for company location */}
 
           <View style={{ height: 1, backgroundColor: BORDER }} />
@@ -2462,49 +1884,7 @@ export default function ProfileScreen() {
                           ))}
                         </View>
                       </View>
-
-                      <View style={{ width: panelW }}>
-                        <View style={{ gap: 14 }}>
-                          {employeeCol2.map((row) => (
-                            <View
-                              key={row.label}
-                              style={{ gap: 4, paddingRight: employee_RIGHT_GUTTER }}
-                            >
-                              <Text style={s.employeeLabel}>{row.label}</Text>
-                              <EmployeeValue
-                                value={row.value}
-                                textStyle={s.EmployeeValue}
-                              />
-                            </View>
-                          ))}
-                        </View>
-                      </View>
                     </View>
-                  </View>
-
-                  <View
-                    style={{
-                      marginTop: 14,
-                      flexDirection: "row",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {[0, 1].map((idx) => {
-                      const active = employeePage === idx;
-                      return (
-                        <View
-                          key={`benefits-dot-measure-${idx}`}
-                          style={{
-                            width: 5,
-                            height: 5,
-                            borderRadius: 999,
-                            marginHorizontal: 3.5,
-                            backgroundColor: active ? "#202020" : HINT,
-                            opacity: active ? 1 : 0.95,
-                          }}
-                        />
-                      );
-                    })}
                   </View>
                 </View>
               </View>
@@ -2532,23 +1912,6 @@ export default function ProfileScreen() {
                         <View style={{ width: panelW }}>
                           <View style={{ gap: 14 }}>
                             {employeeCol1.map((row) => (
-                              <View
-                                key={row.label}
-                                style={{ gap: 4, paddingRight: employee_RIGHT_GUTTER }}
-                              >
-                                <Text style={s.employeeLabel}>{row.label}</Text>
-                                <EmployeeValue
-                                  value={row.value}
-                                  textStyle={s.EmployeeValue}
-                                />
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-
-                        <View style={{ width: panelW }}>
-                          <View style={{ gap: 14 }}>
-                            {employeeCol2.map((row) => (
                               <View
                                 key={row.label}
                                 style={{ gap: 4, paddingRight: employee_RIGHT_GUTTER }}
@@ -2739,49 +2102,7 @@ export default function ProfileScreen() {
                           ))}
                         </View>
                       </View>
-
-                      <View style={{ width: panelW }}>
-                        <View style={{ gap: 14 }}>
-                          {rolesCol2.map((row) => (
-                            <View
-                              key={row.label}
-                              style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
-                            >
-                              <Text style={s.rolesLabel}>{row.label}</Text>
-                              <RolesValue
-                                value={row.value}
-                                textStyle={s.RolesValue}
-                              />
-                            </View>
-                          ))}
-                        </View>
-                      </View>
                     </View>
-                  </View>
-
-                  <View
-                    style={{
-                      marginTop: 14,
-                      flexDirection: "row",
-                      justifyContent: "center",
-                    }}
-                  >
-                    {[0, 1].map((idx) => {
-                      const active = rolesPage === idx;
-                      return (
-                        <View
-                          key={`roles-dot-measure-${idx}`}
-                          style={{
-                            width: 5,
-                            height: 5,
-                            borderRadius: 999,
-                            marginHorizontal: 3.5,
-                            backgroundColor: active ? "#202020" : HINT,
-                            opacity: active ? 1 : 0.95,
-                          }}
-                        />
-                      );
-                    })}
                   </View>
                 </View>
               </View>
@@ -2795,97 +2116,25 @@ export default function ProfileScreen() {
                   }}
                 >
                   <View style={{ marginTop: 14 }}>
-                    <View
-                      style={{ overflow: "hidden" }}
-                      {...rolesSwipeResponder.panHandlers}
-                    >
-                      <Animated.View
-                        style={{
-                          width: panelW * 2,
-                          flexDirection: "row",
-                          transform: [{ translateX: pageTranslateX }],
-                        }}
-                      >
-                        <View style={{ width: panelW }}>
-                          <View style={{ gap: 14 }}>
-                            {rolesCol1.map((row) => (
-                              <View
-                                key={row.label}
-                                style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
-                              >
-                                <Text style={s.rolesLabel}>{row.label}</Text>
-                                <RolesValue
-                                  value={row.value}
-                                  textStyle={s.RolesValue}
-                                />
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-
-                        <View style={{ width: panelW }}>
-                          <View style={{ gap: 14 }}>
-                            {rolesCol2.map((row) => (
-                              <View
-                                key={row.label}
-                                style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
-                              >
-                                <Text style={s.rolesLabel}>{row.label}</Text>
-                                <RolesValue
-                                  value={row.value}
-                                  textStyle={s.RolesValue}
-                                />
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-                      </Animated.View>
-
-                      {/* Page toggle button */}
-                      <Pressable
-                        onPress={togglerolesPage}
-                        hitSlop={10}
-                        style={{
-                          position: "absolute",
-                          right: 0,
-                          top: 0,
-                          bottom: 0,
-                          width: roles_PAGE_BUTTON_W,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      />
-                    </View>
-
-                    <View
-                      style={{
-                        marginTop: 14,
-                        flexDirection: "row",
-                        justifyContent: "center",
-                      }}
-                    >
-                      {[0, 1].map((idx) => {
-                        const active = rolesPage === idx;
-                        return (
+                      <View style={{ gap: 14 }}>
+                        {rolesCol1.map((row) => (
                           <View
-                            key={`benefits-dot-${idx}`}
-                            style={{
-                              width: 5,
-                              height: 5,
-                              borderRadius: 999,
-                              marginHorizontal: 3.5,
-                              backgroundColor: active ? "#202020" : HINT,
-                              opacity: active ? 1 : 0.95,
-                            }}
-                          />
-                        );
-                      })}
-                    </View>
-                  </View>
-                </Animated.View>
-              ) : null}
+                            key={row.label}
+                            style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
+                            >
+                            <Text style={s.rolesLabel}>{row.label}</Text>
+                            <RolesValue
+                              value={row.value}
+                              textStyle={s.RolesValue}
+                              />
+                            </View>
+                            ))}
+                          </View>
+                        </View>
+                      </Animated.View>  
+                    ) : null }
             </Animated.View>
-          </View>{" "}
+          </View>      
           {/*end roles return block*/}
 
           {/* =========== Block F - contact us ============= */}
