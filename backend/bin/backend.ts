@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import * as cdk from "aws-cdk-lib/core";
+import * as cdk from "aws-cdk-lib";
 import { StatefulStack } from "../lib/stateful-stack";
 import { StatelessStack } from "../lib/stateless-stack";
 

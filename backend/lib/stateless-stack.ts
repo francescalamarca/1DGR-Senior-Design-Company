@@ -473,11 +473,13 @@ export class StatelessStack extends cdk.Stack {
         environment: {
           DB_SECRET_ARN: props.db.secret?.secretArn || "",
           RDS_HOST: props.db.instanceEndpoint.hostname,
+          BUCKET_NAME: props.videoBucket.bucketName,
         },
       },
     );
     props.db.secret?.grantRead(deleteVideoForeverLambda);
-
+    props.videoBucket.grantDelete(deleteVideoForeverLambda);
+    
     const deleteVideoForeverResource = api.root.addResource(
       "delete-video-forever",
     ); // /delete-video-forever
