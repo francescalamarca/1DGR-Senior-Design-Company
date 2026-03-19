@@ -25,6 +25,7 @@ import {
   SinglePickerModal,
   WorkTypePickerModal,
   CoreValuesPickerModal,
+  BackgroundColorSection,
 } from "./profileEdit.ui";
 
 const MODAL_KB_OFFSET_IOS = 12;
@@ -97,6 +98,7 @@ export default function ProfileEditScreen() {
     openCoreValuesPicker,
     coreValuesPickerVisible,
     setCoreValuesPickerVisible,
+    selectBackgroundColor,
   } = useProfileEditController();
 
   const workTypeSubtitle = React.useMemo(() => {
@@ -152,6 +154,11 @@ export default function ProfileEditScreen() {
         <NameSection
           companyName={draft.companyName ?? ""}
           onChangeCompanyName={(v: string) => setDraft((p) => ({ ...p, companyName: v }))}
+        />
+
+        <BackgroundColorSection
+          selectedColor={draft.customBackgroundColor ?? ""}
+          onSelect={selectBackgroundColor}
         />
 
         <CoreValuesSection
