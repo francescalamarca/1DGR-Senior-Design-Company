@@ -18,93 +18,35 @@
  */
 import { aws_config } from "@/constants/aws-config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import type {
   ContactDisplaySettings,
-  HigherEdEntry,
   LibraryVideo,
   NameDisplaySettings,
   Profile,
-  ValueSummaryItem,
 } from "./profile.types";
 
 /** ======================
- *  AsyncStorage keys
+ *  AsyncStorage keys - THESE WILL HAVE TO CHANGE FOR COMPANY THINGS
  *  ====================== */
 const STORAGE_KEYS = {
   NAME_DISPLAY_SETTINGS: "@1dgr_nameDisplaySettings",
   CONTACT_DISPLAY_SETTINGS: "@1dgr_contactDisplaySettings",
   VIDEO_LIBRARY: "@1dgr_videoLibrary",
   DELETED_VIDEO_LIBRARY: "@1dgr_deletedVideoLibrary",
-  SHARE_LINKS: "@1dgr_shareLinks",
 };
 
-/** ======================
- *  Name helpers
- *  ====================== */
-function getLegalFullName(
-  p: Pick<Profile, "legalFirstName" | "legalMiddleName" | "legalLastName">,
-) {
-  const first = (p.legalFirstName ?? "").trim();
-  const middle = (p.legalMiddleName ?? "").trim();
-  const last = (p.legalLastName ?? "").trim();
-  return `${first}${middle ? ` ${middle}` : ""}${last ? ` ${last}` : ""}`.trim();
-}
-
-/**
- * Resolves the displayed name based on:
- * - preferredName / legal name parts
- * - nameDisplaySettings toggles + "firstWhenBothOn"
- */
-function getDisplayName(
-  p: Pick<
-    Profile,
-    | "preferredName"
-    | "legalFirstName"
-    | "legalMiddleName"
-    | "legalLastName"
-    | "nameDisplaySettings"
-  >,
-) {
-  const legal = getLegalFullName(p).trim();
-  const preferred = (p.preferredName ?? "").trim();
-
-  const { showPreferredName, showLegalName, firstWhenBothOn } =
-    p.nameDisplaySettings;
-
-  // Safety: never allow a state where both are "off"
-  const safeShowPreferred = showPreferredName || !showLegalName;
-  const safeShowLegal = showLegalName || !showPreferredName;
-
-  // If both are enabled, pick the "first" preference, then fall back to the other.
-  if (safeShowPreferred && safeShowLegal) {
-    const first = firstWhenBothOn === "legal" ? legal : preferred;
-    const second = firstWhenBothOn === "legal" ? preferred : legal;
-
-    if (first.length > 0) return first;
-    if (second.length > 0) return second;
-    return "Your Name";
-  }
-
-  if (safeShowPreferred && preferred.length > 0) return preferred;
-  if (safeShowLegal && legal.length > 0) return legal;
-
-  return "Your Name";
-}
-
-/**
- * Ensures name toggles are always valid:
- * - If both toggles are off, default to preferred name ON.
- * - Ensures firstWhenBothOn always exists.
- */
-function normalizeNameToggles(s: NameDisplaySettings): NameDisplaySettings {
-  const firstWhenBothOn = s.firstWhenBothOn ?? "preferred";
-
-  if (!s.showPreferredName && !s.showLegalName) {
-    return { showPreferredName: true, showLegalName: false, firstWhenBothOn };
-  }
-
-  return { ...s, firstWhenBothOn };
+function normalizeNameToggles(s?: NameDisplaySettings): NameDisplaySettings {
+  return {
+    showCompanyName: s?.showCompanyName ?? true,
+  };
 }
 
 function normalizeContactToggles(
@@ -119,20 +61,8 @@ function normalizeContactToggles(
 }
 
 /** ======================
- *  Immutable DOB helper
+ *  Immutable DOB helper - maybe lets change this to business age helper
  *  ====================== */
-/**
- * dateOfBirth can be set once, then becomes immutable.
- * - If prev had a DOB, keep it.
- * - Otherwise accept next's DOB.
- */
-function lockDateOfBirth(prev: Profile, next: Profile): Profile {
-  const prevDob = (prev.dateOfBirth ?? "").trim();
-  const nextDob = (next.dateOfBirth ?? "").trim();
-
-  if (prevDob.length > 0) return { ...next, dateOfBirth: prevDob };
-  return { ...next, dateOfBirth: nextDob };
-}
 
 /** ======================
  *  URL/key helper
@@ -163,7 +93,14 @@ function extractS3KeyFromUrl(urlOrKey: string) {
  * - videoLibrary / deletedVideoLibrary are canonical lists
  */
 const initialProfileBase = {
-  bio: "",
+  companyName: "",
+  missionStatement: "",
+  coreValues: [],
+  locations: [],
+  currentEmployees: [],
+  industry: [],
+  benefitsSummary: "",
+  openRoles: [],
   avatarImageUri: "",
   avatarVideoUri: "",
   // ✅ profile slots (NOT the library)
@@ -180,15 +117,12 @@ const initialProfileBase = {
   // ✅ soft-deleted library list (recover screen)
   deletedVideoLibrary: [] as LibraryVideo[],
 
-  // ✅ NEW: Higher Education
-  higherEducation: [] as HigherEdEntry[],
-
   email: "",
   phoneNumber: "",
   contactUrl1: "",
   contactUrl2: "",
 
-  linkedinUrl: "",
+  customBackgroundColor: "",
 };
 
 /** ======================
@@ -201,13 +135,11 @@ async function loadPersistedSettings() {
       contactSerialized,
       videoSerialized,
       deletedVideoSerialized,
-      shareLinksSerialized,
     ] = await Promise.all([
       AsyncStorage.getItem(STORAGE_KEYS.NAME_DISPLAY_SETTINGS),
       AsyncStorage.getItem(STORAGE_KEYS.CONTACT_DISPLAY_SETTINGS),
       AsyncStorage.getItem(STORAGE_KEYS.VIDEO_LIBRARY),
       AsyncStorage.getItem(STORAGE_KEYS.DELETED_VIDEO_LIBRARY),
-      AsyncStorage.getItem(STORAGE_KEYS.SHARE_LINKS),
     ]);
 
     const nameSettings = nameSerialized ? JSON.parse(nameSerialized) : null;
@@ -218,16 +150,12 @@ async function loadPersistedSettings() {
     const deletedVideoLibrary = deletedVideoSerialized
       ? JSON.parse(deletedVideoSerialized)
       : null;
-    const shareLinks = shareLinksSerialized
-      ? JSON.parse(shareLinksSerialized)
-      : null;
 
     return {
       nameSettings,
       contactSettings,
       videoLibrary,
       deletedVideoLibrary,
-      shareLinks,
     };
   } catch (error) {
     console.error("[loadPersistedSettings] Error:", error);
@@ -236,18 +164,21 @@ async function loadPersistedSettings() {
       contactSettings: null,
       videoLibrary: null,
       deletedVideoLibrary: null,
-      shareLinks: null,
     };
   }
 }
 
-// ✅ Helper: Save settings to AsyncStorage
+function getDisplayName(
+  p: Pick<Profile, "companyName" | "nameDisplaySettings">
+) {
+  const {showCompanyName} = p.nameDisplaySettings;
+  return "companyName";
+}
+
+// Helper: Save settings to AsyncStorage
 async function saveNameDisplaySettings(settings: NameDisplaySettings) {
   try {
-    await AsyncStorage.setItem(
-      STORAGE_KEYS.NAME_DISPLAY_SETTINGS,
-      JSON.stringify(settings),
-    );
+    await AsyncStorage.setItem(STORAGE_KEYS.NAME_DISPLAY_SETTINGS, JSON.stringify(settings));
   } catch (error) {
     console.error("[saveNameDisplaySettings] Error:", error);
   }
@@ -285,20 +216,11 @@ async function saveVideoLibraries(
 }
 
 const initialProfile: Profile = {
-  name: "Your Name",
   ...initialProfileBase,
 
-  legalFirstName: "",
-  legalLastName: "",
-  legalMiddleName: "",
-  preferredName: "Your Name",
   nameDisplaySettings: {
-    showPreferredName: true,
-    showLegalName: false,
-    firstWhenBothOn: "preferred",
+    showCompanyName: true,
   },
-
-  dateOfBirth: "",
 
   phoneNumber: "",
   email: "",
@@ -306,19 +228,15 @@ const initialProfile: Profile = {
   contactUrl2: "",
   contactUrl1Label: "URL 1",
   contactUrl2Label: "URL 2",
-  linkedinUrl: "",
 
-  residencyStatus: "",
-  industryInterests: [],
-  industryExperience: "",
-  geographicLocation: "",
-  highestEducationCompleted: "",
+  industry: [],
+  businessAge: "",
+  locations: [],
 
-  // ✅ NEW
-  higherEducation: [],
-
-  additionalDetails: "",
-  valuesSummary: [],
+  missionStatement: "",
+  coreValues: [],
+  currentEmployees: [],
+  openRoles: [],
 
   contactDisplaySettings: {
     showEmail: false,
@@ -326,10 +244,9 @@ const initialProfile: Profile = {
     showUrl1: false,
     showUrl2: false,
   },
-
 };
 
-initialProfile.name = getDisplayName(initialProfile);
+initialProfile.companyName = getDisplayName(initialProfile);
 
 /** ======================
  *  Context types
@@ -356,7 +273,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
    * - nameDisplaySettings
    * - contactDisplaySettings
    * - videoLibrary / deletedVideoLibrary
-   * - shareLinks
    */
   useEffect(() => {
     const hydrate = async () => {
@@ -398,11 +314,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
           };
         }
 
-        // Ensure higherEducation exists (backwards compatibility)
-        if (!Array.isArray((updated as any).higherEducation)) {
-          (updated as any).higherEducation = prev.higherEducation ?? [];
-        }
-
         return { ...updated, name: getDisplayName(updated) };
       });
 
@@ -412,76 +323,49 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     hydrate();
   }, []);
 
-  /**
-   * updateProfileState:
-   * - Normalizes invariants (DOB lock, name toggles, arrays)
-   * - Recomputes display name
-   * - Persists deltas to AsyncStorage
-   */
-  const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
-    _setProfile((prev) => {
-      const next =
-        typeof nextOrUpdater === "function"
-          ? (nextOrUpdater as (p: Profile) => Profile)(prev)
-          : nextOrUpdater;
+   /**
+ * updateProfileState:
+ * - Normalizes invariants (name toggles, arrays)
+ * - Recomputes display name
+ * - Persists deltas to AsyncStorage
+ */
+const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
+  _setProfile((prev) => {
+    const next =
+      typeof nextOrUpdater === "function"
+        ? (nextOrUpdater as (p: Profile) => Profile)(prev)
+        : nextOrUpdater;
 
-      const dobLocked = lockDateOfBirth(prev, next);
-      const normalizedToggles = normalizeNameToggles(
-        dobLocked.nameDisplaySettings,
-      );
+    const fixed: Profile = {
+      ...next,
+      nameDisplaySettings: normalizeNameToggles(next.nameDisplaySettings),
+      contactDisplaySettings: normalizeContactToggles(
+        next.contactDisplaySettings ?? prev.contactDisplaySettings,
+      ),
+      videoLibrary: next.videoLibrary ?? prev.videoLibrary ?? [],
+      deletedVideoLibrary: next.deletedVideoLibrary ?? prev.deletedVideoLibrary ?? [],
+      coreValues: next.coreValues ?? prev.coreValues ?? [],
+      locations: next.locations ?? prev.locations ?? [],
+    };
 
-      const fixed: Profile = {
-        ...dobLocked,
-        nameDisplaySettings: normalizedToggles,
-        contactDisplaySettings: normalizeContactToggles(
-          dobLocked.contactDisplaySettings ?? prev.contactDisplaySettings,
-        ),
+    const finalProfile = { ...fixed, companyName: getDisplayName(fixed) };
 
-        // ✅ ensure both libraries always exist
-        videoLibrary: dobLocked.videoLibrary ?? prev.videoLibrary ?? [],
-        deletedVideoLibrary:
-          dobLocked.deletedVideoLibrary ?? prev.deletedVideoLibrary ?? [],
+    if (JSON.stringify(prev.nameDisplaySettings) !== JSON.stringify(finalProfile.nameDisplaySettings)) {
+      saveNameDisplaySettings(finalProfile.nameDisplaySettings);
+    }
+    if (JSON.stringify(prev.contactDisplaySettings) !== JSON.stringify(finalProfile.contactDisplaySettings)) {
+      saveContactDisplaySettings(finalProfile.contactDisplaySettings);
+    }
+    if (
+      JSON.stringify(prev.videoLibrary) !== JSON.stringify(finalProfile.videoLibrary) ||
+      JSON.stringify(prev.deletedVideoLibrary) !== JSON.stringify(finalProfile.deletedVideoLibrary)
+    ) {
+      saveVideoLibraries(finalProfile.videoLibrary, finalProfile.deletedVideoLibrary);
+    }
 
-        // ✅ ensure higherEducation always exists (so it never gets dropped)
-        higherEducation:
-          (dobLocked as any).higherEducation ??
-          (prev as any).higherEducation ??
-          [],
-      };
-
-      const finalProfile = { ...fixed, name: getDisplayName(fixed) };
-
-      // Persist when changed (kept lightweight by comparing JSON)
-      if (
-        JSON.stringify(prev.nameDisplaySettings) !==
-        JSON.stringify(finalProfile.nameDisplaySettings)
-      ) {
-        saveNameDisplaySettings(finalProfile.nameDisplaySettings);
-      }
-
-      if (
-        JSON.stringify(prev.contactDisplaySettings) !==
-        JSON.stringify(finalProfile.contactDisplaySettings)
-      ) {
-        saveContactDisplaySettings(finalProfile.contactDisplaySettings);
-      }
-
-      // ✅ Persist video libraries whenever they change
-      if (
-        JSON.stringify(prev.videoLibrary) !==
-          JSON.stringify(finalProfile.videoLibrary) ||
-        JSON.stringify(prev.deletedVideoLibrary) !==
-          JSON.stringify(finalProfile.deletedVideoLibrary)
-      ) {
-        saveVideoLibraries(
-          finalProfile.videoLibrary,
-          finalProfile.deletedVideoLibrary,
-        );
-      }
-
-      return finalProfile;
-    });
-  };
+    return finalProfile;
+  });
+};
 
   /**
    * refreshProfile:
@@ -651,90 +535,23 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
         };
       });
 
-      const mappedHigherEducation: any[] = Array.isArray(data.higher_education)
-        ? data.higher_education.map((edu: any) => ({
-            unitid: String(edu.unitid ?? "").trim(),
-            label: String(edu.label ?? "").trim(),
-            degrees: Array.isArray(edu.degrees)
-              ? edu.degrees.map((d: any) => String(d).trim()).filter(Boolean)
-              : [],
-            degreeDetails: Array.isArray(edu?.degreeDetails)
-              ? edu.degreeDetails
-              : Array.isArray(edu?.degree_details)
-                ? edu.degree_details
-                : [],
-            estimatedGraduation: String(
-              edu?.estimatedGraduation ?? edu?.estimated_graduation ?? "",
-            ).trim(),
-          }))
-        : [];
-
       const mappedProfile: Partial<Profile> = {
-        legalFirstName: userData.legal_first_name || "",
-        legalLastName: userData.legal_last_name || "",
-        preferredName: userData.preferred_name || userData.email || "User",
-        bio: userData.bio || "",
-        contactUrl1:
-          userData.contact_url_1 ||
-          userData.contactUrl1 ||
-          userData.website_url_1 ||
-          "",
-        contactUrl2:
-          userData.contact_url_2 ||
-          userData.contactUrl2 ||
-          userData.website_url_2 ||
-          "",
-        contactUrl1Label:
-          userData.contact_url_1_label || userData.contactUrl1Label || "URL 1",
-        contactUrl2Label:
-          userData.contact_url_2_label || userData.contactUrl2Label || "URL 2",
-
-        workType:
-          userData.work_type ||
-          userData.workType ||
-          userData.employment_type ||
-          "",
-        workPreference:
-          userData.work_preference ||
-          userData.workPreference ||
-          userData.work_location_preference ||
-          "",
-        residencyStatus: userData.residency || "",
-        industryExperience: userData.experience || "",
-        geographicLocation: userData.location || "",
-        industryInterests: userData.industry_interests || [],
-        additionalDetails: userData.bio_facts || "",
-        valuesSummary: Array.isArray(userData.values_summary)
-          ? userData.values_summary
-              .map((item: any, idx: number): ValueSummaryItem | null => {
-                const label = String(item?.label ?? "").trim();
-                const value = String(item?.value ?? "").trim();
-                if (!label && !value) return null;
-                return {
-                  key:
-                    String(item?.key ?? `value_${idx + 1}`).trim() ||
-                    `value_${idx + 1}`,
-                  label,
-                  value: value || label,
-                };
-              })
-              .filter(
-                (item: ValueSummaryItem | null): item is ValueSummaryItem =>
-                  !!item,
-              )
-          : [],
-        highestEducationCompleted: userData.highest_education || "",
-        higherEducation: mappedHigherEducation,
-
+        companyName: userData.company_name || "",
+        industry: userData.industry || "",
+        businessAge: userData.business_age || "",
+        workType: userData.work_type || "",
+        locations: Array.isArray(userData.locations) ? userData.locations : [],
+        missionStatement: userData.mission_statement || "",
+        coreValues: Array.isArray(userData.core_values) ? userData.core_values : [],
+        benefitsSummary: userData.benefits_summary || "",
+        contactUrl1: userData.contact_url_1 || "",
+        contactUrl2: userData.contact_url_2 || "",
+        contactUrl1Label: userData.contact_url_1_label || "URL 1",
+        contactUrl2Label: userData.contact_url_2_label || "URL 2",
         media: finalMedia,
-
-        // ✅ Active + Deleted libraries
         videoLibrary: mappedLibrary,
         deletedVideoLibrary: mappedDeletedLibrary,
-
       };
-
-      console.log("MAPPED HIGHER EDUCATION:", mappedHigherEducation);
 
       updateProfileState((prev) => {
         // ✅ Merge backend libraries with local libraries (prefer local for videos created locally)
@@ -756,47 +573,13 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
           ...localOnlyDeleted,
         ];
 
-        const prevHigherEdByUnit = new Map<string, any>(
-          (Array.isArray(prev?.higherEducation)
-            ? prev.higherEducation
-            : []
-          ).map((e: any) => [String(e?.unitid ?? ""), e]),
-        );
-        const mergedHigherEducation = mappedHigherEducation.map((e: any) => {
-          const prevE = prevHigherEdByUnit.get(String(e?.unitid ?? ""));
-          return {
-            ...(prevE ?? {}),
-            ...e,
-            degreeDetails:
-              Array.isArray(e?.degreeDetails) && e.degreeDetails.length > 0
-                ? e.degreeDetails
-                : Array.isArray(prevE?.degreeDetails)
-                  ? prevE.degreeDetails
-                  : [],
-            estimatedGraduation:
-              String(e?.estimatedGraduation ?? "").trim() ||
-              String(prevE?.estimatedGraduation ?? "").trim(),
-          };
-        });
-
         return {
           ...prev,
           ...mappedProfile,
-
-          // ✅ Use merged libraries
           videoLibrary: mergedLibrary,
           deletedVideoLibrary: mergedDeletedLibrary,
-
-          // ✅ Avatar slot 0: ONLY overwrite if backend provided real value
-          avatarVideoUri: serverAvatarVideo
-            ? serverAvatarVideo
-            : prev.avatarVideoUri,
-          avatarImageUri: serverAvatarImage
-            ? serverAvatarImage
-            : prev.avatarImageUri,
-
-
-          higherEducation: mergedHigherEducation,
+          avatarVideoUri: serverAvatarVideo ? serverAvatarVideo : prev.avatarVideoUri,
+          avatarImageUri: serverAvatarImage ? serverAvatarImage : prev.avatarImageUri,
         };
       });
     } catch (error) {
@@ -806,12 +589,15 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  const value = useMemo(() => ({
-    profile,
-    setProfile: updateProfileState,
-    refreshProfile,
-    isLoading,
-  }), [profile, isLoading]);
+  const value = useMemo(
+    () => ({
+      profile,
+      setProfile: updateProfileState,
+      refreshProfile,
+      isLoading,
+    }),
+    [profile, isLoading],
+  );
 
   return (
     <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>

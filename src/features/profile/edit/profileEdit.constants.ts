@@ -24,8 +24,24 @@ export const INDUSTRIES: { title: string; options: string[] }[] = [
   { title: "Other / Emerging Industries", options: ["Startups", "Climate Tech", "Space & Advanced Tech", "Other"] },
 ];
 
+//doing this for options for company, will be shown as swatches on the profile
+export const BACKGROUND_COLOR_OPTIONS = [
+  { label: "Midnight", value: "#0A0A0A" },
+  { label: "Navy", value: "#0D1B2A" },
+  { label: "Cobalt", value: "#1B4FD8" },
+  { label: "Electric Blue", value: "#2563EB" },
+  { label: "Emerald", value: "#059669" },
+  { label: "Forest", value: "#166534" },
+  { label: "Crimson", value: "#DC2626" },
+  { label: "Ruby", value: "#9F1239" },
+  { label: "Violet", value: "#7C3AED" },
+  { label: "Indigo", value: "#4338CA" },
+  { label: "Amber", value: "#D97706" },
+  { label: "Slate", value: "#334155" },
+];
+
 //answers the question of how old the company is and how long it has been running for
-export const BUSINESS_AGE_OPTIONS = ["Up to 1", "1-3", "3-5", "5-10", "10+"];
+export const COMPANY_AGE_OPTIONS = ["Up to 1", "1-3", "3-5", "5-10", "10+"];
 
 export const WORK_TYPE_OPTIONS = ["Part-Time", "Full Time", "Contract", "All", "Currently not looking"];
 
