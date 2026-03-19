@@ -1,5 +1,5 @@
 import { APIGatewayProxyHandler } from "aws-lambda";
-import { getDbClient } from "../utils/db-client";
+import { getDbClient } from "../utils/db-client.js";
 import { S3Client, DeleteObjectsCommand } from "@aws-sdk/client-s3";
 
 const s3 = new S3Client({});

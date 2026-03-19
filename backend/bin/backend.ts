@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import * as cdk from "aws-cdk-lib";
-import { StatefulStack } from "../lib/stateful-stack";
-import { StatelessStack } from "../lib/stateless-stack";
+import { StatefulStack } from "../lib/stateful-stack.js";
+import { StatelessStack } from "../lib/stateless-stack.js";
 
 const app = new cdk.App();
 
