@@ -14,7 +14,7 @@ export function mapDraftToApiPayload(draft: DraftProfile) {
   //THESE KEYS BEFORE THE : HIT THE DATABASE, LETS MAKE SURE COLUMNS MATCH ON BOTH SIDES
   return {
     company_name: draft.companyName ?? "",
-    industry: Array.isArray(draft.industry) ? draft.industry: [],
+    industry: draft.industry ?? "",
     business_age: draft.businessAge ?? "",
     work_type: draft.workType ?? "",
     locations: Array.isArray(draft.locations) ? draft.locations: [], //an array of all locations the company is based out of

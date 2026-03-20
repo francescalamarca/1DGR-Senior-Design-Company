@@ -52,7 +52,7 @@ export const WORK_PREFERENCE_OPTIONS = ["Remote", "Willing to relocate", "Both"]
 
 //these will come down in the dropdown of the core values options that can be attached to company profile
 export const CORE_VALUES = ["Integrity", "Innovation", "Teamwork", 
-  "Customer-First", "Excellence", "Diversity and Inclusion","Collaboration", "Adaptability"];
+  "Customer-First", "Excellence", "Diversity and Inclusion","Collaboration", "Adaptability", "Quality"];
 
 //setting a constant here should only be able to have 5
 export const MAX_CORE_VALUES = 5;

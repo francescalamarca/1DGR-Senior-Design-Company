@@ -103,11 +103,13 @@ export type Profile = {
   currentEmployees: string [];
 
   //adding industry as array
-  industry: string[];
+  industry: string;
 
   openRoles: string [];
 
   benefitsSummary: string;
+
+  customBackgroundColor: string;
 
   contactDisplaySettings: ContactDisplaySettings;
 

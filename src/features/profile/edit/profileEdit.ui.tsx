@@ -175,37 +175,6 @@ export function NameSection(props: {
   );
 }
 
-export function BackgroundColorPickerModal(props: {
-  visible: boolean;
-  selected: string[];
-  onToggle: (value: string) => void;
-  onClose: () => void;
-}) {
-  const { visible, selected, onToggle, onClose } = props;
-
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
-        <View style={{
-          backgroundColor: UI.card,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          paddingHorizontal: 16,
-          paddingTop: 16,
-          paddingBottom: 24,
-          maxHeight: "85%",
-          marginTop: "auto",
-        }}>
-          <LLightText style={{ fontSize: 18, fontWeight: "800" }}>Background Color</LLightText>
-          <LLightText style={{ opacity: 0.6, marginTop: 4 }}>Choose up to 1.</LLightText>
-
-          
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
 export function BackgroundColorSection(props: {
   selectedColor: string;
   onSelect: (color: string) => void;

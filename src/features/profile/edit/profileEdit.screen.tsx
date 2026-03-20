@@ -179,7 +179,7 @@ export default function ProfileEditScreen() {
         <IndustryTypeSection
           workTypeSubtitle={workTypeSubtitle}
           companyAgeSubtitle={draft.businessAge?.trim() ? draft.businessAge : "Select"}
-          industrySubtitle={summarizeIndustries(draft.industry ?? [])}
+          industrySubtitle={summarizeIndustries(draft.industry ?? "")}
           locations={draft.locations ?? []}
           onPressAddLocation={openCityPicker}
           onRemoveLocation={removeLocation}
