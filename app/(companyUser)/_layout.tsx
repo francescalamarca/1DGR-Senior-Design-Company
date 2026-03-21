@@ -101,7 +101,7 @@ export default function CompanyUserLayout() {
     };
 
     loadUserData();
-  }, []); // ✅ empty deps — didInit.current prevents double-runs
+  }, [refreshProfile]); // ✅ empty deps — didInit.current prevents double-runs
 
   return (
     <>

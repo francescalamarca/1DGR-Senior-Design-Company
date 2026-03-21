@@ -57,8 +57,9 @@ app.get("/profile", async (_req: any, res: any) => {
       .map(mapVideo);
 
     const logoKey = profile.logo_image_key ?? "";
-    const avatarImageUrl =
-      logoKey && cfDomain ? `https://${cfDomain}/${logoKey}` : "";
+    const avatarImageUrl = logoKey
+      ? (logoKey.includes("://") ? logoKey : (cfDomain ? `https://${cfDomain}/${logoKey}` : ""))
+      : "";
 
     res.json({
       user: {

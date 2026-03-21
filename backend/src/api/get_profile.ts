@@ -38,7 +38,10 @@ export const handler = async (event: APIGatewayProxyEvent): Promise<APIGatewayPr
     const deletedVideoLibrary = videosResult.rows.filter((v: any) => v.is_deleted).map(mapVideo);
 
     const logoKey = profile.logo_image_key ?? "";
-    const avatarImageUrl = logoKey && cfDomain ? `https://${cfDomain}/${logoKey}` : "";
+    //so a full URL stored as logo_image_key doesn't get double-prefixed with the CDN domain:
+    const avatarImageUrl = logoKey
+      ? (logoKey.includes("://") ? logoKey : (cfDomain ? `https://${cfDomain}/${logoKey}` : ""))
+      : "";
 
     return {
       statusCode: 200,

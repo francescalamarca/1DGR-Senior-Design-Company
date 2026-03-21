@@ -87,8 +87,10 @@ export function AvatarSection(props: {
   hasAvatar: boolean;
   onPickAvatarImage: () => void;
   onRemoveAvatarImage: () => void;
+  onSetAvatarFromUrl: (url: string) => void;
 }) {
-  const { avatarPreviewUri, pickingAvatarImage, isSaving, hasAvatar, onPickAvatarImage, onRemoveAvatarImage } = props;
+  const { avatarPreviewUri, pickingAvatarImage, isSaving, hasAvatar, onPickAvatarImage, onRemoveAvatarImage, onSetAvatarFromUrl } = props;
+  const [urlInput, setUrlInput] = React.useState("");
 
   return (
     <>
@@ -139,6 +141,33 @@ export function AvatarSection(props: {
               ]}
             >
               <BtnText>Remove</BtnText>
+            </Pressable>
+          </View>
+
+          {/* URL input row */}
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <TextInput
+              style={[styles.input, { flex: 1, fontSize: 12 }]}
+              placeholder="Paste image URL"
+              placeholderTextColor={UI.hint}
+              value={urlInput}
+              onChangeText={setUrlInput}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              editable={!isSaving}
+            />
+            <Pressable
+              onPress={() => {
+                if (urlInput.trim()) {
+                  onSetAvatarFromUrl(urlInput.trim());
+                  setUrlInput("");
+                }
+              }}
+              disabled={!urlInput.trim() || isSaving}
+              style={[styles.pill, { paddingHorizontal: 14 }, !urlInput.trim() || isSaving ? { opacity: 0.4 } : null]}
+            >
+              <BtnText>Use URL</BtnText>
             </Pressable>
           </View>
         </View>

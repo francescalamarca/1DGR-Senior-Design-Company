@@ -12,6 +12,7 @@
 
 import { aws_config } from "@/constants/aws-config";
 import { RequireUserType } from "@/src/components/RequireUserType";
+import { BackgroundColorSection } from "@/src/features/profile/edit/profileEdit.ui";
 import { useProfile } from "@/src/features/profile/profile.store";
 import { useSession } from "@/src/state/session";
 import { Feather } from "@expo/vector-icons";
@@ -466,8 +467,10 @@ export default function ProfileScreen() {
 
       videoCaption: { ...crimsonSemi, fontSize: 15.2, color: TEXT } as const,
       logout: { ...lexLight, color: TEXT } as const,
+
+      blockABg: (profile.customBackgroundColor ?? "").trim() || BG,
     };
-  }, []);
+  }, [profile.customBackgroundColor]);
 
   async function copyEmail() {
     if (!contactEmail) return;
@@ -1486,7 +1489,7 @@ export default function ProfileScreen() {
     <>
       <SafeAreaView
           edges={["top", "left", "right"]}
-          style={{ flex: 1, backgroundColor: BG }}
+          style={{ flex: 1, backgroundColor: s.blockABg }}
       >
         <RequireUserType type="company" />
 
@@ -1506,7 +1509,7 @@ export default function ProfileScreen() {
           scrollEventThrottle={16}
         > 
           {/* Block A */}
-          <View style={{ backgroundColor: BG, padding: BLOCK_PAD }}>
+          <View style={{ backgroundColor: s.blockABg, padding: BLOCK_PAD }}>
             <View
               style={{
                 flexDirection: "row",

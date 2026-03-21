@@ -299,6 +299,13 @@ function openCoreValuesPicker() {
     ]);
   }
 
+  function onSetAvatarFromUrl(url: string) {
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    setAvatarLocalUri(trimmed);
+    setDraft((p) => ({ ...p, avatarImageUri: trimmed }));
+  }
+
   function scrollToBottomSoon() {
     requestAnimationFrame(() => {
       setTimeout(() => scrollRef.current?.scrollToEnd?.({ animated: true }), 50);
@@ -531,6 +538,7 @@ function openCoreValuesPicker() {
     hasAvatar,
     onPickAvatarImage,
     onRemoveAvatarImage,
+    onSetAvatarFromUrl,
     summarizeIndustries,
     openSingleSelectPicker,
     openIndustryPicker,

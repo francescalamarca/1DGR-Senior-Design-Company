@@ -23,6 +23,6 @@ export function mapDraftToApiPayload(draft: DraftProfile) {
     current_employees: Array.isArray(draft.currentEmployees) ? draft.currentEmployees: [],
     benefits_summary: draft.benefitsSummary ?? "",
     custom_background_color: draft.customBackgroundColor ?? "",
-    logo_image_key: String(draft.logoImageURI ?? "").includes("://") ? null : (draft.logoImageURI ?? ""), //unsure if this still works for companuy logo, will hold here for now
+    logo_image_key: draft.avatarImageUri ?? draft.logoImageURI ?? "",
   };
 }
