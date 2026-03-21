@@ -273,7 +273,7 @@ export default function ProfileScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
   const fetchingRef = useRef(false);
-  const didFetchOnceRef = useRef(false);
+
 
   // ===== Name toggle (preserved) =====
   const [showCompanyNow, setShowCompanyNow] = useState(false);
@@ -642,8 +642,6 @@ export default function ProfileScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (didFetchOnceRef.current) return;
-      didFetchOnceRef.current = true;
       fetchLatestProfile();
     }, [fetchLatestProfile]),
   );

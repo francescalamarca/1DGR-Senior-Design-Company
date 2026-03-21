@@ -60,7 +60,7 @@ export function normalizeForCompare(p: DraftProfile) {
     benefitsSummary: (p.benefitsSummary ?? "").trim(),
     openRoles:(p.openRoles ?? []).map((s) => s.trim()).filter(Boolean).sort(),
     customBackgroundColor: (p.customBackgroundColor ?? "").trim(),
-    logoImageURI: (p.logoImageURI ?? "").trim(),
+    logoImageURI: (p.avatarImageUri ?? p.logoImageURI ?? "").trim(),
   };
 }
 

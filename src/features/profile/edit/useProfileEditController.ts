@@ -113,61 +113,45 @@ export function useProfileEditController() {
   
   const profileRef = useRef(profile);
   profileRef.current = profile;
-  
-  useFocusEffect(
-    useCallback(() => {
-      const p = profileRef.current;
-      setDraft((p as any) as DraftProfile);
-      setAvatarLocalUri(null);
-      setMediaVideoUri(null);
-      setMediaThumbUri(null);
-      setMediaCaption("");
-      setThumbOptions([]);
-      setGeneratingThumbs(false);
-      setAddingLibraryVideo(false);
-      requestAnimationFrame(() => {
-        scrollRef.current?.scrollTo?.({ y: 0, animated: false });
-      });
-    }, [])
-  );
+
+  // Only reset draft on first mount, not on every focus (picker modals cause re-focus).
+  useEffect(() => {
+    const p = profileRef.current;
+    setDraft((p as any) as DraftProfile);
+    setAvatarLocalUri(null);
+    setMediaVideoUri(null);
+    setMediaThumbUri(null);
+    setMediaCaption("");
+    setThumbOptions([]);
+    setGeneratingThumbs(false);
+    setAddingLibraryVideo(false);
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo?.({ y: 0, animated: false });
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   function handleCancel() {
-    if (!changed) {
-      router.replace("/(companyUser)/profile");
-      return;
-    }
-    Alert.alert("Discard changes?", "You have unsaved edits.", [
-      { text: "Keep editing", style: "cancel" },
-      { text: "Discard", style: "destructive", onPress: () => router.replace("/(companyUser)/profile") },
-    ]);
+    router.navigate("/(companyUser)/profile");
   }
 
-  async function handleSave() {
-    if (!accessToken) return Alert.alert("Error", "No access token found. Please log in again.");
-
-    setIsSaving(true);
-    try {
-      const apiPayload = mapDraftToApiPayload(draft);
-      const json = JSON.stringify(apiPayload);
-      if (json.length > 200_000) {
-        Alert.alert("Error", "Payload too large.");
-        return;
-      }
-
-      // Always update local state first so the profile screen reflects changes immediately.
-      setProfile((p: any) => ({ ...p, ...draft }));
-
-      // Attempt to persist to backend — log failures but don't block the user.
-      updateUserProfile(apiPayload as any, accessToken).catch((err) => {
-        console.warn("[handleSave] API sync failed (local save succeeded):", err);
-      });
-
-      router.replace("/(companyUser)/profile");
-    } catch (err) {
-      console.error(err);
-      Alert.alert("Error", "Failed to save profile.");
-    } finally {
-      setIsSaving(false);
+  function handleSave() {
+    if (!accessToken) {
+      Alert.alert("Error", "No access token found. Please log in again.");
+      return;
     }
+
+    const apiPayload = mapDraftToApiPayload(draft);
+
+    // Navigate first before any state updates that could cause re-renders.
+    router.navigate("/(companyUser)/profile");
+
+    // Update local store so profile screen shows changes immediately.
+    setProfile((p: any) => ({ ...p, ...draft }));
+
+    // Fire-and-forget backend sync.
+    updateUserProfile(apiPayload as any, accessToken)
+      .then(() => refreshProfile(accessToken))
+      .catch((err) => console.warn("[handleSave] backend sync failed:", err));
   }
 
   function openSingleSelectPicker(args: { title: string; options: string[]; value: string; onSelect: (val: string) => void }) {
@@ -458,10 +442,7 @@ function openCoreValuesPicker() {
     }
   }
 
-  const canSave = useMemo(() => {
-    const companyName = (draft.companyName ?? "").trim().length > 0;
-    return (companyName && changed);
-  }, [draft.companyName, changed]);
+  const canSave = !isSaving;
 
   function selectBackgroundColor(color: string) {
     setDraft((p) => ({ ...p, customBackgroundColor: color }));
