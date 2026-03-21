@@ -135,23 +135,22 @@ export function useProfileEditController() {
   }
 
   function handleSave() {
-    if (!accessToken) {
-      Alert.alert("Error", "No access token found. Please log in again.");
-      return;
-    }
-
     const apiPayload = mapDraftToApiPayload(draft);
 
-    // Navigate first before any state updates that could cause re-renders.
+    // Navigate first — always, regardless of token state.
     router.navigate("/(companyUser)/profile");
 
     // Update local store so profile screen shows changes immediately.
     setProfile((p: any) => ({ ...p, ...draft }));
 
-    // Fire-and-forget backend sync.
-    updateUserProfile(apiPayload as any, accessToken)
-      .then(() => refreshProfile(accessToken))
-      .catch((err) => console.warn("[handleSave] backend sync failed:", err));
+    // Backend sync only if we have a token.
+    if (accessToken) {
+      updateUserProfile(apiPayload as any, accessToken)
+        .then(() => refreshProfile(accessToken))
+        .catch((err) => console.warn("[handleSave] backend sync failed:", err));
+    } else {
+      console.warn("[handleSave] No access token — local save only.");
+    }
   }
 
   function openSingleSelectPicker(args: { title: string; options: string[]; value: string; onSelect: (val: string) => void }) {
