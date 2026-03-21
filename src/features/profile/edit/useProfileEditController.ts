@@ -146,18 +146,21 @@ export function useProfileEditController() {
 
     setIsSaving(true);
     try {
-      const apiPayload = mapDraftToApiPayload(draft); //this is where that functionn I just changed the variables to match company db is being called
+      const apiPayload = mapDraftToApiPayload(draft);
       const json = JSON.stringify(apiPayload);
       if (json.length > 200_000) {
-        Alert.alert(
-          "Error",
-          "Payload too large."
-        );
+        Alert.alert("Error", "Payload too large.");
         return;
       }
 
-      await updateUserProfile(apiPayload as any, accessToken);
+      // Always update local state first so the profile screen reflects changes immediately.
       setProfile((p: any) => ({ ...p, ...draft }));
+
+      // Attempt to persist to backend — log failures but don't block the user.
+      updateUserProfile(apiPayload as any, accessToken).catch((err) => {
+        console.warn("[handleSave] API sync failed (local save succeeded):", err);
+      });
+
       router.replace("/(companyUser)/profile");
     } catch (err) {
       console.error(err);
@@ -175,15 +178,13 @@ export function useProfileEditController() {
     setSinglePickerVisible(true);
   }
 
-  function summarizeIndustries(list: string[]) {
-    const clean = (list ?? []).map((s) => s.trim()).filter(Boolean);
-    if (clean.length === 0) return "None selected";
-    if (clean.length <= 2) return clean.join(", ");
-    return `${clean.slice(0, 2).join(", ")} +${clean.length - 2} more`;
+  function summarizeIndustries(industry: string) {
+    const clean = (industry ?? "").trim();
+    return clean.length > 0 ? clean : "None selected";
   }
 
   function openIndustryPicker() {
-    const current = new Set<string>((draft.industry ?? ""));
+    const current = draft.industry ? new Set<string>([draft.industry]) : new Set<string>();
     setIndustryTempSelected(current);
     setIndustryCustomInput("");
     setIndustrySearch("");
@@ -192,10 +193,8 @@ export function useProfileEditController() {
 
   function toggleIndustry(val: string) {
     setIndustryTempSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(val)) next.delete(val);
-      else next.add(val);
-      return next;
+      if (prev.has(val)) return new Set<string>();
+      return new Set<string>([val]);
     });
   }
 
@@ -209,8 +208,8 @@ export function useProfileEditController() {
   }
 
   function applyIndustrySelection() {
-    const selected = Array.from(industryTempSelected).map((s) => s.trim()).filter(Boolean).sort((a, b) => a.localeCompare(b));
-    setDraft((p) => ({ ...p, industryInterests: selected }));
+    const selected = Array.from(industryTempSelected).map((s) => s.trim()).filter(Boolean)[0] ?? "";
+    setDraft((p) => ({ ...p, industry: selected }));
     setIndustryPickerVisible(false);
   }
 
@@ -252,7 +251,7 @@ export function useProfileEditController() {
 function removeCoreValue(value: string) {
   setDraft((p) => ({
     ...p,
-    core_values: (p.coreValues ?? []).filter((v) => v !== value),
+    coreValues: (p.coreValues ?? []).filter((v) => v !== value),
   }));
 }
 
@@ -298,6 +297,13 @@ function openCoreValuesPicker() {
         },
       },
     ]);
+  }
+
+  function onSetAvatarFromUrl(url: string) {
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    setAvatarLocalUri(trimmed);
+    setDraft((p) => ({ ...p, avatarImageUri: trimmed }));
   }
 
   function scrollToBottomSoon() {
@@ -458,7 +464,7 @@ function openCoreValuesPicker() {
   }, [draft.companyName, changed]);
 
   function selectBackgroundColor(color: string) {
-  setDraft((p) => ({ ...p, customBackgroundColor: color }));
+    setDraft((p) => ({ ...p, customBackgroundColor: color }));
   }
 
 
@@ -532,6 +538,7 @@ function openCoreValuesPicker() {
     hasAvatar,
     onPickAvatarImage,
     onRemoveAvatarImage,
+    onSetAvatarFromUrl,
     summarizeIndustries,
     openSingleSelectPicker,
     openIndustryPicker,

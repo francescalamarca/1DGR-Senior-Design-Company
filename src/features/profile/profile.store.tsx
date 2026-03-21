@@ -98,7 +98,7 @@ const initialProfileBase = {
   coreValues: [],
   locations: [],
   currentEmployees: [],
-  industry: [],
+  industry: "",
   benefitsSummary: "",
   openRoles: [],
   avatarImageUri: "",
@@ -171,8 +171,7 @@ async function loadPersistedSettings() {
 function getDisplayName(
   p: Pick<Profile, "companyName" | "nameDisplaySettings">
 ) {
-  const {showCompanyName} = p.nameDisplaySettings;
-  return "companyName";
+  return p.companyName ?? "";
 }
 
 // Helper: Save settings to AsyncStorage
@@ -229,7 +228,7 @@ const initialProfile: Profile = {
   contactUrl1Label: "URL 1",
   contactUrl2Label: "URL 2",
 
-  industry: [],
+  industry: "",
   businessAge: "",
   locations: [],
 
@@ -537,13 +536,14 @@ const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
 
       const mappedProfile: Partial<Profile> = {
         companyName: userData.company_name || "",
-        industry: userData.industry || "",
+        industry: Array.isArray(userData.industry) ? (userData.industry[0] ?? "") : (userData.industry || ""),
         businessAge: userData.business_age || "",
         workType: userData.work_type || "",
         locations: Array.isArray(userData.locations) ? userData.locations : [],
         missionStatement: userData.mission_statement || "",
         coreValues: Array.isArray(userData.core_values) ? userData.core_values : [],
         benefitsSummary: userData.benefits_summary || "",
+        customBackgroundColor: userData.custom_background_color || "",
         contactUrl1: userData.contact_url_1 || "",
         contactUrl2: userData.contact_url_2 || "",
         contactUrl1Label: userData.contact_url_1_label || "URL 1",

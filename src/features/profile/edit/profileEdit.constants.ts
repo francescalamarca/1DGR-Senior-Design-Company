@@ -30,11 +30,14 @@ export const BACKGROUND_COLOR_OPTIONS = [
   { label: "Navy", value: "#0D1B2A" },
   { label: "Cobalt", value: "#1B4FD8" },
   { label: "Electric Blue", value: "#2563EB" },
+  {label: "Mint Green", value: "#2bb59b"},
   { label: "Emerald", value: "#059669" },
   { label: "Forest", value: "#166534" },
   { label: "Crimson", value: "#DC2626" },
+  { label: "Strawberry", value: "#df8484" },
   { label: "Ruby", value: "#9F1239" },
   { label: "Violet", value: "#7C3AED" },
+  { label: "Lavender", value: "#9f89c4" },
   { label: "Indigo", value: "#4338CA" },
   { label: "Amber", value: "#D97706" },
   { label: "Slate", value: "#334155" },
@@ -49,7 +52,7 @@ export const WORK_PREFERENCE_OPTIONS = ["Remote", "Willing to relocate", "Both"]
 
 //these will come down in the dropdown of the core values options that can be attached to company profile
 export const CORE_VALUES = ["Integrity", "Innovation", "Teamwork", 
-  "Customer-First", "Excellence", "Diversity and Inclusion","Collaboration", "Adaptability"];
+  "Customer-First", "Excellence", "Diversity and Inclusion","Collaboration", "Adaptability", "Quality"];
 
 //setting a constant here should only be able to have 5
 export const MAX_CORE_VALUES = 5;

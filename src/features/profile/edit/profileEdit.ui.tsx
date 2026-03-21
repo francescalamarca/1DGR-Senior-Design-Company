@@ -87,8 +87,10 @@ export function AvatarSection(props: {
   hasAvatar: boolean;
   onPickAvatarImage: () => void;
   onRemoveAvatarImage: () => void;
+  onSetAvatarFromUrl: (url: string) => void;
 }) {
-  const { avatarPreviewUri, pickingAvatarImage, isSaving, hasAvatar, onPickAvatarImage, onRemoveAvatarImage } = props;
+  const { avatarPreviewUri, pickingAvatarImage, isSaving, hasAvatar, onPickAvatarImage, onRemoveAvatarImage, onSetAvatarFromUrl } = props;
+  const [urlInput, setUrlInput] = React.useState("");
 
   return (
     <>
@@ -141,6 +143,33 @@ export function AvatarSection(props: {
               <BtnText>Remove</BtnText>
             </Pressable>
           </View>
+
+          {/* URL input row */}
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <TextInput
+              style={[styles.input, { flex: 1, fontSize: 12 }]}
+              placeholder="Paste image URL"
+              placeholderTextColor={UI.hint}
+              value={urlInput}
+              onChangeText={setUrlInput}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              editable={!isSaving}
+            />
+            <Pressable
+              onPress={() => {
+                if (urlInput.trim()) {
+                  onSetAvatarFromUrl(urlInput.trim());
+                  setUrlInput("");
+                }
+              }}
+              disabled={!urlInput.trim() || isSaving}
+              style={[styles.pill, { paddingHorizontal: 14 }, !urlInput.trim() || isSaving ? { opacity: 0.4 } : null]}
+            >
+              <BtnText>Use URL</BtnText>
+            </Pressable>
+          </View>
         </View>
       </View>
     </>
@@ -172,37 +201,6 @@ export function NameSection(props: {
         />
       </View>
     </>
-  );
-}
-
-export function BackgroundColorPickerModal(props: {
-  visible: boolean;
-  selected: string[];
-  onToggle: (value: string) => void;
-  onClose: () => void;
-}) {
-  const { visible, selected, onToggle, onClose } = props;
-
-  return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
-      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
-        <View style={{
-          backgroundColor: UI.card,
-          borderTopLeftRadius: 20,
-          borderTopRightRadius: 20,
-          paddingHorizontal: 16,
-          paddingTop: 16,
-          paddingBottom: 24,
-          maxHeight: "85%",
-          marginTop: "auto",
-        }}>
-          <LLightText style={{ fontSize: 18, fontWeight: "800" }}>Background Color</LLightText>
-          <LLightText style={{ opacity: 0.6, marginTop: 4 }}>Choose up to 1.</LLightText>
-
-          
-        </View>
-      </View>
-    </Modal>
   );
 }
 

@@ -49,6 +49,7 @@ export default function ProfileEditScreen() {
     hasAvatar,
     onPickAvatarImage,
     onRemoveAvatarImage,
+    onSetAvatarFromUrl,
     summarizeIndustries,
     openSingleSelectPicker,
     openIndustryPicker,
@@ -149,6 +150,7 @@ export default function ProfileEditScreen() {
           hasAvatar={hasAvatar}
           onPickAvatarImage={onPickAvatarImage}
           onRemoveAvatarImage={onRemoveAvatarImage}
+          onSetAvatarFromUrl={onSetAvatarFromUrl} //added this function so the user can add a url to a photo as the logo
         />
 
         <NameSection
@@ -179,7 +181,7 @@ export default function ProfileEditScreen() {
         <IndustryTypeSection
           workTypeSubtitle={workTypeSubtitle}
           companyAgeSubtitle={draft.businessAge?.trim() ? draft.businessAge : "Select"}
-          industrySubtitle={summarizeIndustries(draft.industry ?? [])}
+          industrySubtitle={summarizeIndustries(draft.industry ?? "")}
           locations={draft.locations ?? []}
           onPressAddLocation={openCityPicker}
           onRemoveLocation={removeLocation}
