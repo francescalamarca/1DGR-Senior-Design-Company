@@ -13,7 +13,7 @@ import { INDUSTRIES } from "./profileEdit.constants";
 import { mapDraftToApiPayload } from "./profileEdit.data";
 import { filterCitiesByQuery, mapCitiesFromJson } from "./profileEdit.mappers"; //label is defined in this map function
 import { buildCdnUrlFromKey, pickImageFromLibrary, pickVideoFromLibrary, uploadToS3 } from "./profileEdit.media";
-import { type CityRow, type IndustryRow } from "./profileEdit.ui";
+import {type CityRow, type IndustryRow } from "./profileEdit.ui";
 
 
 
@@ -457,6 +457,10 @@ function openCoreValuesPicker() {
     return (companyName && changed);
   }, [draft.companyName, changed]);
 
+  function selectBackgroundColor(color: string) {
+  setDraft((p) => ({ ...p, customBackgroundColor: color }));
+  }
+
 
   function resetProfileMediaOnly() {
     Alert.alert(
@@ -566,6 +570,7 @@ function openCoreValuesPicker() {
     industryTempSelected,
     toggleIndustry,
     predefinedIndustrySet,
+    selectBackgroundColor,
     applyIndustrySelection,
     cityPickerVisible,
     setCityPickerVisible,

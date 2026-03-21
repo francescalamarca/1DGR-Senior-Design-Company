@@ -15,7 +15,7 @@ import {
 
 import { styles, UI } from "./profileEdit.styles";
 import { LLightText, BtnText } from "./profileEdit.components";
-import { MAX_CORE_VALUES, CORE_VALUES } from "./profileEdit.constants";
+import { BACKGROUND_COLOR_OPTIONS, CORE_VALUES } from "./profileEdit.constants";
 
 // ---------- Types the screen expects ----------
 export type IndustryRow =
@@ -159,11 +159,10 @@ export function NameSection(props: {
 
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Name</LLightText>
-      <LLightText style={styles.sectionHelper}>Preferred name is shown publicly. Legal name is optional.</LLightText>
+      <LLightText style={styles.sectionTitle}>Company Name</LLightText>
 
       <View style={styles.fieldStack}>
-        <LLightText style={styles.label}>Preferred Name</LLightText>
+        <LLightText style={styles.label}>Company Name</LLightText>
         <TextInput
           value={companyName}
           onChangeText={onChangeCompanyName}
@@ -171,6 +170,77 @@ export function NameSection(props: {
           placeholderTextColor={UI.hint}
           style={styles.input}
         />
+      </View>
+    </>
+  );
+}
+
+export function BackgroundColorPickerModal(props: {
+  visible: boolean;
+  selected: string[];
+  onToggle: (value: string) => void;
+  onClose: () => void;
+}) {
+  const { visible, selected, onToggle, onClose } = props;
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <View style={{
+          backgroundColor: UI.card,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          paddingBottom: 24,
+          maxHeight: "85%",
+          marginTop: "auto",
+        }}>
+          <LLightText style={{ fontSize: 18, fontWeight: "800" }}>Background Color</LLightText>
+          <LLightText style={{ opacity: 0.6, marginTop: 4 }}>Choose up to 1.</LLightText>
+
+          
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+export function BackgroundColorSection(props: {
+  selectedColor: string;
+  onSelect: (color: string) => void;
+}) {
+  const { selectedColor, onSelect } = props;
+
+  return (
+    <>
+      <LLightText style={styles.sectionTitle}>Background Color</LLightText>
+      <LLightText style={styles.sectionHelper}>Choose up to 1.</LLightText>
+
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 12 }}>
+        {BACKGROUND_COLOR_OPTIONS.map((color) => {
+          const selected = selectedColor === color.value;
+          return (
+            <Pressable
+              key={color.value}
+              onPress={() => onSelect(selected ? "" : color.value)}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: color.value,
+                alignItems: "center",
+                justifyContent: "center",
+                borderWidth: selected ? 3 : 1,
+                borderColor: selected ? UI.text : "transparent",
+              }}
+            >
+              {selected ? (
+                <LLightText style={{ color: "#fff", fontSize: 18 }}>✓</LLightText>
+              ) : null}
+            </Pressable>
+          );
+        })}
       </View>
     </>
   );
