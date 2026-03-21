@@ -140,8 +140,15 @@ export function useProfileEditController() {
     // Navigate first — always, regardless of token state.
     router.navigate("/(companyUser)/profile");
 
-    // Update local store so profile screen shows changes immediately.
-    setProfile((p: any) => ({ ...p, ...draft }));
+    // Update local store — use CDN URL if upload succeeded, local URI as fallback, else keep existing.
+    setProfile((p: any) => ({
+      ...p,
+      ...draft,
+      avatarImageUri:
+        buildCdnUrlFromKey(draft.avatarImageUri ?? "") ||
+        avatarLocalUri ||
+        (p as any).avatarImageUri,
+    }));
 
     // Backend sync only if we have a token.
     if (accessToken) {

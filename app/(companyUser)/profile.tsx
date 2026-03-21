@@ -608,9 +608,10 @@ export default function ProfileScreen() {
           customBackgroundColor: user?.custom_background_color ?? "",
           logoImageURI: user?.logo_image_uri ?? user?.logo_image_key ?? "",
 
-          avatarImageUri: toCloudFrontUrl(
-            user?.avatar_image_url ?? user?.avatar_image_key,
-          ),
+          avatarImageUri:
+            toCloudFrontUrl(user?.avatar_image_url ?? user?.avatar_image_key) ||
+            prev?.avatarImageUri ||
+            "",
           avatarVideoUri: toCloudFrontUrl(
             user?.avatar_video_url ?? user?.avatar_video_key,
           ),
