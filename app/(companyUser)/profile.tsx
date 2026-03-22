@@ -273,7 +273,7 @@ export default function ProfileScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
   const fetchingRef = useRef(false);
-  const didFetchOnceRef = useRef(false);
+
 
   // ===== Name toggle (preserved) =====
   const [showCompanyNow, setShowCompanyNow] = useState(false);
@@ -608,9 +608,10 @@ export default function ProfileScreen() {
           customBackgroundColor: user?.custom_background_color ?? "",
           logoImageURI: user?.logo_image_uri ?? user?.logo_image_key ?? "",
 
-          avatarImageUri: toCloudFrontUrl(
-            user?.avatar_image_url ?? user?.avatar_image_key,
-          ),
+          avatarImageUri:
+            toCloudFrontUrl(user?.avatar_image_url ?? user?.avatar_image_key) ||
+            prev?.avatarImageUri ||
+            "",
           avatarVideoUri: toCloudFrontUrl(
             user?.avatar_video_url ?? user?.avatar_video_key,
           ),
@@ -642,8 +643,6 @@ export default function ProfileScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      if (didFetchOnceRef.current) return;
-      didFetchOnceRef.current = true;
       fetchLatestProfile();
     }, [fetchLatestProfile]),
   );

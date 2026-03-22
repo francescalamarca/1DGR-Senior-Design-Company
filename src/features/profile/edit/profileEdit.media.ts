@@ -12,17 +12,15 @@ export function buildCdnUrlFromKey(keyOrUrl: string) {
   if (!keyOrUrl) return "";
   if (keyOrUrl.includes("://")) return keyOrUrl;
 
-  const base =
-    (aws_config as any)?.cloudfrontBaseUrl ||
+  const domain =
+    (aws_config as any)?.cloudFrontDomain ||
+    (aws_config as any)?.cloudfrontDomain ||
     (aws_config as any)?.cdnBaseUrl ||
-    (aws_config as any)?.mediaBaseUrl ||
-    (aws_config as any)?.cloudFrontUrl ||
-    (aws_config as any)?.cloudfrontUrl ||
-    (aws_config as any)?.cdnUrl ||
     "";
 
-  if (!base) return keyOrUrl;
-  return `${String(base).replace(/\/$/, "")}/${String(keyOrUrl).replace(/^\/+/, "")}`;
+  if (!domain) return keyOrUrl;
+  const base = domain.includes("://") ? domain : `https://${domain}`;
+  return `${base.replace(/\/$/, "")}/${keyOrUrl.replace(/^\/+/, "")}`;
 }
 
 export async function ensureMediaLibraryPermission(alertFn: AlertFn = defaultAlert) {
@@ -94,7 +92,7 @@ export async function uploadToS3(args: {
 
     const urlRes = await fetch(
       `${aws_config.apiBaseUrl}/upload-video?contentType=${encodeURIComponent(contentType)}`,
-      { headers: { Authorization: accessToken } }
+      { headers: { Authorization: accessToken.startsWith("Bearer ") ? accessToken : `Bearer ${accessToken}` } }
     );
     if (!urlRes.ok) throw new Error("Failed to get upload URL");
 
