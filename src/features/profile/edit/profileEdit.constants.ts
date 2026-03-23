@@ -40,6 +40,7 @@ export const BACKGROUND_COLOR_OPTIONS = [
   { label: "Lavender", value: "#9f89c4" },
   { label: "Indigo", value: "#4338CA" },
   { label: "Amber", value: "#D97706" },
+  { label: "Light Orange", value: "#e9b06f" },
   { label: "Slate", value: "#334155" },
 ];
 
@@ -51,18 +52,38 @@ export const WORK_TYPE_OPTIONS = ["Part-Time", "Full Time", "Contract", "All", "
 export const WORK_PREFERENCE_OPTIONS = ["Remote", "Willing to relocate", "Both"];
 
 //these will come down in the dropdown of the core values options that can be attached to company profile
-export const CORE_VALUES = ["Integrity", 
-  "Innovation", 
-  "Teamwork", 
-  "Customer-First", 
-  "Excellence", 
+export const CORE_VALUES = [
+  "Integrity",
+  "Innovation",
+  "Teamwork",
+  "Customer-First",
+  "Excellence",
   "Diversity and Inclusion",
-  "Collaboration", 
-  "Adaptability", 
+  "Collaboration",
+  "Adaptability",
   "Quality",
   "Discipline",
   "Inclusion",
-  "Research and Development"];
+  "Research and Development",
+  "Accountability",
+  "Transparency",
+  "Sustainability",
+  "Work-Life Balance",
+  "Community Impact",
+  "Continuous Learning",
+  "Employee Wellness",
+  "Data-Driven",
+  "Ownership",
+  "Respect",
+  "Agility",
+  "Safety",
+  "Creativity",
+  "Social Responsibility",
+  "Empowerment",
+  "Trust",
+  "Results-Oriented",
+  "Leadership Development",
+];
 
 //setting a constant here should only be able to have 5
 export const MAX_CORE_VALUES = 5;

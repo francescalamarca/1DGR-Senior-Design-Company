@@ -668,14 +668,9 @@ export default function ProfileScreen() {
   const screenW = Dimensions.get("window").width;
   const BLOCK_PAD = 16;
   const scrollY = useRef(new Animated.Value(0)).current;
-  const avatarSize = scrollY.interpolate({
+const avatarHeight = scrollY.interpolate({
     inputRange: [-120, 0, 120],
-    outputRange: [230, 300, 180],
-    extrapolate: "clamp",
-  });
-  const avatarHeight = scrollY.interpolate({
-    inputRange: [-120, 0, 120],
-    outputRange: [330, 200, 180],
+    outputRange: [380, 280, 180],
     extrapolate: "clamp",
   });
 
@@ -1516,75 +1511,83 @@ export default function ProfileScreen() {
           scrollEventThrottle={16}
         >
           {/* Block A */}
-          <View style={{ backgroundColor: s.blockABg, padding: BLOCK_PAD }}>
+          <View style={{ backgroundColor: s.blockABg }}>
+            {/* Icons bar, to make sure logos do not blend in*/}
             <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "space-between",
+                justifyContent: "flex-end",
+                gap: 22,
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                backgroundColor: BG,
               }}
             >
-              <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 22 }}
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: "/(companyUser)/video-library",
+                    params: { returnTo: "/(companyUser)/profile" },
+                  })
+                }
+                hitSlop={10}
               >
-                <Pressable
-                  onPress={() =>
-                    router.push({
-                      pathname: "/(companyUser)/video-library",
-                      params: { returnTo: "/(companyUser)/profile" },
-                    })
-                  }
-                  hitSlop={10}
-                >
-                  <Feather name="layers" size={18} color={TEXT} />
-                </Pressable>
+                <Feather name="layers" size={18} color={TEXT} />
+              </Pressable>
 
-                <Pressable
-                  onPress={() => router.push("/(companyUser)/profile-edit")}
-                  hitSlop={10}
-                >
-                  <Feather name="edit-2" size={18} color={TEXT} />
-                </Pressable>
+              <Pressable
+                onPress={() => router.push("/(companyUser)/profile-edit")}
+                hitSlop={10}
+              >
+                <Feather name="edit-2" size={18} color={TEXT} />
+              </Pressable>
 
-                <Pressable
-                  onPress={() => router.push("/(companyUser)/settings")}
-                  hitSlop={10}
-                >
-                  <Feather name="settings" size={18} color={TEXT} />
-                </Pressable>
-              </View>
+              <Pressable
+                onPress={() => router.push("/(companyUser)/settings")}
+                hitSlop={10}
+              >
+                <Feather name="settings" size={18} color={TEXT} />
+              </Pressable>
             </View>
 
-            <Pressable
-              onPress={() => openVideo(profile.avatarVideoUri)}
-              style={{ alignSelf: "center", marginTop: 18 }}
-              hitSlop={10}
-            >
-              {profile.avatarImageUri?.trim() ? (
-                <Animated.Image
-                  source={{ uri: profile.avatarImageUri }}
-                  style={{
-                    width: avatarSize,
-                    height: avatarHeight,
-                  }}
-                />
-              ) : (
-                <Animated.View
-                  style={{
-                    width: avatarSize,
-                    height: avatarHeight,
-                    backgroundColor: "#EDEDED",
-                    opacity: 0.95,
-                  }}
-                />
-              )}
-            </Pressable>
+            {/* Logo fills full width */}
+            <View style={{ position: "relative" }}>
+              <Pressable
+                onPress={() => openVideo(profile.avatarVideoUri)}
+                hitSlop={10}
+              >
+                {profile.avatarImageUri?.trim() ? (
+                  <Animated.Image
+                    source={{ uri: profile.avatarImageUri }}
+                    style={{
+                      width: screenW,
+                      height: avatarHeight,
+                      resizeMode: "contain",
+                    }}
+                  />
+                ) : (
+                  <Animated.View
+                    style={{
+                      width: screenW,
+                      height: avatarHeight,
+                      backgroundColor: "#EDEDED",
+                      opacity: 0.95,
+                    }}
+                  />
+                )}
+              </Pressable>
+            </View>
+          </View>
+          <View style={{ height: 1, backgroundColor: BORDER }} />
 
+          {/* Name + headline below the logo */}
+          <View style={{ padding: BLOCK_PAD }}>
             <Pressable
               onPress={() => {
                 setShowCompanyNow((v) => !v);
               }}
-              style={{ alignSelf: "center", marginTop: 12 }}
+              style={{ alignSelf: "center" }}
               hitSlop={10}
             >
               <Text style={s.displayName}>{displayName}</Text>
@@ -1592,7 +1595,9 @@ export default function ProfileScreen() {
 
             {!!headlineText && <Text style={s.headline}>{headlineText}</Text>}
           </View>
+
           <View style={{ height: 1, backgroundColor: BORDER }} />
+
           {/* Block B for company mission */}
           <View style={{ backgroundColor: WHITE, padding: BLOCK_PAD }}>
             {!!missionText ? (
