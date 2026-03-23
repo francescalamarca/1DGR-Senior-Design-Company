@@ -20,8 +20,12 @@ import {
   NameSection,
   ProfileMediaResetSection,
   SinglePickerModal,
-  VideoLibrarySection,
-  WorkTypePickerModal
+  WorkTypePickerModal,
+  CoreValuesPickerModal,
+  BackgroundColorSection,
+  BenefitsSection,
+  RolesSection,
+  RoleFormModal,
 } from "./profileEdit.ui";
 import { useProfileEditController } from "./useProfileEditController";
 
@@ -97,6 +101,10 @@ export default function ProfileEditScreen() {
     coreValuesPickerVisible,
     setCoreValuesPickerVisible,
     selectBackgroundColor,
+    roleFormVisible,
+    setRoleFormVisible,
+    addRole,
+    removeRole,
   } = useProfileEditController();
 
   const workTypeSubtitle = React.useMemo(() => {
@@ -166,6 +174,11 @@ export default function ProfileEditScreen() {
           onRemove={removeCoreValue}
         />
 
+        <BenefitsSection
+          benefits={draft.benefitsSummary ?? ""}
+          onChangeBenefits={(v: string) => setDraft((p) => ({...p, benefitsSummary: v }))}
+        />
+
         <CoreValuesPickerModal
           visible={coreValuesPickerVisible}
           selected={draft.coreValues ?? []}
@@ -194,6 +207,17 @@ export default function ProfileEditScreen() {
           onPressIndustry={openIndustryPicker}
         />
 
+        <RolesSection
+          roles={draft.openRoles ?? []}
+          onPressAdd={() => setRoleFormVisible(true)}
+          onRemove={removeRole}
+        />
+
+        <RoleFormModal
+          visible={roleFormVisible}
+          onClose={() => setRoleFormVisible(false)}
+          onSave={addRole}
+        />
 
         <VideoLibrarySection
           mediaVideoUri={mediaVideoUri}

@@ -12,7 +12,6 @@
 
 import { aws_config } from "@/constants/aws-config";
 import { RequireUserType } from "@/src/components/RequireUserType";
-import { BackgroundColorSection } from "@/src/features/profile/edit/profileEdit.ui";
 import { useProfile } from "@/src/features/profile/profile.store";
 import { useSession } from "@/src/state/session";
 import { Feather } from "@expo/vector-icons";
@@ -34,7 +33,7 @@ import {
   RefreshControl,
   Text,
   UIManager,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -129,8 +128,6 @@ type companyRow = { label: string; value: companyRowValue };
 type employeeRowValue = string | string[];
 type employeeRow = { label: string; value: employeeRowValue };
 
-type rolesRowValue = string | string[];
-type rolesRow = { label: string; value: rolesRowValue };
 
 /** Build a location string from common fields (city/state/country OR location fields). */
 function formatBusinessLocationLine(e: any): string {
@@ -239,31 +236,53 @@ function EmployeeValue({
   return <Text style={textStyle}>{softWrapLongTokens(value)}</Text>;
 }
 
-function RolesValue({
-  value,
-  textStyle,
-}: {
-  value: rolesRowValue;
-  textStyle: any;
-}) {
-  if (Array.isArray(value)) {
-    if (value.length === 0) return <Text style={textStyle}>—</Text>;
-
+function RolesGrid({ roles, styles: s }: { roles: any[]; styles: any }) {
+  if (!roles.length) {
     return (
-      <View>
-        {value.map((item, idx) => (
-          <Text
-            key={`${idx}_${item}`}
-            //style={[textStyle, idx === value.length - 1 ? null : { marginBottom: HIGHER_ED_ITEM_GAP }]}
-          >
-            {softWrapLongTokens(item)}
-          </Text>
-        ))}
+      <View style={{ marginTop: 14 }}>
+        <Text style={s.RolesValue}>—</Text>
       </View>
     );
   }
 
-  return <Text style={textStyle}>{softWrapLongTokens(value)}</Text>;
+  return (
+    <View style={{ marginTop: 14, flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+      {roles.map((role: any) => (
+        <View
+          key={role.id}
+          style={{
+            width: "30%",
+            flexGrow: 1,
+            backgroundColor: WHITE,
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: BORDER,
+            padding: 10,
+            gap: 4,
+          }}
+        >
+          <Text style={[s.RolesValue, { fontWeight: "700", fontSize: 13 }]} numberOfLines={2}>
+            {role.title || "—"}
+          </Text>
+          {!!role.salary && (
+            <Text style={[s.RolesValue, { fontSize: 11, opacity: 0.7 }]} numberOfLines={1}>
+              {role.salary}
+            </Text>
+          )}
+          {!!role.postedAt && (
+            <Text style={[s.RolesValue, { fontSize: 10, opacity: 0.5 }]} numberOfLines={1}>
+              {role.postedAt}
+            </Text>
+          )}
+          {Array.isArray(role.skills) && role.skills.length > 0 && (
+            <Text style={[s.RolesValue, { fontSize: 10, opacity: 0.6 }]} numberOfLines={2}>
+              {role.skills.join(", ")}
+            </Text>
+          )}
+        </View>
+      ))}
+    </View>
+  );
 }
 
 export default function ProfileScreen() {
@@ -273,7 +292,6 @@ export default function ProfileScreen() {
 
   const [refreshing, setRefreshing] = useState(false);
   const fetchingRef = useRef(false);
-
 
   // ===== Name toggle (preserved) =====
   const [showCompanyNow, setShowCompanyNow] = useState(false);
@@ -319,21 +337,20 @@ export default function ProfileScreen() {
         lineHeight: 24,
         paddingHorizontal: 20,
         color: TEXT,
+        fontWeight: "300",
       } as const,
 
-      valuesLabel: {
-        ...lexLight,
-        fontSize: 12,
-        color: TEXT,
-        opacity: 1,
-      } as const,
-      valuesValue: {
-        ...lexLight,
-        fontSize: 13,
-        color: TEXT,
-        opacity: 0.65,
+      coreValuesItem: {
+        ...crimson,
         textAlign: "center" as const,
+        fontSize: 20,
+        color: TEXT,
+        lineHeight: 24,
+        opacity: 1,
+        paddingHorizontal: 24,
+        fontWeight: "300",
       } as const,
+
       contactLabel: {
         ...lexLight,
         fontSize: 12.5,
@@ -651,14 +668,9 @@ export default function ProfileScreen() {
   const screenW = Dimensions.get("window").width;
   const BLOCK_PAD = 16;
   const scrollY = useRef(new Animated.Value(0)).current;
-  const avatarSize = scrollY.interpolate({
+const avatarHeight = scrollY.interpolate({
     inputRange: [-120, 0, 120],
-    outputRange: [170, 140, 128],
-    extrapolate: "clamp",
-  });
-  const avatarRadius = scrollY.interpolate({
-    inputRange: [-120, 0, 120],
-    outputRange: [85, 70, 64],
+    outputRange: [380, 280, 180],
     extrapolate: "clamp",
   });
 
@@ -671,6 +683,8 @@ export default function ProfileScreen() {
         (profile as any).tagline ??
         "",
     ).trim() || "";
+
+  const coreValueText = (profile.coreValues ?? []).map((s) => s.trim()).filter(Boolean).sort();
 
   // ===== Benefits dropdown (2-page pull-in) =====
   const [benefitsOpen, setBenefitsOpen] = useState(false);
@@ -900,20 +914,10 @@ export default function ProfileScreen() {
   }, [benefitsOpen, openbenefits, closebenefits]);
 
   const benefitsCol1: benefitsRow[] = useMemo(() => {
-    const workType = dashIfEmpty(profile.workType ?? "");
-    const location = dashIfEmpty(
-      Array.isArray(profile.locations) && profile.locations.length
-        ? profile.locations.join(" · ")
-        : "",
-    );
-    const age = dashIfEmpty(profile.businessAge ?? "");
     const benefits = dashIfEmpty(profile.benefitsSummary ?? "");
 
     return [
-      { label: "Work Type", value: workType },
-      { label: "Locations", value: location },
-      { label: "Business Age", value: age },
-      { label: "Benefits", value: benefits },
+      { label: "Benefits Summary", value: benefits },
     ];
   }, [profile]);
 
@@ -1439,15 +1443,14 @@ export default function ProfileScreen() {
     }).start();
   }, [pageX, rolesPage, rolesOpen]);
 
-  const rolesCol1: rolesRow[] = useMemo(() => {
-    const roles = dashIfEmpty(
-      Array.isArray(profile.openRoles) && profile.openRoles.length
-        ? profile.openRoles.join(" · ")
-        : "",
-    );
-
-    return [{ label: "Roles", value: roles }];
-  }, [profile]);
+  const openRoles = useMemo(() => {
+    if (!Array.isArray(profile.openRoles)) return [];
+    // handle both OpenRole objects and legacy strings gracefully
+    return profile.openRoles.map((r: any) => {
+      if (typeof r === "string") return { id: r, title: r, salary: "", postedAt: "", skills: [] };
+      return r;
+    });
+  }, [profile.openRoles]);
 
   // ===== Videos (horizontal snap) =====
   const videos = useMemo(() => {
@@ -1487,8 +1490,8 @@ export default function ProfileScreen() {
   return (
     <>
       <SafeAreaView
-          edges={["top", "left", "right"]}
-          style={{ flex: 1, backgroundColor: s.blockABg }}
+        edges={["top", "left", "right"]}
+        style={{ flex: 1, backgroundColor: s.blockABg }}
       >
         <RequireUserType type="company" />
 
@@ -1506,79 +1509,85 @@ export default function ProfileScreen() {
             { useNativeDriver: false },
           )}
           scrollEventThrottle={16}
-        > 
+        >
           {/* Block A */}
-          <View style={{ backgroundColor: s.blockABg, padding: BLOCK_PAD }}>
+          <View style={{ backgroundColor: s.blockABg }}>
+            {/* Icons bar, to make sure logos do not blend in*/}
             <View
               style={{
                 flexDirection: "row",
                 alignItems: "center",
-                justifyContent: "space-between",
+                justifyContent: "flex-end",
+                gap: 22,
+                paddingHorizontal: 16,
+                paddingVertical: 10,
+                backgroundColor: BG,
               }}
             >
-              <View
-                style={{ flexDirection: "row", alignItems: "center", gap: 22 }}
+              <Pressable
+                onPress={() =>
+                  router.push({
+                    pathname: "/(companyUser)/video-library",
+                    params: { returnTo: "/(companyUser)/profile" },
+                  })
+                }
+                hitSlop={10}
               >
-                <Pressable
-                  onPress={() =>
-                    router.push({
-                      pathname: "/(companyUser)/video-library",
-                      params: { returnTo: "/(companyUser)/profile" },
-                    })
-                  }
-                  hitSlop={10}
-                >
-                  <Feather name="layers" size={18} color={TEXT} />
-                </Pressable>
+                <Feather name="layers" size={18} color={TEXT} />
+              </Pressable>
 
-                <Pressable
-                  onPress={() => router.push("/(companyUser)/profile-edit")}
-                  hitSlop={10}
-                >
-                  <Feather name="edit-2" size={18} color={TEXT} />
-                </Pressable>
+              <Pressable
+                onPress={() => router.push("/(companyUser)/profile-edit")}
+                hitSlop={10}
+              >
+                <Feather name="edit-2" size={18} color={TEXT} />
+              </Pressable>
 
-                <Pressable
-                  onPress={() => router.push("/(companyUser)/settings")}
-                  hitSlop={10}
-                >
-                  <Feather name="settings" size={18} color={TEXT} />
-                </Pressable>
-              </View>
+              <Pressable
+                onPress={() => router.push("/(companyUser)/settings")}
+                hitSlop={10}
+              >
+                <Feather name="settings" size={18} color={TEXT} />
+              </Pressable>
             </View>
 
-            <Pressable
-              onPress={() => openVideo(profile.avatarVideoUri)}
-              style={{ alignSelf: "center", marginTop: 18 }}
-              hitSlop={10}
-            >
-              {profile.avatarImageUri?.trim() ? (
-                <Animated.Image
-                  source={{ uri: profile.avatarImageUri }}
-                  style={{
-                    width: avatarSize,
-                    height: avatarSize,
-                    borderRadius: avatarRadius,
-                  }}
-                />
-              ) : (
-                <Animated.View
-                  style={{
-                    width: avatarSize,
-                    height: avatarSize,
-                    borderRadius: avatarRadius,
-                    backgroundColor: "#EDEDED",
-                    opacity: 0.95,
-                  }}
-                />
-              )}
-            </Pressable>
+            {/* Logo fills full width */}
+            <View style={{ position: "relative" }}>
+              <Pressable
+                onPress={() => openVideo(profile.avatarVideoUri)}
+                hitSlop={10}
+              >
+                {profile.avatarImageUri?.trim() ? (
+                  <Animated.Image
+                    source={{ uri: profile.avatarImageUri }}
+                    style={{
+                      width: screenW,
+                      height: avatarHeight,
+                      resizeMode: "contain",
+                    }}
+                  />
+                ) : (
+                  <Animated.View
+                    style={{
+                      width: screenW,
+                      height: avatarHeight,
+                      backgroundColor: "#EDEDED",
+                      opacity: 0.95,
+                    }}
+                  />
+                )}
+              </Pressable>
+            </View>
+          </View>
+          <View style={{ height: 1, backgroundColor: BORDER }} />
 
+          {/* Name + headline below the logo */}
+          <View style={{ padding: BLOCK_PAD }}>
             <Pressable
               onPress={() => {
                 setShowCompanyNow((v) => !v);
               }}
-              style={{ alignSelf: "center", marginTop: 12 }}
+              style={{ alignSelf: "center" }}
               hitSlop={10}
             >
               <Text style={s.displayName}>{displayName}</Text>
@@ -1586,7 +1595,9 @@ export default function ProfileScreen() {
 
             {!!headlineText && <Text style={s.headline}>{headlineText}</Text>}
           </View>
+
           <View style={{ height: 1, backgroundColor: BORDER }} />
+
           {/* Block B for company mission */}
           <View style={{ backgroundColor: WHITE, padding: BLOCK_PAD }}>
             {!!missionText ? (
@@ -1596,14 +1607,18 @@ export default function ProfileScreen() {
             )}
           </View>
           <View style={{ height: 1, backgroundColor: BORDER }} />
-          {/* Block BA for company values - need to change variables */}
+
+          {/* Block B2 for company core values*/}
           <View style={{ backgroundColor: WHITE, padding: BLOCK_PAD }}>
-            {!!missionText ? (
-              <Text style={s.mission}>{missionText}</Text>
+          {(profile.coreValues ?? []).length > 0 ? (
+            <Text style={s.coreValuesItem}>
+              {(profile.coreValues ?? []).join(" - ")}
+            </Text>
             ) : (
-              <Text style={[s.mission, { opacity: 1 }]}>—</Text>
+              <Text style={[s.coreValuesItem, { opacity: 1 }]}>—</Text>
             )}
           </View>
+        
           <View style={{ height: 1, backgroundColor: BORDER }} />
           {/* Block benefits */}
           <View style={{ backgroundColor: BG, padding: BLOCK_PAD }}>
@@ -1695,6 +1710,7 @@ export default function ProfileScreen() {
           </View>
           {/*end benefits return block*/}
           <View style={{ height: 1, backgroundColor: BORDER }} />
+
           {/* Block company location START */}
           <View style={{ backgroundColor: BG, padding: BLOCK_PAD }}>
             <Pressable
@@ -2037,6 +2053,7 @@ export default function ProfileScreen() {
             {/* ✅ Premium animated reveal container */}
             <Animated.View style={{ height: rolesHeight, overflow: "hidden" }}>
               {/* ✅ Hidden measurer */}
+              {/* Hidden measurer */}
               <View
                 pointerEvents="none"
                 style={{ opacity: 0, position: "absolute", left: 0, right: 0 }}
@@ -2046,31 +2063,7 @@ export default function ProfileScreen() {
                     setrolesContentH(h);
                 }}
               >
-                <View style={{ marginTop: 14 }}>
-                  <View style={{ overflow: "hidden" }}>
-                    <View style={{ width: panelW * 2, flexDirection: "row" }}>
-                      <View style={{ width: panelW }}>
-                        <View style={{ gap: 14 }}>
-                          {rolesCol1.map((row) => (
-                            <View
-                              key={row.label}
-                              style={{
-                                gap: 4,
-                                paddingRight: roles_RIGHT_GUTTER,
-                              }}
-                            >
-                              <Text style={s.rolesLabel}>{row.label}</Text>
-                              <RolesValue
-                                value={row.value}
-                                textStyle={s.RolesValue}
-                              />
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-                </View>
+                <RolesGrid roles={openRoles} styles={s} />
               </View>
 
               {/* Visible animated content */}
@@ -2081,22 +2074,7 @@ export default function ProfileScreen() {
                     transform: [{ translateY: rolesTranslateY }],
                   }}
                 >
-                  <View style={{ marginTop: 14 }}>
-                    <View style={{ gap: 14 }}>
-                      {rolesCol1.map((row) => (
-                        <View
-                          key={row.label}
-                          style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
-                        >
-                          <Text style={s.rolesLabel}>{row.label}</Text>
-                          <RolesValue
-                            value={row.value}
-                            textStyle={s.RolesValue}
-                          />
-                        </View>
-                      ))}
-                    </View>
-                  </View>
+                  <RolesGrid roles={openRoles} styles={s} />
                 </Animated.View>
               ) : null}
             </Animated.View>

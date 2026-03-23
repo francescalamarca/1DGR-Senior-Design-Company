@@ -9,6 +9,7 @@ import { useSession } from "@/src/state/session";
 import { updateUserProfile } from "@/src/utils/update_api";
 
 import { hasProfileChanged, type DraftProfile } from "./profileEdit.compare";
+import type { OpenRole } from "@/src/features/profile/profile.types";
 import { INDUSTRIES } from "./profileEdit.constants";
 import { mapDraftToApiPayload } from "./profileEdit.data";
 import { filterCitiesByQuery, mapCitiesFromJson } from "./profileEdit.mappers"; //label is defined in this map function
@@ -53,6 +54,8 @@ export function useProfileEditController() {
 
   const [coreValuePicker, setCoreValuePicker] = useState(false);
   const [coreValuesPickerVisible, setCoreValuesPickerVisible] = useState(false);
+
+  const [roleFormVisible, setRoleFormVisible] = useState(false);
 
 
 
@@ -214,8 +217,11 @@ export function useProfileEditController() {
 
   function addLocation(label: string) { //passing this in to get an instance of CityRow
     setDraft((p) => {
+      //no max, infinite allowed
       const current = p.locations ?? []; //takes the current city that was tapped in the setDraft, gets current array, empty if nothing in it yet
-      if (current.includes(label)) return p; // prevent duplicates, if already there, does not add
+      if (current.includes(label)){
+        return {...p, locations: current.filter((v) => v !== label)}
+      }// prevent duplicates, if already there and clicked again will remove
       return { ...p, locations: [...current, label] }; //appends to existing array
   });
   }
@@ -232,8 +238,10 @@ export function useProfileEditController() {
   function addCoreValue(value: string) {
   setDraft((p) => {
     const current = p.coreValues ?? [];
+    if (current.includes(value)) {
+      return { ...p, coreValues: current.filter((v) => v !== value) }; //keeps values ONLY IF they are not equal to any existing
+    }
     if (current.length >= 5) return p; // enforce max
-    if (current.includes(value)) return p; // prevent duplicates
     return { ...p, coreValues: [...current, value] };
   });
 }
@@ -248,6 +256,20 @@ function removeCoreValue(value: string) {
 function openCoreValuesPicker() {
   //function will open the core values picker dropdown
   setCoreValuesPickerVisible(true);
+}
+
+function addRole(role: OpenRole) {
+  setDraft((p) => ({
+    ...p,
+    openRoles: [...(p.openRoles ?? []), role],
+  }));
+}
+
+function removeRole(id: string) {
+  setDraft((p) => ({
+    ...p,
+    openRoles: (p.openRoles ?? []).filter((r) => r.id !== id),
+  }));
 }
 
 
@@ -578,5 +600,9 @@ function openCoreValuesPicker() {
     singlePickerTempValue,
     setSinglePickerTempValue,
     singlePickerOnSelect,
+    roleFormVisible,
+    setRoleFormVisible,
+    addRole,
+    removeRole,
   };
 }

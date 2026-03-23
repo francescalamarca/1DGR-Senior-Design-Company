@@ -16,6 +16,7 @@ import {
 import { styles, UI } from "./profileEdit.styles";
 import { LLightText, BtnText } from "./profileEdit.components";
 import { BACKGROUND_COLOR_OPTIONS, CORE_VALUES } from "./profileEdit.constants";
+import type { OpenRole } from "@/src/features/profile/profile.types";
 
 // ---------- Types the screen expects ----------
 export type IndustryRow =
@@ -100,9 +101,8 @@ export function AvatarSection(props: {
       <View style={[styles.inlineCard, { marginTop: 14, flexDirection: "row", alignItems: "center", gap: 14 }]}>
         <View
           style={{
-            width: 60,
-            height: 60,
-            borderRadius: 30,
+            width: 100,
+            height: 50,
             borderWidth: 1,
             borderColor: UI.border,
             overflow: "hidden",
@@ -266,6 +266,28 @@ export function MissionSection(props: { mission: string; onChangeMission: (v: st
   );
 }
 
+export function BenefitsSection(props: {benefits: string; onChangeBenefits: (v: string) => void}) {
+  const {benefits, onChangeBenefits } = props;
+
+  return (
+    <>
+    <LLightText style={styles.sectionTitle}> Company Benefits </LLightText>
+    <LLightText style={styles.sectionHelper}>The benefits of the company. 401k, work schedule, overtime, etc.</LLightText>
+
+    <View style={styles.fieldStack}>
+      <TextInput
+      value = {benefits?.trim().length ? benefits : ""}
+      onChangeText={onChangeBenefits}
+      placeholder="Write something about the benefits..."
+      placeholderTextColor={UI.hint}
+      style={styles.inputMultiline}
+      multiline
+      />
+    </View>
+    </>
+  )
+}
+
 export function IndustryTypeSection(props: {
   workTypeSubtitle: string;
   companyAgeSubtitle: string;
@@ -290,7 +312,7 @@ export function IndustryTypeSection(props: {
   } = props;
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Industry</LLightText>
+      <LLightText style={styles.sectionTitle}>Company Logistics</LLightText>
       <LLightText style={styles.sectionHelper}>Residency requirements, company age, work, and location.</LLightText>
 
       <GroupCard>
@@ -789,6 +811,172 @@ export function CityPickerModal(props: {
                 }}
               >
                 <LLightText style={{ fontWeight: "800" }}>Apply</LLightText>
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </View>
+    </Modal>
+  );
+}
+
+export function RolesSection(props: {
+  roles: OpenRole[];
+  onPressAdd: () => void;
+  onRemove: (id: string) => void;
+}) {
+  const { roles, onPressAdd, onRemove } = props;
+
+  return (
+    <>
+      <LLightText style={styles.sectionTitle}>Open Roles</LLightText>
+      <LLightText style={styles.sectionHelper}>Add positions you are actively hiring for.</LLightText>
+
+      <GroupCard>
+        <PickerRow
+          title="Add Role"
+          subtitle={roles.length > 0 ? `${roles.length} role${roles.length === 1 ? "" : "s"} listed` : "None added"}
+          onPress={onPressAdd}
+          showDivider={roles.length > 0}
+        />
+        {roles.map((role) => (
+          <View key={role.id} style={[styles.rowPressable, { paddingVertical: 14, gap: 4 }]}>
+            <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+              <LLightText style={[styles.rowTitle, { flex: 1, paddingRight: 10 }]}>{role.title}</LLightText>
+              <Pressable onPress={() => onRemove(role.id)} hitSlop={8}>
+                <LLightText style={{ color: UI.danger, fontSize: 13 }}>Remove</LLightText>
+              </Pressable>
+            </View>
+            {!!role.salary.trim() && (
+              <LLightText style={styles.rowSub}>{role.salary}</LLightText>
+            )}
+            {role.skills.length > 0 && (
+              <LLightText style={styles.rowSub} numberOfLines={1}>
+                {role.skills.join(", ")}
+              </LLightText>
+            )}
+          </View>
+        ))}
+      </GroupCard>
+    </>
+  );
+}
+
+export function RoleFormModal(props: {
+  visible: boolean;
+  onClose: () => void;
+  onSave: (role: OpenRole) => void;
+}) {
+  const { visible, onClose, onSave } = props;
+
+  const [title, setTitle] = React.useState("");
+  const [salary, setSalary] = React.useState("");
+  const [skillsText, setSkillsText] = React.useState("");
+
+  // Reset fields each time the modal opens
+  React.useEffect(() => {
+    if (visible) {
+      setTitle("");
+      setSalary("");
+      setSkillsText("");
+    }
+  }, [visible]);
+
+  const canSave = title.trim().length > 0;
+
+  function handleSave() {
+    if (!canSave) return;
+    const skills = skillsText
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
+    onSave({
+      id: String(Date.now()),
+      title: title.trim(),
+      salary: salary.trim(),
+      postedAt: new Date().toISOString().slice(0, 10),
+      skills,
+    });
+    onClose();
+  }
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1, justifyContent: "flex-end" }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={MODAL_KB_OFFSET_IOS}
+        >
+          <View
+            style={{
+              backgroundColor: UI.card,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              paddingHorizontal: 16,
+              paddingTop: 16,
+              paddingBottom: 32,
+            }}
+          >
+            <LLightText style={{ fontSize: 18, fontWeight: "800", marginBottom: 16 }}>Add Role</LLightText>
+
+            <LLightText style={styles.label}>Role Title *</LLightText>
+            <TextInput
+              value={title}
+              onChangeText={setTitle}
+              placeholder="e.g. Software Engineer"
+              placeholderTextColor={UI.hint}
+              style={[styles.input, { marginBottom: 14 }]}
+            />
+
+            <LLightText style={styles.label}>Salary / Range</LLightText>
+            <TextInput
+              value={salary}
+              onChangeText={setSalary}
+              placeholder="e.g. $80k–$100k or Competitive"
+              placeholderTextColor={UI.hint}
+              style={[styles.input, { marginBottom: 14 }]}
+            />
+
+            <LLightText style={styles.label}>Skills (comma-separated)</LLightText>
+            <TextInput
+              value={skillsText}
+              onChangeText={setSkillsText}
+              placeholder="e.g. React, Node.js, SQL"
+              placeholderTextColor={UI.hint}
+              style={[styles.input, { marginBottom: 20 }]}
+              autoCorrect={false}
+            />
+
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Pressable
+                onPress={onClose}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: UI.borderStrong,
+                  borderRadius: 12,
+                  alignItems: "center",
+                }}
+              >
+                <LLightText style={{ fontWeight: "800" }}>Cancel</LLightText>
+              </Pressable>
+
+              <Pressable
+                onPress={handleSave}
+                disabled={!canSave}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: UI.text,
+                  borderRadius: 12,
+                  alignItems: "center",
+                  opacity: canSave ? 1 : 0.4,
+                }}
+              >
+                <LLightText style={{ fontWeight: "800" }}>Save Role</LLightText>
               </Pressable>
             </View>
           </View>

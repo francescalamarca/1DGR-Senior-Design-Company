@@ -18,6 +18,14 @@
  * A single profile media slot (fixed-position on profile).
  * These are derived from the active video library and displayed on the profile.
  */
+export type OpenRole = {
+  id: string;
+  title: string;
+  salary: string;
+  postedAt: string; // ISO date string, e.g. "2024-03-22"
+  skills: string[];
+};
+
 export type MediaItem = {
   id: string;
   imageUri: string;
@@ -105,7 +113,8 @@ export type Profile = {
   //adding industry as array
   industry: string;
 
-  openRoles: string [];
+  openRoles: OpenRole[];
+
 
   benefitsSummary: string;
 
