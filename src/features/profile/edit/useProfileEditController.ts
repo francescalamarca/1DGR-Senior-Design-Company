@@ -9,6 +9,7 @@ import { useSession } from "@/src/state/session";
 import { updateUserProfile } from "@/src/utils/update_api";
 
 import { hasProfileChanged, type DraftProfile } from "./profileEdit.compare";
+import type { OpenRole } from "@/src/features/profile/profile.types";
 import { INDUSTRIES } from "./profileEdit.constants";
 import { mapDraftToApiPayload } from "./profileEdit.data";
 import { filterCitiesByQuery, mapCitiesFromJson } from "./profileEdit.mappers"; //label is defined in this map function
@@ -53,6 +54,8 @@ export function useProfileEditController() {
 
   const [coreValuePicker, setCoreValuePicker] = useState(false);
   const [coreValuesPickerVisible, setCoreValuesPickerVisible] = useState(false);
+
+  const [roleFormVisible, setRoleFormVisible] = useState(false);
 
 
 
@@ -113,57 +116,50 @@ export function useProfileEditController() {
   
   const profileRef = useRef(profile);
   profileRef.current = profile;
-  
-  useFocusEffect(
-    useCallback(() => {
-      const p = profileRef.current;
-      setDraft((p as any) as DraftProfile);
-      setAvatarLocalUri(null);
-      setMediaVideoUri(null);
-      setMediaThumbUri(null);
-      setMediaCaption("");
-      setThumbOptions([]);
-      setGeneratingThumbs(false);
-      setAddingLibraryVideo(false);
-      requestAnimationFrame(() => {
-        scrollRef.current?.scrollTo?.({ y: 0, animated: false });
-      });
-    }, [])
-  );
+
+  // Only reset draft on first mount, not on every focus (picker modals cause re-focus).
+  useEffect(() => {
+    const p = profileRef.current;
+    setDraft((p as any) as DraftProfile);
+    setAvatarLocalUri(null);
+    setMediaVideoUri(null);
+    setMediaThumbUri(null);
+    setMediaCaption("");
+    setThumbOptions([]);
+    setGeneratingThumbs(false);
+    setAddingLibraryVideo(false);
+    requestAnimationFrame(() => {
+      scrollRef.current?.scrollTo?.({ y: 0, animated: false });
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   function handleCancel() {
-    if (!changed) {
-      router.replace("/(companyUser)/profile");
-      return;
-    }
-    Alert.alert("Discard changes?", "You have unsaved edits.", [
-      { text: "Keep editing", style: "cancel" },
-      { text: "Discard", style: "destructive", onPress: () => router.replace("/(companyUser)/profile") },
-    ]);
+    router.navigate("/(companyUser)/profile");
   }
 
-  async function handleSave() {
-    if (!accessToken) return Alert.alert("Error", "No access token found. Please log in again.");
+  function handleSave() {
+    const apiPayload = mapDraftToApiPayload(draft);
 
-    setIsSaving(true);
-    try {
-      const apiPayload = mapDraftToApiPayload(draft); //this is where that functionn I just changed the variables to match company db is being called
-      const json = JSON.stringify(apiPayload);
-      if (json.length > 200_000) {
-        Alert.alert(
-          "Error",
-          "Payload too large."
-        );
-        return;
-      }
+    // Navigate first — always, regardless of token state.
+    router.navigate("/(companyUser)/profile");
 
-      await updateUserProfile(apiPayload as any, accessToken);
-      setProfile((p: any) => ({ ...p, ...draft }));
-      router.replace("/(companyUser)/profile");
-    } catch (err) {
-      console.error(err);
-      Alert.alert("Error", "Failed to save profile.");
-    } finally {
-      setIsSaving(false);
+    // Update local store — use CDN URL if upload succeeded, local URI as fallback, else keep existing.
+    setProfile((p: any) => ({
+      ...p,
+      ...draft,
+      avatarImageUri:
+        buildCdnUrlFromKey(draft.avatarImageUri ?? "") ||
+        avatarLocalUri ||
+        (p as any).avatarImageUri,
+    }));
+
+    // Backend sync only if we have a token.
+    if (accessToken) {
+      updateUserProfile(apiPayload as any, accessToken)
+        .then(() => refreshProfile(accessToken))
+        .catch((err) => console.warn("[handleSave] backend sync failed:", err));
+    } else {
+      console.warn("[handleSave] No access token — local save only.");
     }
   }
 
@@ -175,15 +171,13 @@ export function useProfileEditController() {
     setSinglePickerVisible(true);
   }
 
-  function summarizeIndustries(list: string[]) {
-    const clean = (list ?? []).map((s) => s.trim()).filter(Boolean);
-    if (clean.length === 0) return "None selected";
-    if (clean.length <= 2) return clean.join(", ");
-    return `${clean.slice(0, 2).join(", ")} +${clean.length - 2} more`;
+  function summarizeIndustries(industry: string) {
+    const clean = (industry ?? "").trim();
+    return clean.length > 0 ? clean : "None selected";
   }
 
   function openIndustryPicker() {
-    const current = new Set<string>((draft.industry ?? ""));
+    const current = draft.industry ? new Set<string>([draft.industry]) : new Set<string>();
     setIndustryTempSelected(current);
     setIndustryCustomInput("");
     setIndustrySearch("");
@@ -192,10 +186,8 @@ export function useProfileEditController() {
 
   function toggleIndustry(val: string) {
     setIndustryTempSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(val)) next.delete(val);
-      else next.add(val);
-      return next;
+      if (prev.has(val)) return new Set<string>();
+      return new Set<string>([val]);
     });
   }
 
@@ -209,8 +201,8 @@ export function useProfileEditController() {
   }
 
   function applyIndustrySelection() {
-    const selected = Array.from(industryTempSelected).map((s) => s.trim()).filter(Boolean).sort((a, b) => a.localeCompare(b));
-    setDraft((p) => ({ ...p, industryInterests: selected }));
+    const selected = Array.from(industryTempSelected).map((s) => s.trim()).filter(Boolean)[0] ?? "";
+    setDraft((p) => ({ ...p, industry: selected }));
     setIndustryPickerVisible(false);
   }
 
@@ -225,8 +217,11 @@ export function useProfileEditController() {
 
   function addLocation(label: string) { //passing this in to get an instance of CityRow
     setDraft((p) => {
+      //no max, infinite allowed
       const current = p.locations ?? []; //takes the current city that was tapped in the setDraft, gets current array, empty if nothing in it yet
-      if (current.includes(label)) return p; // prevent duplicates, if already there, does not add
+      if (current.includes(label)){
+        return {...p, locations: current.filter((v) => v !== label)}
+      }// prevent duplicates, if already there and clicked again will remove
       return { ...p, locations: [...current, label] }; //appends to existing array
   });
   }
@@ -243,8 +238,10 @@ export function useProfileEditController() {
   function addCoreValue(value: string) {
   setDraft((p) => {
     const current = p.coreValues ?? [];
+    if (current.includes(value)) {
+      return { ...p, coreValues: current.filter((v) => v !== value) }; //keeps values ONLY IF they are not equal to any existing
+    }
     if (current.length >= 5) return p; // enforce max
-    if (current.includes(value)) return p; // prevent duplicates
     return { ...p, coreValues: [...current, value] };
   });
 }
@@ -252,13 +249,27 @@ export function useProfileEditController() {
 function removeCoreValue(value: string) {
   setDraft((p) => ({
     ...p,
-    core_values: (p.coreValues ?? []).filter((v) => v !== value),
+    coreValues: (p.coreValues ?? []).filter((v) => v !== value),
   }));
 }
 
 function openCoreValuesPicker() {
   //function will open the core values picker dropdown
   setCoreValuesPickerVisible(true);
+}
+
+function addRole(role: OpenRole) {
+  setDraft((p) => ({
+    ...p,
+    openRoles: [...(p.openRoles ?? []), role],
+  }));
+}
+
+function removeRole(id: string) {
+  setDraft((p) => ({
+    ...p,
+    openRoles: (p.openRoles ?? []).filter((r) => r.id !== id),
+  }));
 }
 
 
@@ -298,6 +309,13 @@ function openCoreValuesPicker() {
         },
       },
     ]);
+  }
+
+  function onSetAvatarFromUrl(url: string) {
+    const trimmed = url.trim();
+    if (!trimmed) return;
+    setAvatarLocalUri(trimmed);
+    setDraft((p) => ({ ...p, avatarImageUri: trimmed }));
   }
 
   function scrollToBottomSoon() {
@@ -452,13 +470,10 @@ function openCoreValuesPicker() {
     }
   }
 
-  const canSave = useMemo(() => {
-    const companyName = (draft.companyName ?? "").trim().length > 0;
-    return (companyName && changed);
-  }, [draft.companyName, changed]);
+  const canSave = !isSaving;
 
   function selectBackgroundColor(color: string) {
-  setDraft((p) => ({ ...p, customBackgroundColor: color }));
+    setDraft((p) => ({ ...p, customBackgroundColor: color }));
   }
 
 
@@ -532,6 +547,7 @@ function openCoreValuesPicker() {
     hasAvatar,
     onPickAvatarImage,
     onRemoveAvatarImage,
+    onSetAvatarFromUrl,
     summarizeIndustries,
     openSingleSelectPicker,
     openIndustryPicker,
@@ -584,5 +600,9 @@ function openCoreValuesPicker() {
     singlePickerTempValue,
     setSinglePickerTempValue,
     singlePickerOnSelect,
+    roleFormVisible,
+    setRoleFormVisible,
+    addRole,
+    removeRole,
   };
 }

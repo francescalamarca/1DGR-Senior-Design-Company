@@ -26,6 +26,9 @@ import {
   WorkTypePickerModal,
   CoreValuesPickerModal,
   BackgroundColorSection,
+  BenefitsSection,
+  RolesSection,
+  RoleFormModal,
 } from "./profileEdit.ui";
 
 const MODAL_KB_OFFSET_IOS = 12;
@@ -49,6 +52,7 @@ export default function ProfileEditScreen() {
     hasAvatar,
     onPickAvatarImage,
     onRemoveAvatarImage,
+    onSetAvatarFromUrl,
     summarizeIndustries,
     openSingleSelectPicker,
     openIndustryPicker,
@@ -99,6 +103,10 @@ export default function ProfileEditScreen() {
     coreValuesPickerVisible,
     setCoreValuesPickerVisible,
     selectBackgroundColor,
+    roleFormVisible,
+    setRoleFormVisible,
+    addRole,
+    removeRole,
   } = useProfileEditController();
 
   const workTypeSubtitle = React.useMemo(() => {
@@ -149,6 +157,7 @@ export default function ProfileEditScreen() {
           hasAvatar={hasAvatar}
           onPickAvatarImage={onPickAvatarImage}
           onRemoveAvatarImage={onRemoveAvatarImage}
+          onSetAvatarFromUrl={onSetAvatarFromUrl} //added this function so the user can add a url to a photo as the logo
         />
 
         <NameSection
@@ -167,6 +176,11 @@ export default function ProfileEditScreen() {
           onRemove={removeCoreValue}
         />
 
+        <BenefitsSection
+          benefits={draft.benefitsSummary ?? ""}
+          onChangeBenefits={(v: string) => setDraft((p) => ({...p, benefitsSummary: v }))}
+        />
+
         <CoreValuesPickerModal
           visible={coreValuesPickerVisible}
           selected={draft.coreValues ?? []}
@@ -179,7 +193,7 @@ export default function ProfileEditScreen() {
         <IndustryTypeSection
           workTypeSubtitle={workTypeSubtitle}
           companyAgeSubtitle={draft.businessAge?.trim() ? draft.businessAge : "Select"}
-          industrySubtitle={summarizeIndustries(draft.industry ?? [])}
+          industrySubtitle={summarizeIndustries(draft.industry ?? "")}
           locations={draft.locations ?? []}
           onPressAddLocation={openCityPicker}
           onRemoveLocation={removeLocation}
@@ -195,6 +209,17 @@ export default function ProfileEditScreen() {
           onPressIndustry={openIndustryPicker}
         />
 
+        <RolesSection
+          roles={draft.openRoles ?? []}
+          onPressAdd={() => setRoleFormVisible(true)}
+          onRemove={removeRole}
+        />
+
+        <RoleFormModal
+          visible={roleFormVisible}
+          onClose={() => setRoleFormVisible(false)}
+          onSave={addRole}
+        />
 
         <VideoLibrarySection
           mediaVideoUri={mediaVideoUri}
