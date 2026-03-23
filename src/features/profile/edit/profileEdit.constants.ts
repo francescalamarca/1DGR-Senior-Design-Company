@@ -24,8 +24,12 @@ export const INDUSTRIES: { title: string; options: string[] }[] = [
   { title: "Other / Emerging Industries", options: ["Startups", "Climate Tech", "Space & Advanced Tech", "Other"] },
 ];
 
+<<<<<<<<< Temporary merge branch 1
+export const INDUSTRY_EXPERIENCE_OPTIONS = ["Up to 1", "1-3", "3-5", "5-10", "10+"];
+=========
 //answers the question of how old the company is and how long it has been running for
 export const BUSINESS_AGE_OPTIONS = ["Up to 1", "1-3", "3-5", "5-10", "10+"];
+>>>>>>>>> Temporary merge branch 2
 
 export const WORK_TYPE_OPTIONS = ["Part-Time", "Full Time", "Contract", "All", "Currently not looking"];
 
@@ -33,7 +37,7 @@ export const WORK_PREFERENCE_OPTIONS = ["Remote", "Willing to relocate", "Both"]
 
 //these will come down in the dropdown of the core values options that can be attached to company profile
 export const CORE_VALUES = ["Integrity", "Innovation", "Teamwork", 
-  "Customer-First", "Excellence", "Diversity and Inclusion","Collaboration", "Adaptability"];
+  "Customer-First", "Excellence", "Diversity and Inclusion","Collaboration", "Adaptability", "Quality"];
 
 //setting a constant here should only be able to have 5
 export const MAX_CORE_VALUES = 5;

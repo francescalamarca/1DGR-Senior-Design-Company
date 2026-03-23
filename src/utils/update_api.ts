@@ -10,7 +10,7 @@ export const updateUserProfile = async (profileData: any, token: string) => {
     const response = await fetch(`${aws_config.apiBaseUrl}/update-profile`, {
       method: 'PUT',
       headers: {
-        'Authorization': token,
+        'Authorization': token.startsWith('Bearer ') ? token : `Bearer ${token}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(profileData)

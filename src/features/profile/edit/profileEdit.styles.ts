@@ -1,5 +1,7 @@
 // src/features/profile/edit/profileEdit.styles.ts
 import { Platform, StyleSheet } from "react-native";
+import { useProfileEditController } from "./useProfileEditController";
+
 
 export const FONTS = {
   LEXEND_LIGHT: "Lexend-Light",

@@ -32,12 +32,14 @@ import type { Profile} from "@/src/features/profile/profile.types";
 //these values will match the draft.___ variables in the profileEdit.data file
 export type DraftProfile = Profile & {
   companyName?: string;
-  industry?: string;
+  industry?: string; //company should only be able to be in one industry at a time
   businessAge?: string;
   workType?: string;
   locations?: string[]; //this is an array of strings that will be populated by the companies choice of cities that they operate in
   missionStatement?: string;
   coreValues?: string[];
+  currentEmployees?: string[]; //added to keep track of current employees to display on profile
+  openRoles?: string[];
   benefitsSummary?: string;
   customBackgroundColor?: string;
   logoImageURI?: string;
@@ -48,15 +50,17 @@ export function normalizeForCompare(p: DraftProfile) {
 
   return {
     companyName: (p.companyName ?? "").trim(),
-    industry: (p.industry ?? "").trim(),
+    industry: (Array.isArray(p.industry) ? (p.industry[0] ?? "") : (p.industry ?? "")).trim(),
     businessAge:(p.businessAge ?? "").trim(),
     workType: (p.workType ?? "").trim(),
     locations: (p.locations ?? []).map((s) => s.trim()).filter(Boolean).sort(), //same as the coreValues array functionality for checking change
     missionStatement: (p.missionStatement ?? "").trim(),
     coreValues: (p.coreValues ?? []).map((s) => s.trim()).filter(Boolean).sort(), //the sort is important bc will read as different wityh the same words in different order
+    currentEmployees: (p.currentEmployees ?? []).map((s) => s.trim()).filter(Boolean).sort(),
     benefitsSummary: (p.benefitsSummary ?? "").trim(),
+    openRoles:(p.openRoles ?? []).map((s) => s.trim()).filter(Boolean).sort(),
     customBackgroundColor: (p.customBackgroundColor ?? "").trim(),
-    logoImageURI: (p.logoImageURI ?? "").trim(),
+    logoImageURI: (p.avatarImageUri ?? p.logoImageURI ?? "").trim(),
   };
 }
 

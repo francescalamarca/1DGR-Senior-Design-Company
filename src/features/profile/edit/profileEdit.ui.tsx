@@ -15,6 +15,7 @@ import {
 
 import { styles, UI } from "./profileEdit.styles";
 import { LLightText, BtnText } from "./profileEdit.components";
+import { BACKGROUND_COLOR_OPTIONS, CORE_VALUES } from "./profileEdit.constants";
 
 // ---------- Types the screen expects ----------
 export type IndustryRow =
@@ -86,13 +87,15 @@ export function AvatarSection(props: {
   hasAvatar: boolean;
   onPickAvatarImage: () => void;
   onRemoveAvatarImage: () => void;
+  onSetAvatarFromUrl: (url: string) => void;
 }) {
-  const { avatarPreviewUri, pickingAvatarImage, isSaving, hasAvatar, onPickAvatarImage, onRemoveAvatarImage } = props;
+  const { avatarPreviewUri, pickingAvatarImage, isSaving, hasAvatar, onPickAvatarImage, onRemoveAvatarImage, onSetAvatarFromUrl } = props;
+  const [urlInput, setUrlInput] = React.useState("");
 
   return (
     <>
-      <LLightText style={[styles.sectionTitle, { marginTop: 17 }]}>Avatar</LLightText>
-      <LLightText style={styles.sectionHelper}>Add a profile image.</LLightText>
+      <LLightText style={[styles.sectionTitle, { marginTop: 17 }]}>Logo</LLightText>
+      <LLightText style={styles.sectionHelper}>Add a company logo image here.</LLightText>
 
       <View style={[styles.inlineCard, { marginTop: 14, flexDirection: "row", alignItems: "center", gap: 14 }]}>
         <View
@@ -140,6 +143,33 @@ export function AvatarSection(props: {
               <BtnText>Remove</BtnText>
             </Pressable>
           </View>
+
+          {/* URL input row */}
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <TextInput
+              style={[styles.input, { flex: 1, fontSize: 12 }]}
+              placeholder="Paste image URL"
+              placeholderTextColor={UI.hint}
+              value={urlInput}
+              onChangeText={setUrlInput}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              editable={!isSaving}
+            />
+            <Pressable
+              onPress={() => {
+                if (urlInput.trim()) {
+                  onSetAvatarFromUrl(urlInput.trim());
+                  setUrlInput("");
+                }
+              }}
+              disabled={!urlInput.trim() || isSaving}
+              style={[styles.pill, { paddingHorizontal: 14 }, !urlInput.trim() || isSaving ? { opacity: 0.4 } : null]}
+            >
+              <BtnText>Use URL</BtnText>
+            </Pressable>
+          </View>
         </View>
       </View>
     </>
@@ -158,11 +188,10 @@ export function NameSection(props: {
 
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Name</LLightText>
-      <LLightText style={styles.sectionHelper}>Preferred name is shown publicly. Legal name is optional.</LLightText>
+      <LLightText style={styles.sectionTitle}>Company Name</LLightText>
 
       <View style={styles.fieldStack}>
-        <LLightText style={styles.label}>Preferred Name</LLightText>
+        <LLightText style={styles.label}>Company Name</LLightText>
         <TextInput
           value={companyName}
           onChangeText={onChangeCompanyName}
@@ -175,8 +204,48 @@ export function NameSection(props: {
   );
 }
 
-export function HookSection(props: { bio: string; onChangeBio: (v: string) => void }) {
-  const { bio, onChangeBio } = props;
+export function BackgroundColorSection(props: {
+  selectedColor: string;
+  onSelect: (color: string) => void;
+}) {
+  const { selectedColor, onSelect } = props;
+
+  return (
+    <>
+      <LLightText style={styles.sectionTitle}>Background Color</LLightText>
+      <LLightText style={styles.sectionHelper}>Choose up to 1.</LLightText>
+
+      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, marginTop: 12 }}>
+        {BACKGROUND_COLOR_OPTIONS.map((color) => {
+          const selected = selectedColor === color.value;
+          return (
+            <Pressable
+              key={color.value}
+              onPress={() => onSelect(selected ? "" : color.value)}
+              style={{
+                width: 44,
+                height: 44,
+                borderRadius: 22,
+                backgroundColor: color.value,
+                alignItems: "center",
+                justifyContent: "center",
+                borderWidth: selected ? 3 : 1,
+                borderColor: selected ? UI.text : "transparent",
+              }}
+            >
+              {selected ? (
+                <LLightText style={{ color: "#fff", fontSize: 18 }}>✓</LLightText>
+              ) : null}
+            </Pressable>
+          );
+        })}
+      </View>
+    </>
+  );
+}
+
+export function MissionSection(props: { mission: string; onChangeMission: (v: string) => void }) {
+  const { mission, onChangeMission } = props;
 
   return (
     <>
@@ -185,8 +254,8 @@ export function HookSection(props: { bio: string; onChangeBio: (v: string) => vo
 
       <View style={styles.fieldStack}>
         <TextInput
-          value={bio?.trim().length ? bio : ""}
-          onChangeText={onChangeBio}
+          value={mission?.trim().length ? mission : ""}
+          onChangeText={onChangeMission}
           placeholder="Write something about the mission…"
           placeholderTextColor={UI.hint}
           style={styles.inputMultiline}
@@ -197,53 +266,28 @@ export function HookSection(props: { bio: string; onChangeBio: (v: string) => vo
   );
 }
 
-export function CoreValuesSection(props: { valuesText: string; onChangeValuesText: (v: string) => void }) {
-  const { valuesText, onChangeValuesText } = props;
-
-  return (
-    <>
-      <LLightText style={[styles.sectionTitle, { marginTop: 14 }]}>Company Values</LLightText>
-      <LLightText style={[styles.sectionHelper, { marginTop: 4 }]}>Add one value per line. Optional format: Label: Value.</LLightText>
-
-      <View style={styles.fieldStack}>
-        <TextInput
-          value={valuesText}
-          onChangeText={onChangeValuesText}
-          placeholder={"Worker happiness and support."}
-          placeholderTextColor={UI.hint}
-          style={styles.inputMultiline}
-          multiline
-        />
-      </View>
-    </>
-  );
-}
-
-export function IndustryTypeSection(props: { //changed this to type to categorize the company based on industry
-  workTypeSubtitle: string; //for a company this will be what kind of work is being done (tech, hands-on, construction,etc)
+export function IndustryTypeSection(props: {
+  workTypeSubtitle: string;
   companyAgeSubtitle: string;
   industrySubtitle: string;
-  citySubtitle: string;
-  hasCity: boolean;
+  locations: string[];
   onPressWorkType: () => void;
   onPressCompanyAge: () => void;
   onPressIndustry: () => void;
-  onPressCity: () => void;
-  onClearCity: () => void;
+  onPressAddLocation: () => void;
+  onRemoveLocation: (label: string) => void;
 }) {
   const {
     workTypeSubtitle,
     companyAgeSubtitle,
     industrySubtitle,
-    citySubtitle,
-    hasCity,
+    locations,
     onPressWorkType,
     onPressCompanyAge,
     onPressIndustry,
-    onPressCity,
-    onClearCity,
+    onPressAddLocation,
+    onRemoveLocation,
   } = props;
-
   return (
     <>
       <LLightText style={styles.sectionTitle}>Industry</LLightText>
@@ -258,12 +302,22 @@ export function IndustryTypeSection(props: { //changed this to type to categoriz
           showDivider
         />
         <PickerRow title="Industry Type" subtitle={industrySubtitle} onPress={onPressIndustry} showDivider />
-        <PickerRow title="City" subtitle={citySubtitle} onPress={onPressCity} showDivider={hasCity} />
-        {hasCity ? (
-          <Pressable onPress={onClearCity} style={[styles.rowPressable, { paddingVertical: 14 }]}>
-            <LLightText style={[styles.rowTitle, { color: UI.danger }]}>Clear City</LLightText>
+        <PickerRow 
+          title="Add Location" 
+          subtitle={locations.length > 0 ? `${locations.length} selected` : "Select"}
+          onPress={onPressAddLocation} 
+          showDivider={locations.length > 0} //i got this code from claud, i was unsure how to display the array in this function bc location is an array not single value
+        />
+        {locations.map((loc) => (
+          <Pressable 
+            key={loc} 
+            onPress={() => onRemoveLocation(loc)} 
+            style={[styles.rowPressable, { paddingVertical: 14 }]}
+          >
+            <LLightText style={styles.rowTitle}>{loc}</LLightText>
+            <LLightText style={[styles.rowTitle, { color: UI.danger }]}>Remove</LLightText>
           </Pressable>
-        ) : null}
+        ))}
       </GroupCard>
     </>
   );
@@ -499,7 +553,7 @@ export function IndustryPickerModal(props: {
               maxHeight: "85%",
             }}
           >
-            <LLightText style={{ fontSize: 18, fontWeight: "800" }}>Industry Interests</LLightText>
+            <LLightText style={{ fontSize: 18, fontWeight: "800" }}>Industry Type</LLightText>
 
             <TextInput
               value={industrySearch}
@@ -627,20 +681,17 @@ export function IndustryPickerModal(props: {
 export function CityPickerModal(props: {
   visible: boolean;
   title?: string;
-
   citySearch: string;
   setCitySearch: (v: string) => void;
-
   data: CityRow[];
   selectedLabel: string;
+  selectedLabels?: string[];  // add this as optional
   onSelect: (label: string) => void;
-
   canApply: boolean;
   onClose: () => void;
   onApply: () => void;
 }) {
-  const { visible, title = "Select City", citySearch, setCitySearch, data, selectedLabel, onSelect, canApply, onClose, onApply } =
-    props;
+  const { visible, title = "Select City", citySearch, setCitySearch, data, selectedLabel, selectedLabels, onSelect, canApply, onClose, onApply } = props;
 
   return (
     <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
@@ -686,7 +737,9 @@ export function CityPickerModal(props: {
               windowSize={10}
               removeClippedSubviews={Platform.OS === "android"}
               renderItem={({ item }) => {
-                const selected = item.label === selectedLabel;
+                const selected = selectedLabels //checks if prop is passed in at all
+                  ? selectedLabels.includes(item.label)  // company: check against array
+                  : item.label === selectedLabel;         // user: check against single string
                 return (
                   <Pressable
                     onPress={() => onSelect(item.label)}
@@ -744,6 +797,107 @@ export function CityPickerModal(props: {
     </Modal>
   );
 }
+
+export function CoreValuesPickerModal(props: {
+  visible: boolean;
+  selected: string[];
+  onToggle: (value: string) => void;
+  onClose: () => void;
+}) {
+  const { visible, selected, onToggle, onClose } = props;
+
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <View style={{
+          backgroundColor: UI.card,
+          borderTopLeftRadius: 20,
+          borderTopRightRadius: 20,
+          paddingHorizontal: 16,
+          paddingTop: 16,
+          paddingBottom: 24,
+          maxHeight: "85%",
+          marginTop: "auto",
+        }}>
+          <LLightText style={{ fontSize: 18, fontWeight: "800" }}>Core Values</LLightText>
+          <LLightText style={{ opacity: 0.6, marginTop: 4 }}>Choose up to 5.</LLightText>
+
+          <FlatList
+            data={CORE_VALUES}
+            keyExtractor={(item) => item}
+            style={{ marginTop: 12, marginBottom: 12 }}
+            renderItem={({ item }) => {
+              const checked = selected.includes(item);
+              const maxReached = selected.length >= 5 && !checked;
+              return (
+                <Pressable
+                  onPress={() => onToggle(item)}
+                  disabled={maxReached}
+                  style={{
+                    paddingVertical: 12,
+                    paddingHorizontal: 12,
+                    borderWidth: 1,
+                    borderColor: checked ? UI.text : UI.border,
+                    borderRadius: 12,
+                    marginBottom: 8,
+                    flexDirection: "row",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    opacity: maxReached ? 0.4 : 1,
+                  }}
+                >
+                  <LLightText style={{ fontSize: 14, fontWeight: checked ? "800" : "500" }}>{item}</LLightText>
+                  <LLightText style={{ opacity: 0.6 }}>{checked ? "✓" : ""}</LLightText>
+                </Pressable>
+              );
+            }}
+          />
+
+          <Pressable onPress={onClose} style={{
+            paddingVertical: 12,
+            borderWidth: 1,
+            borderColor: UI.borderStrong,
+            borderRadius: 12,
+            alignItems: "center",
+          }}>
+            <LLightText style={{ fontWeight: "800" }}>Done</LLightText>
+          </Pressable>
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+export function CoreValuesSection(props: {
+  coreValues: string[];
+  onPressAdd: () => void;
+  onRemove: (value: string) => void;
+}) {
+  const { coreValues, onPressAdd, onRemove } = props;
+
+  return (
+    <>
+      <LLightText style={[styles.sectionTitle, { marginTop: 14 }]}>Core Values</LLightText>
+      <LLightText style={[styles.sectionHelper, { marginTop: 4 }]}>Choose up to 5.</LLightText>
+      <GroupCard>
+        <PickerRow
+          title="Add Core Value"
+          subtitle={coreValues.length > 0 ? `${coreValues.length}/5 selected` : "Select"}
+          onPress={onPressAdd}
+          showDivider={coreValues.length > 0}
+        />
+        {coreValues.map((value) => (
+          <Pressable key={value} onPress={() => onRemove(value)} style={[styles.rowPressable, { paddingVertical: 14 }]}>
+            <LLightText style={styles.rowTitle}>{value}</LLightText>
+            <LLightText style={[styles.rowTitle, { color: UI.danger }]}>Remove</LLightText>
+          </Pressable>
+        ))}
+      </GroupCard>
+    </>
+  );
+}
+
+
 
 export function SinglePickerModal(props: {
   visible: boolean;

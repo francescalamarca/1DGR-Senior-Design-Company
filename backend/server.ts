@@ -1,183 +1,158 @@
 import cors from "cors";
 import * as dotenv from "dotenv";
 import express from "express";
-import { testConnection } from "./db-config.ts";
+import { getDbClient } from "./src/utils/db-client"; //the real utility client
 
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.use(cors()); // Allow React Native to connect
+app.use(cors());
 app.use(express.json());
 
-// Test database connection on startup
-async function startServer() {
-  try {
-    await testConnection();
-
-    app.listen(PORT, () => {
-      console.log(`Backend server running on http://localhost:${PORT}`);
-      console.log(`Database: ${process.env.DB_NAME}`);
-    });
-  } catch (error) {
-    console.error("Failed to start server:", error);
-    process.exit(1);
-  }
-}
-
-// API ROUTES
-
 // Health check
-app.get("/api/health", (req, res) => {
+app.get("/api/health", (_req: any, res: any) => {
   res.json({ status: "ok", message: "Backend is running!" });
 });
 
-// Get company profile by ID
-app.get("/api/companies/:id", async (req, res) => {
+// GET /profile - matches aws_config.apiBaseUrl + "/profile" used in profile.tsx
+// NOTE: getDbClient() requires DB_SECRET_ARN and RDS_HOST env vars (AWS Secrets Manager + RDS)
+app.get("/profile", async (_req: any, res: any) => {
+  const client = await getDbClient();
   try {
-    const { executeQuery } = await import("./db-config.ts");
-    const companyId = parseInt(req.params.id);
+    // TODO: derive userId from Authorization token (Cognito JWT) in production
+    const userId = process.env.DEV_USER_ID ?? "";
 
-    console.log("Fetching company with ID:", companyId);
+    const profileResult = await client.query(
+      `SELECT * FROM company_profiles WHERE user_id = $1`,
+      [userId],
+    );
+    const profile = profileResult.rows[0] ?? {};
 
-    const query = `
-      SELECT 
-        company_id,
-        company_name,
-        email_domain,
-        website_url,
-        logo_url,
-        mission_statement,
-        core_values,
-        benefits_summary,
-        num_employees,
-        location_type,
-        background_color,
-        primary_color,
-        is_verified
-      FROM Companies
-      WHERE company_id = ? AND is_active = TRUE
-    `;
+    const cfDomain = process.env.CLOUDFRONT_DOMAIN ?? "";
 
-    const results = await executeQuery(query, [companyId]);
+    const videosResult = await client.query(
+      `SELECT id, title, s3_key, thumbnail_url, slot, is_deleted, created_at
+       FROM company_videos WHERE user_id = $1 ORDER BY created_at DESC`,
+      [userId],
+    );
 
-    console.log("Query results:", results);
-
-    if (results.length === 0) {
-      return res.status(404).json({ error: "Company not found" });
-    }
-
-    res.json(results[0]);
-  } catch (error: any) {
-    console.error("Error fetching company:", error);
-    res.status(500).json({
-      error: "Internal server error",
-      details: error.message,
+    const mapVideo = (v: any) => ({
+      id: v.id,
+      url: cfDomain ? `https://${cfDomain}/${v.s3_key}` : "",
+      s3Key: v.s3_key,
+      thumbnailUrl: v.thumbnail_url ?? "",
+      caption: v.title ?? "",
+      slot: v.slot ?? null,
+      source: "camera-roll",
+      createdAt: v.created_at ? new Date(v.created_at).getTime() : Date.now(),
     });
+
+    const videoLibrary = videosResult.rows
+      .filter((v: any) => !v.is_deleted)
+      .map(mapVideo);
+    const deletedVideoLibrary = videosResult.rows
+      .filter((v: any) => v.is_deleted)
+      .map(mapVideo);
+
+    const logoKey = profile.logo_image_key ?? "";
+    const avatarImageUrl = logoKey
+      ? (logoKey.includes("://") ? logoKey : (cfDomain ? `https://${cfDomain}/${logoKey}` : ""))
+      : "";
+
+    res.json({
+      user: {
+        company_name: profile.company_name ?? "",
+        industry: profile.industry ?? "",
+        business_age: profile.business_age ?? "",
+        work_type: profile.work_type ?? "",
+        locations: profile.locations ?? [],
+        mission_statement: profile.mission_statement ?? "",
+        core_values: profile.core_values ?? [],
+        benefits_summary: profile.benefits_summary ?? "",
+        custom_background_color: profile.custom_background_color ?? "",
+        logo_image_key: logoKey,
+        avatar_image_url: avatarImageUrl,
+        avatar_image_key: logoKey,
+      },
+      videoLibrary,
+      deletedVideoLibrary,
+    });
+  } catch (error: any) {
+    console.error("[GET /profile] error:", error);
+    res
+      .status(500)
+      .json({ error: "Internal server error", details: error.message });
+  } finally {
+    await client.end();
   }
 });
 
-// Update company profile
-app.put("/api/companies/:id", async (req, res) => {
+// PUT /update-profile - matches aws_config.apiBaseUrl + "/update-profile" used in update_api.ts
+// Payload shape comes from mapDraftToApiPayload in profileEdit.data.ts
+app.put("/update-profile", async (req: any, res: any) => {
+  const client = await getDbClient();
   try {
-    const { executeQuery } = await import("./db-config.ts");
-    const companyId = parseInt(req.params.id);
-
-    console.log("Updating company with ID:", companyId);
-    console.log("Request body:", req.body);
+    // TODO: derive userId from Authorization token (Cognito JWT) in production
+    const userId = process.env.DEV_USER_ID ?? "";
 
     const {
       company_name,
-      website_url,
-      logo_url,
+      industry,
+      business_age,
+      work_type,
+      locations,
       mission_statement,
       core_values,
       benefits_summary,
-      num_employees,
-      location_type,
-      background_color,
-      primary_color,
+      custom_background_color,
+      logo_image_key,
     } = req.body;
 
-    const query = `
-      UPDATE Companies
-      SET 
-        company_name = ?,
-        website_url = ?,
-        logo_url = ?,
-        mission_statement = ?,
-        core_values = ?,
-        benefits_summary = ?,
-        num_employees = ?,
-        location_type = ?,
-        background_color = ?,
-        primary_color = ?
-      WHERE company_id = ?
-    `;
+    await client.query(
+      `INSERT INTO company_profiles (
+        user_id, company_name, industry, business_age, work_type,
+        locations, mission_statement, core_values, benefits_summary,
+        custom_background_color, logo_image_key
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+      ON CONFLICT (user_id) DO UPDATE SET
+        company_name            = EXCLUDED.company_name,
+        industry                = EXCLUDED.industry,
+        business_age            = EXCLUDED.business_age,
+        work_type               = EXCLUDED.work_type,
+        locations               = EXCLUDED.locations,
+        mission_statement       = EXCLUDED.mission_statement,
+        core_values             = EXCLUDED.core_values,
+        benefits_summary        = EXCLUDED.benefits_summary,
+        custom_background_color = EXCLUDED.custom_background_color,
+        logo_image_key          = EXCLUDED.logo_image_key`,
+      [
+        userId,
+        company_name ?? "",
+        industry ?? "",
+        business_age ?? "",
+        work_type ?? "",
+        JSON.stringify(Array.isArray(locations) ? locations : []),
+        mission_statement ?? "",
+        JSON.stringify(Array.isArray(core_values) ? core_values : []),
+        benefits_summary ?? "",
+        custom_background_color ?? "",
+        logo_image_key ?? "",
+      ],
+    );
 
-    await executeQuery(query, [
-      company_name,
-      website_url,
-      logo_url,
-      mission_statement,
-      core_values,
-      benefits_summary,
-      num_employees,
-      location_type,
-      background_color,
-      primary_color,
-      companyId,
-    ]);
-
-    console.log("Company updated successfully");
-
-    res.json({ success: true, message: "Company profile updated" });
+    res.json({ success: true, message: "Profile updated" });
   } catch (error: any) {
-    console.error("Error updating company:", error);
-    res.status(500).json({
-      error: "Internal server error",
-      details: error.message,
-    });
+    console.error("[PUT /update-profile] error:", error);
+    res
+      .status(500)
+      .json({ error: "Internal server error", details: error.message });
+  } finally {
+    await client.end();
   }
 });
 
-// Get all companies
-app.get("/api/companies", async (req, res) => {
-  try {
-    const { executeQuery } = await import("./db-config.ts");
-
-    console.log("Fetching all companies");
-
-    const query = `
-      SELECT 
-        company_id,
-        company_name,
-        email_domain,
-        website_url,
-        logo_url,
-        mission_statement,
-        location_type,
-        background_color,
-        primary_color,
-        is_verified
-      FROM Companies
-      WHERE is_active = TRUE
-      ORDER BY created_at DESC
-    `;
-
-    const results = await executeQuery(query, []);
-
-    console.log("Found companies:", results.length);
-
-    res.json(results);
-  } catch (error: any) {
-    console.error("Error fetching companies:", error);
-    res.status(500).json({
-      error: "Internal server error",
-      details: error.message,
-    });
-  }
+app.listen(PORT, () => {
+  console.log(`Backend server running on http://localhost:${PORT}`);
 });
-
-startServer();

@@ -13,15 +13,16 @@ export function mapDraftToApiPayload(draft: DraftProfile) {
 
   //THESE KEYS BEFORE THE : HIT THE DATABASE, LETS MAKE SURE COLUMNS MATCH ON BOTH SIDES
   return {
-    company_name: draft.legalFirstName ?? "",
+    company_name: draft.companyName ?? "",
     industry: draft.industry ?? "",
     business_age: draft.businessAge ?? "",
     work_type: draft.workType ?? "",
     locations: Array.isArray(draft.locations) ? draft.locations: [], //an array of all locations the company is based out of
     mission_statement: draft.missionStatement ?? "",
     core_values: Array.isArray(draft.coreValues) ? draft.coreValues: [], //this is an array bc list of values (up to 5)
+    current_employees: Array.isArray(draft.currentEmployees) ? draft.currentEmployees: [],
     benefits_summary: draft.benefitsSummary ?? "",
     custom_background_color: draft.customBackgroundColor ?? "",
-    logo_image_key: String(draft.logoImageURI ?? "").includes("://") ? null : (draft.logoImageURI ?? ""), //unsure if this still works for companuy logo, will hold here for now
+    logo_image_key: draft.avatarImageUri ?? draft.logoImageURI ?? "",
   };
 }

@@ -5,23 +5,26 @@ import { RequireUserType } from "@/src/components/RequireUserType";
 
 import { KeyboardScreen, LLightText } from "./profileEdit.components";
 import {
-  INDUSTRY_EXPERIENCE_OPTIONS,
-  WORK_PREFERENCE_OPTIONS,
+  COMPANY_AGE_OPTIONS,
   WORK_TYPE_OPTIONS,
+  WORK_PREFERENCE_OPTIONS,
+  CORE_VALUES,
 } from "./profileEdit.constants";
 import { styles, UI } from "./profileEdit.styles";
 import {
   AvatarSection,
-  CityPickerModal,
-  HookSection,
-  IndustryPickerModal,
-  IndustryTypeSection,
   NameSection,
+  CoreValuesSection,
+  MissionSection,
+  IndustryTypeSection,
+  VideoLibrarySection,
   ProfileMediaResetSection,
   SinglePickerModal,
   ValuesSection,
   VideoLibrarySection,
   WorkTypePickerModal,
+  CoreValuesPickerModal,
+  BackgroundColorSection,
 } from "./profileEdit.ui";
 import { useProfileEditController } from "./useProfileEditController";
 
@@ -34,7 +37,6 @@ export default function ProfileEditScreen() {
   const [workPreferenceTemp, setWorkPreferenceTemp] = React.useState("");
 
   const {
-    MAX_HIGHER_ED,
     scrollRef,
     draft,
     setDraft,
@@ -47,11 +49,11 @@ export default function ProfileEditScreen() {
     hasAvatar,
     onPickAvatarImage,
     onRemoveAvatarImage,
+    onSetAvatarFromUrl,
     summarizeIndustries,
     openSingleSelectPicker,
     openIndustryPicker,
     openCityPicker,
-    clearCity,
     mediaVideoUri,
     mediaThumbUri,
     mediaCaption,
@@ -59,8 +61,6 @@ export default function ProfileEditScreen() {
     generatingThumbs,
     thumbOptions,
     canUploadToLibrary,
-    valuesText,
-    onChangeValuesText,
     addingLibraryVideo,
     onPickMediaVideo,
     onPickMediaThumb,
@@ -85,9 +85,8 @@ export default function ProfileEditScreen() {
     citySearch,
     setCitySearch,
     filteredCities,
-    cityTempSelected,
-    setCityTempSelected,
-    applyCity,
+    addLocation,
+    removeLocation,
     singlePickerVisible,
     setSinglePickerVisible,
     singlePickerTitle,
@@ -95,6 +94,12 @@ export default function ProfileEditScreen() {
     singlePickerTempValue,
     setSinglePickerTempValue,
     singlePickerOnSelect,
+    addCoreValue,
+    removeCoreValue,
+    openCoreValuesPicker,
+    coreValuesPickerVisible,
+    setCoreValuesPickerVisible,
+    selectBackgroundColor,
   } = useProfileEditController();
 
   const workTypeSubtitle = React.useMemo(() => {
@@ -145,41 +150,51 @@ export default function ProfileEditScreen() {
           hasAvatar={hasAvatar}
           onPickAvatarImage={onPickAvatarImage}
           onRemoveAvatarImage={onRemoveAvatarImage}
+          onSetAvatarFromUrl={onSetAvatarFromUrl} //added this function so the user can add a url to a photo as the logo
         />
 
         <NameSection
-          preferredName={draft.preferredName ?? ""}
-          legalFirstName={draft.legalFirstName ?? ""}
-          legalMiddleName={(draft as any).legalMiddleName ?? ""}
-          legalLastName={draft.legalLastName ?? ""}
-          onChangePreferredName={(v: string) => setDraft((p) => ({ ...p, preferredName: v }))}
-          onChangeLegalFirst={(v: string) => setDraft((p) => ({ ...p, legalFirstName: v }))}
-          onChangeLegalMiddle={(v: string) => setDraft((p: any) => ({ ...p, legalMiddleName: v }))}
-          onChangeLegalLast={(v: string) => setDraft((p) => ({ ...p, legalLastName: v }))}
+          companyName={draft.companyName ?? ""}
+          onChangeCompanyName={(v: string) => setDraft((p) => ({ ...p, companyName: v }))}
         />
 
-        <ValuesSection valuesText={valuesText} onChangeValuesText={onChangeValuesText} />
+        <BackgroundColorSection
+          selectedColor={draft.customBackgroundColor ?? ""}
+          onSelect={selectBackgroundColor}
+        />
 
-        <HookSection bio={draft.bio ?? ""} onChangeBio={(v: string) => setDraft((p) => ({ ...p, bio: v }))} />
+        <CoreValuesSection
+          coreValues={draft.coreValues ?? []}
+          onPressAdd={openCoreValuesPicker}
+          onRemove={removeCoreValue}
+        />
+
+        <CoreValuesPickerModal
+          visible={coreValuesPickerVisible}
+          selected={draft.coreValues ?? []}
+          onToggle={addCoreValue}
+          onClose={() => setCoreValuesPickerVisible(false)}
+        />
+
+        <MissionSection mission={draft.missionStatement ?? ""} onChangeMission={(v: string) => setDraft((p) => ({ ...p, missionStatement: v }))} />
 
         <IndustryTypeSection
           workTypeSubtitle={workTypeSubtitle}
-          companyAgeSubtitle={draft.industryExperience?.trim() ? draft.industryExperience : "Select"}
-          industrySubtitle={summarizeIndustries(draft.industryInterests ?? [])}
-          citySubtitle={draft.geographicLocation?.trim() ? draft.geographicLocation : "Select"}
-          hasCity={!!draft.geographicLocation?.trim()}
+          companyAgeSubtitle={draft.businessAge?.trim() ? draft.businessAge : "Select"}
+          industrySubtitle={summarizeIndustries(draft.industry ?? "")}
+          locations={draft.locations ?? []}
+          onPressAddLocation={openCityPicker}
+          onRemoveLocation={removeLocation}
           onPressWorkType={openWorkTypePicker}
-          onPressExperience={() =>
+          onPressCompanyAge={() =>
             openSingleSelectPicker({
-              title: "Industry Experience",
-              options: INDUSTRY_EXPERIENCE_OPTIONS,
-              value: draft.industryExperience ?? "",
-              onSelect: (val: string) => setDraft((p) => ({ ...p, industryExperience: val })),
+              title: "Business Age",
+              options: COMPANY_AGE_OPTIONS, //in years
+              value: draft.businessAge ?? "",
+              onSelect: (val: string) => setDraft((p) => ({ ...p, businessAge: val })),
             })
           }
           onPressIndustry={openIndustryPicker}
-          onPressCity={openCityPicker}
-          onClearCity={clearCity}
         />
 
 
@@ -218,14 +233,16 @@ export default function ProfileEditScreen() {
 
         <CityPickerModal
           visible={cityPickerVisible}
+          title="Add Location"
           citySearch={citySearch}
           setCitySearch={setCitySearch}
           data={filteredCities}
-          selectedLabel={cityTempSelected}
-          onSelect={(label: string) => setCityTempSelected(label)}
-          canApply={!!cityTempSelected.trim()}
+          selectedLabel=""
+          selectedLabels={draft.locations ?? []}
+          onSelect={(label) => addLocation(label)}
+          canApply={false}
           onClose={() => setCityPickerVisible(false)}
-          onApply={applyCity}
+          onApply={() => setCityPickerVisible(false)}
         />
 
         <SinglePickerModal
