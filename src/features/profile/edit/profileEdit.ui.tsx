@@ -872,6 +872,7 @@ export function RoleFormModal(props: {
   const [title, setTitle] = React.useState("");
   const [salary, setSalary] = React.useState("");
   const [skillsText, setSkillsText] = React.useState("");
+  const [postUrl, setPostUrl] = React.useState("");
 
   // Reset fields each time the modal opens
   React.useEffect(() => {
@@ -879,6 +880,7 @@ export function RoleFormModal(props: {
       setTitle("");
       setSalary("");
       setSkillsText("");
+      setPostUrl("");
     }
   }, [visible]);
 
@@ -896,6 +898,7 @@ export function RoleFormModal(props: {
       salary: salary.trim(),
       postedAt: new Date().toISOString().slice(0, 10),
       skills,
+      postUrl: postUrl.trim(),
     });
     onClose();
   }
@@ -943,6 +946,16 @@ export function RoleFormModal(props: {
               value={skillsText}
               onChangeText={setSkillsText}
               placeholder="e.g. React, Node.js, SQL"
+              placeholderTextColor={UI.hint}
+              style={[styles.input, { marginBottom: 20 }]}
+              autoCorrect={false}
+            />
+
+            <LLightText style={styles.label}>Job Posting URL </LLightText>
+            <TextInput
+              value={postUrl}
+              onChangeText={setPostUrl}
+              placeholder="site link"
               placeholderTextColor={UI.hint}
               style={[styles.input, { marginBottom: 20 }]}
               autoCorrect={false}

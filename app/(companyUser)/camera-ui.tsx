@@ -126,21 +126,21 @@ export default function CameraUIScreen() {
   // - stopProgressAnimation(): stops Animated.timing and optionally resets progress to 0
   // - startVisualTimer(): starts both the text tick + ring animation (0→1 over MAX_MS)
   // - endVisualTimer(): shared cleanup for stop/unmount paths
-  function clearTimer() {
+  const clearTimer = useCallback(() => {
     if (tickIntervalRef.current) {
       clearInterval(tickIntervalRef.current);
       tickIntervalRef.current = null;
     }
     recordingStartMsRef.current = null;
     setElapsedSec(0);
-  }
+  }, []);
 
-  function stopProgressAnimation(resetToZero = false) {
+  const stopProgressAnimation = useCallback((resetToZero = false) => {
     progressAnimRef.current?.stop();
     progressAnimRef.current = null;
     progress.stopAnimation();
     if (resetToZero) progress.setValue(0);
-  }
+  }, [progress]);
 
   function startVisualTimer() {
     clearTimer();
@@ -177,10 +177,10 @@ export default function CameraUIScreen() {
     progressAnimRef.current.start();
   }
 
-  function endVisualTimer({ reset }: { reset: boolean }) {
+  const endVisualTimer = useCallback(({ reset }: { reset: boolean }) => {
     clearTimer();
     stopProgressAnimation(reset);
-  }
+  }, [clearTimer, stopProgressAnimation]); //has stable render
 
   // Focus lifecycle: on enter/exit, stop any ongoing recording, clear the last URI/prompt, and reset the ring/timer.
   useFocusEffect(

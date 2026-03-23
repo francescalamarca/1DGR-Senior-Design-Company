@@ -24,6 +24,7 @@ export type OpenRole = {
   salary: string;
   postedAt: string; // ISO date string, e.g. "2024-03-22"
   skills: string[];
+  postUrl: string;
 };
 
 export type MediaItem = {
