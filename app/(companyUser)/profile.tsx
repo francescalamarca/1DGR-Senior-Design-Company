@@ -12,7 +12,6 @@
 
 import { aws_config } from "@/constants/aws-config";
 import { RequireUserType } from "@/src/components/RequireUserType";
-import { BackgroundColorSection } from "@/src/features/profile/edit/profileEdit.ui";
 import { useProfile } from "@/src/features/profile/profile.store";
 import { useSession } from "@/src/state/session";
 import { Feather } from "@expo/vector-icons";
@@ -34,7 +33,7 @@ import {
   RefreshControl,
   Text,
   UIManager,
-  View
+  View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -274,7 +273,6 @@ export default function ProfileScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const fetchingRef = useRef(false);
 
-
   // ===== Name toggle (preserved) =====
   const [showCompanyNow, setShowCompanyNow] = useState(false);
 
@@ -319,21 +317,20 @@ export default function ProfileScreen() {
         lineHeight: 24,
         paddingHorizontal: 20,
         color: TEXT,
+        fontWeight: "300",
       } as const,
 
-      valuesLabel: {
-        ...lexLight,
-        fontSize: 12,
-        color: TEXT,
-        opacity: 1,
-      } as const,
-      valuesValue: {
-        ...lexLight,
-        fontSize: 13,
-        color: TEXT,
-        opacity: 0.65,
+      coreValuesItem: {
+        ...crimson,
         textAlign: "center" as const,
+        fontSize: 20,
+        color: TEXT,
+        lineHeight: 24,
+        opacity: 1,
+        paddingHorizontal: 24,
+        fontWeight: "300",
       } as const,
+
       contactLabel: {
         ...lexLight,
         fontSize: 12.5,
@@ -653,12 +650,12 @@ export default function ProfileScreen() {
   const scrollY = useRef(new Animated.Value(0)).current;
   const avatarSize = scrollY.interpolate({
     inputRange: [-120, 0, 120],
-    outputRange: [170, 140, 128],
+    outputRange: [230, 300, 180],
     extrapolate: "clamp",
   });
-  const avatarRadius = scrollY.interpolate({
+  const avatarHeight = scrollY.interpolate({
     inputRange: [-120, 0, 120],
-    outputRange: [85, 70, 64],
+    outputRange: [330, 200, 180],
     extrapolate: "clamp",
   });
 
@@ -671,6 +668,8 @@ export default function ProfileScreen() {
         (profile as any).tagline ??
         "",
     ).trim() || "";
+
+  const coreValueText = (profile.coreValues ?? []).map((s) => s.trim()).filter(Boolean).sort();
 
   // ===== Benefits dropdown (2-page pull-in) =====
   const [benefitsOpen, setBenefitsOpen] = useState(false);
@@ -900,20 +899,10 @@ export default function ProfileScreen() {
   }, [benefitsOpen, openbenefits, closebenefits]);
 
   const benefitsCol1: benefitsRow[] = useMemo(() => {
-    const workType = dashIfEmpty(profile.workType ?? "");
-    const location = dashIfEmpty(
-      Array.isArray(profile.locations) && profile.locations.length
-        ? profile.locations.join(" · ")
-        : "",
-    );
-    const age = dashIfEmpty(profile.businessAge ?? "");
     const benefits = dashIfEmpty(profile.benefitsSummary ?? "");
 
     return [
-      { label: "Work Type", value: workType },
-      { label: "Locations", value: location },
-      { label: "Business Age", value: age },
-      { label: "Benefits", value: benefits },
+      { label: "Benefits Summary", value: benefits },
     ];
   }, [profile]);
 
@@ -1487,8 +1476,8 @@ export default function ProfileScreen() {
   return (
     <>
       <SafeAreaView
-          edges={["top", "left", "right"]}
-          style={{ flex: 1, backgroundColor: s.blockABg }}
+        edges={["top", "left", "right"]}
+        style={{ flex: 1, backgroundColor: s.blockABg }}
       >
         <RequireUserType type="company" />
 
@@ -1506,7 +1495,7 @@ export default function ProfileScreen() {
             { useNativeDriver: false },
           )}
           scrollEventThrottle={16}
-        > 
+        >
           {/* Block A */}
           <View style={{ backgroundColor: s.blockABg, padding: BLOCK_PAD }}>
             <View
@@ -1557,16 +1546,14 @@ export default function ProfileScreen() {
                   source={{ uri: profile.avatarImageUri }}
                   style={{
                     width: avatarSize,
-                    height: avatarSize,
-                    borderRadius: avatarRadius,
+                    height: avatarHeight,
                   }}
                 />
               ) : (
                 <Animated.View
                   style={{
                     width: avatarSize,
-                    height: avatarSize,
-                    borderRadius: avatarRadius,
+                    height: avatarHeight,
                     backgroundColor: "#EDEDED",
                     opacity: 0.95,
                   }}
@@ -1596,14 +1583,18 @@ export default function ProfileScreen() {
             )}
           </View>
           <View style={{ height: 1, backgroundColor: BORDER }} />
-          {/* Block BA for company values - need to change variables */}
+
+          {/* Block B2 for company core values*/}
           <View style={{ backgroundColor: WHITE, padding: BLOCK_PAD }}>
-            {!!missionText ? (
-              <Text style={s.mission}>{missionText}</Text>
+          {(profile.coreValues ?? []).length > 0 ? (
+            <Text style={s.coreValuesItem}>
+              {(profile.coreValues ?? []).join(" - ")}
+            </Text>
             ) : (
-              <Text style={[s.mission, { opacity: 1 }]}>—</Text>
+              <Text style={[s.coreValuesItem, { opacity: 1 }]}>—</Text>
             )}
           </View>
+        
           <View style={{ height: 1, backgroundColor: BORDER }} />
           {/* Block benefits */}
           <View style={{ backgroundColor: BG, padding: BLOCK_PAD }}>
@@ -1695,6 +1686,7 @@ export default function ProfileScreen() {
           </View>
           {/*end benefits return block*/}
           <View style={{ height: 1, backgroundColor: BORDER }} />
+
           {/* Block company location START */}
           <View style={{ backgroundColor: BG, padding: BLOCK_PAD }}>
             <Pressable

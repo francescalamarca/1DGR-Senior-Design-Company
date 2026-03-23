@@ -100,9 +100,8 @@ export function AvatarSection(props: {
       <View style={[styles.inlineCard, { marginTop: 14, flexDirection: "row", alignItems: "center", gap: 14 }]}>
         <View
           style={{
-            width: 60,
-            height: 60,
-            borderRadius: 30,
+            width: 100,
+            height: 50,
             borderWidth: 1,
             borderColor: UI.border,
             overflow: "hidden",
@@ -290,7 +289,7 @@ export function IndustryTypeSection(props: {
   } = props;
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Industry</LLightText>
+      <LLightText style={styles.sectionTitle}>Company Logistics</LLightText>
       <LLightText style={styles.sectionHelper}>Residency requirements, company age, work, and location.</LLightText>
 
       <GroupCard>

@@ -214,8 +214,11 @@ export function useProfileEditController() {
 
   function addLocation(label: string) { //passing this in to get an instance of CityRow
     setDraft((p) => {
+      //no max, infinite allowed
       const current = p.locations ?? []; //takes the current city that was tapped in the setDraft, gets current array, empty if nothing in it yet
-      if (current.includes(label)) return p; // prevent duplicates, if already there, does not add
+      if (current.includes(label)){
+        return {...p, locations: current.filter((v) => v !== label)}
+      }// prevent duplicates, if already there and clicked again will remove
       return { ...p, locations: [...current, label] }; //appends to existing array
   });
   }
@@ -232,8 +235,10 @@ export function useProfileEditController() {
   function addCoreValue(value: string) {
   setDraft((p) => {
     const current = p.coreValues ?? [];
+    if (current.includes(value)) {
+      return { ...p, coreValues: current.filter((v) => v !== value) }; //keeps values ONLY IF they are not equal to any existing
+    }
     if (current.length >= 5) return p; // enforce max
-    if (current.includes(value)) return p; // prevent duplicates
     return { ...p, coreValues: [...current, value] };
   });
 }
