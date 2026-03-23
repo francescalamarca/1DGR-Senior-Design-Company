@@ -128,8 +128,6 @@ type companyRow = { label: string; value: companyRowValue };
 type employeeRowValue = string | string[];
 type employeeRow = { label: string; value: employeeRowValue };
 
-type rolesRowValue = string | string[];
-type rolesRow = { label: string; value: rolesRowValue };
 
 /** Build a location string from common fields (city/state/country OR location fields). */
 function formatBusinessLocationLine(e: any): string {
@@ -238,31 +236,53 @@ function EmployeeValue({
   return <Text style={textStyle}>{softWrapLongTokens(value)}</Text>;
 }
 
-function RolesValue({
-  value,
-  textStyle,
-}: {
-  value: rolesRowValue;
-  textStyle: any;
-}) {
-  if (Array.isArray(value)) {
-    if (value.length === 0) return <Text style={textStyle}>—</Text>;
-
+function RolesGrid({ roles, styles: s }: { roles: any[]; styles: any }) {
+  if (!roles.length) {
     return (
-      <View>
-        {value.map((item, idx) => (
-          <Text
-            key={`${idx}_${item}`}
-            //style={[textStyle, idx === value.length - 1 ? null : { marginBottom: HIGHER_ED_ITEM_GAP }]}
-          >
-            {softWrapLongTokens(item)}
-          </Text>
-        ))}
+      <View style={{ marginTop: 14 }}>
+        <Text style={s.RolesValue}>—</Text>
       </View>
     );
   }
 
-  return <Text style={textStyle}>{softWrapLongTokens(value)}</Text>;
+  return (
+    <View style={{ marginTop: 14, flexDirection: "row", flexWrap: "wrap", gap: 10 }}>
+      {roles.map((role: any) => (
+        <View
+          key={role.id}
+          style={{
+            width: "30%",
+            flexGrow: 1,
+            backgroundColor: WHITE,
+            borderRadius: 10,
+            borderWidth: 1,
+            borderColor: BORDER,
+            padding: 10,
+            gap: 4,
+          }}
+        >
+          <Text style={[s.RolesValue, { fontWeight: "700", fontSize: 13 }]} numberOfLines={2}>
+            {role.title || "—"}
+          </Text>
+          {!!role.salary && (
+            <Text style={[s.RolesValue, { fontSize: 11, opacity: 0.7 }]} numberOfLines={1}>
+              {role.salary}
+            </Text>
+          )}
+          {!!role.postedAt && (
+            <Text style={[s.RolesValue, { fontSize: 10, opacity: 0.5 }]} numberOfLines={1}>
+              {role.postedAt}
+            </Text>
+          )}
+          {Array.isArray(role.skills) && role.skills.length > 0 && (
+            <Text style={[s.RolesValue, { fontSize: 10, opacity: 0.6 }]} numberOfLines={2}>
+              {role.skills.join(", ")}
+            </Text>
+          )}
+        </View>
+      ))}
+    </View>
+  );
 }
 
 export default function ProfileScreen() {
@@ -1428,15 +1448,14 @@ export default function ProfileScreen() {
     }).start();
   }, [pageX, rolesPage, rolesOpen]);
 
-  const rolesCol1: rolesRow[] = useMemo(() => {
-    const roles = dashIfEmpty(
-      Array.isArray(profile.openRoles) && profile.openRoles.length
-        ? profile.openRoles.join(" · ")
-        : "",
-    );
-
-    return [{ label: "Roles", value: roles }];
-  }, [profile]);
+  const openRoles = useMemo(() => {
+    if (!Array.isArray(profile.openRoles)) return [];
+    // handle both OpenRole objects and legacy strings gracefully
+    return profile.openRoles.map((r: any) => {
+      if (typeof r === "string") return { id: r, title: r, salary: "", postedAt: "", skills: [] };
+      return r;
+    });
+  }, [profile.openRoles]);
 
   // ===== Videos (horizontal snap) =====
   const videos = useMemo(() => {
@@ -2029,6 +2048,7 @@ export default function ProfileScreen() {
             {/* ✅ Premium animated reveal container */}
             <Animated.View style={{ height: rolesHeight, overflow: "hidden" }}>
               {/* ✅ Hidden measurer */}
+              {/* Hidden measurer */}
               <View
                 pointerEvents="none"
                 style={{ opacity: 0, position: "absolute", left: 0, right: 0 }}
@@ -2038,31 +2058,7 @@ export default function ProfileScreen() {
                     setrolesContentH(h);
                 }}
               >
-                <View style={{ marginTop: 14 }}>
-                  <View style={{ overflow: "hidden" }}>
-                    <View style={{ width: panelW * 2, flexDirection: "row" }}>
-                      <View style={{ width: panelW }}>
-                        <View style={{ gap: 14 }}>
-                          {rolesCol1.map((row) => (
-                            <View
-                              key={row.label}
-                              style={{
-                                gap: 4,
-                                paddingRight: roles_RIGHT_GUTTER,
-                              }}
-                            >
-                              <Text style={s.rolesLabel}>{row.label}</Text>
-                              <RolesValue
-                                value={row.value}
-                                textStyle={s.RolesValue}
-                              />
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-                    </View>
-                  </View>
-                </View>
+                <RolesGrid roles={openRoles} styles={s} />
               </View>
 
               {/* Visible animated content */}
@@ -2073,22 +2069,7 @@ export default function ProfileScreen() {
                     transform: [{ translateY: rolesTranslateY }],
                   }}
                 >
-                  <View style={{ marginTop: 14 }}>
-                    <View style={{ gap: 14 }}>
-                      {rolesCol1.map((row) => (
-                        <View
-                          key={row.label}
-                          style={{ gap: 4, paddingRight: roles_RIGHT_GUTTER }}
-                        >
-                          <Text style={s.rolesLabel}>{row.label}</Text>
-                          <RolesValue
-                            value={row.value}
-                            textStyle={s.RolesValue}
-                          />
-                        </View>
-                      ))}
-                    </View>
-                  </View>
+                  <RolesGrid roles={openRoles} styles={s} />
                 </Animated.View>
               ) : null}
             </Animated.View>

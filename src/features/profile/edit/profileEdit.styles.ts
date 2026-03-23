@@ -49,7 +49,7 @@ export const styles = StyleSheet.create({
 
   content: { paddingHorizontal: UI.padX, paddingTop: 16, paddingBottom: 40 },
 
-  sectionTitle: { marginTop: UI.sectionTop, fontSize: 15.5, color: UI.text, letterSpacing: 0.5 },
+  sectionTitle: { marginTop: UI.sectionTop, fontSize: 18, color: UI.text, letterSpacing: 0.5 },
   sectionHelper: { marginTop: 7, fontSize: 12, color: UI.subtext, letterSpacing: 0.2 },
 
   label: { marginBottom: 8, fontSize: 13, color: UI.text },

@@ -25,7 +25,7 @@ flow: clean both - stringify both - are they different? - if yes user has made c
 
 
 // src/features/profile/edit/profileEdit.compare.ts
-import type { Profile} from "@/src/features/profile/profile.types";
+import type { Profile, OpenRole } from "@/src/features/profile/profile.types";
 
 //altered to fit company needs and pass ins
 //*****  NOTE THESE ARE IN CAMEL CASE
@@ -39,7 +39,7 @@ export type DraftProfile = Profile & {
   missionStatement?: string;
   coreValues?: string[];
   currentEmployees?: string[]; //added to keep track of current employees to display on profile
-  openRoles?: string[];
+  openRoles?: OpenRole[];
   benefitsSummary?: string;
   customBackgroundColor?: string;
   logoImageURI?: string;
@@ -58,7 +58,9 @@ export function normalizeForCompare(p: DraftProfile) {
     coreValues: (p.coreValues ?? []).map((s) => s.trim()).filter(Boolean).sort(), //the sort is important bc will read as different wityh the same words in different order
     currentEmployees: (p.currentEmployees ?? []).map((s) => s.trim()).filter(Boolean).sort(),
     benefitsSummary: (p.benefitsSummary ?? "").trim(),
-    openRoles:(p.openRoles ?? []).map((s) => s.trim()).filter(Boolean).sort(),
+    openRoles: (p.openRoles ?? [])
+      .map((r) => `${r.id}|${r.title.trim()}|${r.salary.trim()}|${r.postedAt.trim()}|${[...r.skills].sort().join(",")}`)
+      .sort(),
     customBackgroundColor: (p.customBackgroundColor ?? "").trim(),
     logoImageURI: (p.avatarImageUri ?? p.logoImageURI ?? "").trim(),
   };

@@ -9,6 +9,7 @@ import { useSession } from "@/src/state/session";
 import { updateUserProfile } from "@/src/utils/update_api";
 
 import { hasProfileChanged, type DraftProfile } from "./profileEdit.compare";
+import type { OpenRole } from "@/src/features/profile/profile.types";
 import { INDUSTRIES } from "./profileEdit.constants";
 import { mapDraftToApiPayload } from "./profileEdit.data";
 import { filterCitiesByQuery, mapCitiesFromJson } from "./profileEdit.mappers"; //label is defined in this map function
@@ -53,6 +54,8 @@ export function useProfileEditController() {
 
   const [coreValuePicker, setCoreValuePicker] = useState(false);
   const [coreValuesPickerVisible, setCoreValuesPickerVisible] = useState(false);
+
+  const [roleFormVisible, setRoleFormVisible] = useState(false);
 
 
 
@@ -253,6 +256,20 @@ function removeCoreValue(value: string) {
 function openCoreValuesPicker() {
   //function will open the core values picker dropdown
   setCoreValuesPickerVisible(true);
+}
+
+function addRole(role: OpenRole) {
+  setDraft((p) => ({
+    ...p,
+    openRoles: [...(p.openRoles ?? []), role],
+  }));
+}
+
+function removeRole(id: string) {
+  setDraft((p) => ({
+    ...p,
+    openRoles: (p.openRoles ?? []).filter((r) => r.id !== id),
+  }));
 }
 
 
@@ -583,5 +600,9 @@ function openCoreValuesPicker() {
     singlePickerTempValue,
     setSinglePickerTempValue,
     singlePickerOnSelect,
+    roleFormVisible,
+    setRoleFormVisible,
+    addRole,
+    removeRole,
   };
 }
