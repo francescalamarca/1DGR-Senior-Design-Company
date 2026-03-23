@@ -24,12 +24,12 @@ export const INDUSTRIES: { title: string; options: string[] }[] = [
   { title: "Other / Emerging Industries", options: ["Startups", "Climate Tech", "Space & Advanced Tech", "Other"] },
 ];
 
-<<<<<<<<< Temporary merge branch 1
+
 export const INDUSTRY_EXPERIENCE_OPTIONS = ["Up to 1", "1-3", "3-5", "5-10", "10+"];
-=========
+
 //answers the question of how old the company is and how long it has been running for
 export const BUSINESS_AGE_OPTIONS = ["Up to 1", "1-3", "3-5", "5-10", "10+"];
->>>>>>>>> Temporary merge branch 2
+
 
 export const WORK_TYPE_OPTIONS = ["Part-Time", "Full Time", "Contract", "All", "Currently not looking"];
 

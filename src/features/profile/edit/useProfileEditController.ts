@@ -51,13 +51,10 @@ export function useProfileEditController() {
   const [thumbOptions, setThumbOptions] = useState<string[]>([]);
   const [addingLibraryVideo, setAddingLibraryVideo] = useState(false);
 
-<<<<<<< HEAD
-=======
   const [coreValuePicker, setCoreValuePicker] = useState(false);
   const [coreValuesPickerVisible, setCoreValuesPickerVisible] = useState(false);
 
 
->>>>>>> 909ba9462c792416f185035e8e6347d73a5ce6a7
 
   const avatarPreviewUri = useMemo(() => {
     if (avatarLocalUri) return avatarLocalUri;
@@ -72,21 +69,6 @@ export function useProfileEditController() {
   const hasAvatar = !!(avatarLocalUri || (draft.avatarImageUri ?? "").trim());
 
   const changed = hasProfileChanged((profile as any) as DraftProfile, draft);
-<<<<<<< HEAD
-  const legalMiddleName = (draft as any).legalMiddleName;
-
-  const canSave = useMemo(() => {
-    const preferredOk = (draft.preferredName ?? "").trim().length > 0;
-    const legalOk =
-      (draft.legalFirstName?.trim().length ?? 0) > 0 ||
-      (legalMiddleName?.trim().length ?? 0) > 0 ||
-      (draft.legalLastName?.trim().length ?? 0) > 0;
-
-    return (preferredOk || legalOk) && changed;
-  }, [draft.preferredName, draft.legalFirstName, legalMiddleName, draft.legalLastName, changed]);
-
-=======
->>>>>>> 909ba9462c792416f185035e8e6347d73a5ce6a7
 
   const canUploadToLibrary =
     !!mediaVideoUri && !!mediaThumbUri && mediaCaption.trim().length > 0 && !addingLibraryVideo && !isSaving;
@@ -131,34 +113,6 @@ export function useProfileEditController() {
   
   const profileRef = useRef(profile);
   profileRef.current = profile;
-<<<<<<< HEAD
-  
-  useFocusEffect(
-    useCallback(() => {
-      const p = profileRef.current;
-      setDraft((p as any) as DraftProfile);
-      setAvatarLocalUri(null);
-      setMediaVideoUri(null);
-      setMediaThumbUri(null);
-      setMediaCaption("");
-      setThumbOptions([]);
-      setGeneratingThumbs(false);
-      setAddingLibraryVideo(false);
-      requestAnimationFrame(() => {
-        scrollRef.current?.scrollTo?.({ y: 0, animated: false });
-      });
-    }, []) // ✅ empty deps - safe because we read profile via ref
-  );
-  function handleCancel() {
-    if (!changed) {
-      router.replace("/(companyUser)/profile");
-      return;
-    }
-    Alert.alert("Discard changes?", "You have unsaved edits.", [
-      { text: "Keep editing", style: "cancel" },
-      { text: "Discard", style: "destructive", onPress: () => router.replace("/(companyUser)/profile") },
-    ]);
-=======
 
   // Only reset draft on first mount, not on every focus (picker modals cause re-focus).
   useEffect(() => {
@@ -178,34 +132,11 @@ export function useProfileEditController() {
   }, []);
   function handleCancel() {
     router.navigate("/(companyUser)/profile");
->>>>>>> 909ba9462c792416f185035e8e6347d73a5ce6a7
   }
 
   function handleSave() {
     const apiPayload = mapDraftToApiPayload(draft);
 
-<<<<<<< HEAD
-    setIsSaving(true);
-    try {
-      const apiPayload = mapDraftToApiPayload(draft); //this is where that functionn I just changed the variables to match company db is being called
-      const json = JSON.stringify(apiPayload);
-      if (json.length > 200_000) {
-        Alert.alert(
-          "Error",
-          "Payload too large."
-        );
-        return;
-      }
-
-      await updateUserProfile(apiPayload as any, accessToken);
-      setProfile((p: any) => ({ ...p, ...draft }));
-      router.replace("/(companyUser)/profile");
-    } catch (err) {
-      console.error(err);
-      Alert.alert("Error", "Failed to save profile.");
-    } finally {
-      setIsSaving(false);
-=======
     // Navigate first — always, regardless of token state.
     router.navigate("/(companyUser)/profile");
 
@@ -226,7 +157,6 @@ export function useProfileEditController() {
         .catch((err) => console.warn("[handleSave] backend sync failed:", err));
     } else {
       console.warn("[handleSave] No access token — local save only.");
->>>>>>> 909ba9462c792416f185035e8e6347d73a5ce6a7
     }
   }
 
@@ -359,8 +289,6 @@ function openCoreValuesPicker() {
     ]);
   }
 
-<<<<<<< HEAD
-=======
   function onSetAvatarFromUrl(url: string) {
     const trimmed = url.trim();
     if (!trimmed) return;
@@ -368,7 +296,6 @@ function openCoreValuesPicker() {
     setDraft((p) => ({ ...p, avatarImageUri: trimmed }));
   }
 
->>>>>>> 909ba9462c792416f185035e8e6347d73a5ce6a7
   function scrollToBottomSoon() {
     requestAnimationFrame(() => {
       setTimeout(() => scrollRef.current?.scrollToEnd?.({ animated: true }), 50);
@@ -604,9 +531,6 @@ function openCoreValuesPicker() {
     openIndustryPicker,
     openCityPicker,
     addLocation, //added for locations
-<<<<<<< HEAD
-    deleteLocation, //added for locations
-=======
     removeLocation, //added for locations
     addCoreValue,
     removeCoreValue,
@@ -615,7 +539,6 @@ function openCoreValuesPicker() {
     coreValuePicker,
     setCoreValuePicker,
     setCoreValuesPickerVisible,
->>>>>>> 909ba9462c792416f185035e8e6347d73a5ce6a7
     mediaVideoUri,
     mediaThumbUri,
     mediaCaption,

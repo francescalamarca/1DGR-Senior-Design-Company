@@ -6,25 +6,22 @@ import { RequireUserType } from "@/src/components/RequireUserType";
 import { KeyboardScreen, LLightText } from "./profileEdit.components";
 import {
   COMPANY_AGE_OPTIONS,
-  WORK_TYPE_OPTIONS,
   WORK_PREFERENCE_OPTIONS,
-  CORE_VALUES,
+  WORK_TYPE_OPTIONS
 } from "./profileEdit.constants";
-import { styles, UI } from "./profileEdit.styles";
+import { UI, styles } from "./profileEdit.styles";
 import {
   AvatarSection,
-  NameSection,
+  BackgroundColorSection,
+  CoreValuesPickerModal,
   CoreValuesSection,
-  MissionSection,
   IndustryTypeSection,
-  VideoLibrarySection,
+  MissionSection,
+  NameSection,
   ProfileMediaResetSection,
   SinglePickerModal,
-  ValuesSection,
   VideoLibrarySection,
-  WorkTypePickerModal,
-  CoreValuesPickerModal,
-  BackgroundColorSection,
+  WorkTypePickerModal
 } from "./profileEdit.ui";
 import { useProfileEditController } from "./useProfileEditController";
 
