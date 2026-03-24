@@ -1038,7 +1038,15 @@ export default function SettingsScreen() {
                   <LLText style={styles.bodyDescription}>
                     {`Profile Settings - Light, dark, system aligned`}
                   </LLText>
-                </View>`
+                  {/* <View style={{ marginRight: 10 }}>
+                                <CircleIconButton
+                                  iconName="light"
+                                  label="Light"
+                                  onPress={() => fill}
+                                  disabled={isEditingThis}
+                                />
+                              </View> */}
+            </View>
           </Collapsible>
 
           <AccordionHeader
