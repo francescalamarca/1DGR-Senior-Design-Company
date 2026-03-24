@@ -136,11 +136,11 @@ export function AvatarSection(props: {
               disabled={!hasAvatar || isSaving}
               style={[
                 styles.pill,
-                { flex: 1, borderColor: UI.borderStrong },
-                !hasAvatar || isSaving ? { opacity: 0.5 } : null,
+                { flex: 1, borderColor: hasAvatar && !isSaving ? UI.danger : UI.borderStrong },
+                !hasAvatar || isSaving ? { opacity: 0.4 } : null,
               ]}
             >
-              <BtnText>Remove</BtnText>
+              <BtnText style={{ color: hasAvatar && !isSaving ? UI.danger : undefined }}>Remove</BtnText>
             </Pressable>
           </View>
 
@@ -824,8 +824,9 @@ export function RolesSection(props: {
   roles: OpenRole[];
   onPressAdd: () => void;
   onRemove: (id: string) => void;
+  onPressEdit: (role: OpenRole) => void;
 }) {
-  const { roles, onPressAdd, onRemove } = props;
+  const { roles, onPressAdd, onRemove, onPressEdit } = props;
 
   return (
     <>
@@ -843,9 +844,14 @@ export function RolesSection(props: {
           <View key={role.id} style={[styles.rowPressable, { paddingVertical: 14, gap: 4 }]}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
               <LLightText style={[styles.rowTitle, { flex: 1, paddingRight: 10 }]}>{role.title}</LLightText>
-              <Pressable onPress={() => onRemove(role.id)} hitSlop={8}>
-                <LLightText style={{ color: UI.danger, fontSize: 13 }}>Remove</LLightText>
-              </Pressable>
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <Pressable onPress={() => onPressEdit(role)} hitSlop={8}>
+                  <LLightText style={{ color: "#007AFF", fontSize: 13 }}>Edit</LLightText>
+                </Pressable>
+                <Pressable onPress={() => onRemove(role.id)} hitSlop={8}>
+                  <LLightText style={{ color: UI.danger, fontSize: 13 }}>Remove</LLightText>
+                </Pressable>
+              </View>
             </View>
             {!!role.salary.trim() && (
               <LLightText style={styles.rowSub}>{role.salary}</LLightText>
@@ -866,23 +872,24 @@ export function RoleFormModal(props: {
   visible: boolean;
   onClose: () => void;
   onSave: (role: OpenRole) => void;
+  initialRole?: OpenRole; //lets us take the existing values and populate for editing
 }) {
-  const { visible, onClose, onSave } = props;
+  const { visible, onClose, onSave, initialRole } = props;
 
   const [title, setTitle] = React.useState("");
   const [salary, setSalary] = React.useState("");
   const [skillsText, setSkillsText] = React.useState("");
   const [postUrl, setPostUrl] = React.useState("");
 
-  // Reset fields each time the modal opens
+  // Reset/pre-populate fields each time the modal opens
   React.useEffect(() => {
     if (visible) {
-      setTitle("");
-      setSalary("");
-      setSkillsText("");
-      setPostUrl("");
+      setTitle(initialRole?.title ?? "");
+      setSalary(initialRole?.salary ?? "");
+      setSkillsText(initialRole?.skills.join(", ") ?? "");
+      setPostUrl(initialRole?.postUrl ?? "");
     }
-  }, [visible]);
+  }, [visible, initialRole?.title, initialRole?.salary, initialRole?.skills, initialRole?.postUrl]);
 
   const canSave = title.trim().length > 0;
 
@@ -893,10 +900,10 @@ export function RoleFormModal(props: {
       .map((s) => s.trim())
       .filter(Boolean);
     onSave({
-      id: String(Date.now()),
+      id: initialRole?.id ?? String(Date.now()),
       title: title.trim(),
       salary: salary.trim(),
-      postedAt: new Date().toISOString().slice(0, 10),
+      postedAt: initialRole?.postedAt ?? new Date().toISOString().slice(0, 10),
       skills,
       postUrl: postUrl.trim(),
     });
@@ -921,7 +928,7 @@ export function RoleFormModal(props: {
               paddingBottom: 32,
             }}
           >
-            <LLightText style={{ fontSize: 18, fontWeight: "800", marginBottom: 16 }}>Add Role</LLightText>
+            <LLightText style={{ fontSize: 18, fontWeight: "800", marginBottom: 16 }}>{initialRole ? "Edit Role" : "Add Role"}</LLightText>
 
             <LLightText style={styles.label}>Role Title *</LLightText>
             <TextInput

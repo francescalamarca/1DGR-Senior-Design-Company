@@ -2,7 +2,10 @@
 import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as VideoThumbnails from "expo-video-thumbnails";
+import { File, Paths } from "expo-file-system";
 import { aws_config } from "@/constants/aws-config";
+
+const REMOVE_BG_API_KEY = "17BU2EgBRKZX1jwpF7VYnfBv";
 
 type AlertFn = (title: string, msg: string) => void;
 
@@ -72,6 +75,53 @@ export async function generateThumbnails(videoUri: string) {
   }
 
   return Array.from(new Set(out));
+}
+
+/**
+ * Calls the remove.bg API with either a local file URI or a remote image URL,
+ * saves the processed PNG to the device cache, and returns the local URI.
+ * Pass the returned URI straight into uploadToS3.
+ */
+export async function removeBackgroundAndSave(args: {
+  localUri?: string;
+  imageUrl?: string;
+}): Promise<string | null> {
+  const { localUri, imageUrl } = args;
+
+  const formData = new FormData();
+  if (localUri) {
+    // React Native FormData accepts a plain object for file parts
+    formData.append("image_file", { uri: localUri, type: "image/png", name: "logo.png" } as any);
+  } else if (imageUrl) {
+    formData.append("image_url", imageUrl);
+  } else {
+    return null;
+  }
+  formData.append("size", "auto");
+
+  const response = await fetch("https://api.remove.bg/v1.0/removebg", {
+    method: "POST",
+    headers: { "X-Api-Key": REMOVE_BG_API_KEY },
+    body: formData,
+  });
+
+  if (!response.ok) {
+    throw new Error(`remove.bg failed: ${response.statusText}`);
+  }
+
+  // Convert response to base64 so expo-file-system can write it
+  const buffer = await response.arrayBuffer();
+  const bytes = new Uint8Array(buffer);
+  let binary = "";
+  const chunkSize = 0x8000;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    binary += String.fromCharCode(...Array.from(bytes.subarray(i, i + chunkSize)));
+  }
+  const base64 = btoa(binary);
+
+  const tempFile = new File(Paths.cache, `logo_nobg_${Date.now()}.png`);
+  tempFile.write(base64, { encoding: "base64" });
+  return tempFile.uri;
 }
 
 export async function uploadToS3(args: {

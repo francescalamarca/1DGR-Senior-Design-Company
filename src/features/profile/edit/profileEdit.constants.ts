@@ -26,9 +26,12 @@ export const INDUSTRIES: { title: string; options: string[] }[] = [
 
 //doing this for options for company, will be shown as swatches on the profile
 export const BACKGROUND_COLOR_OPTIONS = [
+  { label: "White", value: "#e9e8e8" },
   { label: "Midnight", value: "#0A0A0A" },
+  { label: "Grey", value: "#aaa6a6" },
   { label: "Navy", value: "#0D1B2A" },
   { label: "Cobalt", value: "#1B4FD8" },
+  { label: "Grey Blue", value: "#51608a" },
   { label: "Electric Blue", value: "#2563EB" },
   {label: "Mint Green", value: "#2bb59b"},
   { label: "Emerald", value: "#059669" },
@@ -36,6 +39,8 @@ export const BACKGROUND_COLOR_OPTIONS = [
   { label: "Crimson", value: "#DC2626" },
   { label: "Strawberry", value: "#df8484" },
   { label: "Ruby", value: "#9F1239" },
+  { label: "Gold", value: "#e0d53e" },
+  { label: "Midnight", value: "#dab11d" },
   { label: "Violet", value: "#7C3AED" },
   { label: "Lavender", value: "#9f89c4" },
   { label: "Indigo", value: "#4338CA" },
