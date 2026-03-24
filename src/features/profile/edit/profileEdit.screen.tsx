@@ -214,13 +214,11 @@ export default function ProfileEditScreen() {
         <MissionSection mission={draft.missionStatement ?? ""} onChangeMission={(v: string) => setDraft((p) => ({ ...p, missionStatement: v }))} />
 
         <IndustryTypeSection
-          workTypeSubtitle={workTypeSubtitle}
           companyAgeSubtitle={draft.businessAge?.trim() ? draft.businessAge : "Select"}
           industrySubtitle={summarizeIndustries(draft.industry ?? "")}
           locations={draft.locations ?? []}
           onPressAddLocation={openCityPicker}
           onRemoveLocation={removeLocation}
-          onPressWorkType={openWorkTypePicker}
           onPressCompanyAge={() =>
             openSingleSelectPicker({
               title: "Business Age",
@@ -241,7 +239,7 @@ export default function ProfileEditScreen() {
 
         <RoleFormModal
           visible={roleFormVisible}
-          onClose={() => { setRoleFormVisible(false); setEditingRole(null); }}
+          onClose={() => { setRoleFormVisible(false); setEditingRole(null);}}
           onSave={(role) => { if (editingRole) { updateRole(role); } else { addRole(role); } }}
           initialRole={editingRole ?? undefined}
         />

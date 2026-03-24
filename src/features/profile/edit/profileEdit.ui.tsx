@@ -11,6 +11,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Switch, //used in roles for relocation check box
 } from "react-native";
 
 import { styles, UI } from "./profileEdit.styles";
@@ -289,22 +290,18 @@ export function BenefitsSection(props: {benefits: string; onChangeBenefits: (v: 
 }
 
 export function IndustryTypeSection(props: {
-  workTypeSubtitle: string;
   companyAgeSubtitle: string;
   industrySubtitle: string;
   locations: string[];
-  onPressWorkType: () => void;
   onPressCompanyAge: () => void;
   onPressIndustry: () => void;
   onPressAddLocation: () => void;
   onRemoveLocation: (label: string) => void;
 }) {
   const {
-    workTypeSubtitle,
     companyAgeSubtitle,
     industrySubtitle,
     locations,
-    onPressWorkType,
     onPressCompanyAge,
     onPressIndustry,
     onPressAddLocation,
@@ -316,7 +313,6 @@ export function IndustryTypeSection(props: {
       <LLightText style={styles.sectionHelper}>Residency requirements, company age, work, and location.</LLightText>
 
       <GroupCard>
-        <PickerRow title="Work Type" subtitle={workTypeSubtitle} onPress={onPressWorkType} showDivider />
         <PickerRow
           title="Company Age (years)"
           subtitle={companyAgeSubtitle}
@@ -810,7 +806,7 @@ export function RolesSection(props: {
   onRemove: (id: string) => void;
   onPressEdit: (role: OpenRole) => void;
 }) {
-  const { roles, onPressAdd, onRemove, onPressEdit } = props;
+  const { roles, onPressAdd, onRemove, onPressEdit} = props;
 
   return (
     <>
@@ -845,6 +841,12 @@ export function RolesSection(props: {
                 {role.skills.join(", ")}
               </LLightText>
             )}
+            {!!role.workType.trim() && (
+              <LLightText style={styles.rowSub}>{role.workType}</LLightText>
+            )}
+            {!!role.postUrl.trim() && (
+              <LLightText style={styles.rowSub}>{role.postUrl}</LLightText>
+            )}
           </View>
         ))}
       </GroupCard>
@@ -864,6 +866,8 @@ export function RoleFormModal(props: {
   const [salary, setSalary] = React.useState("");
   const [skillsText, setSkillsText] = React.useState("");
   const [postUrl, setPostUrl] = React.useState("");
+  const [workType, setWorkType] = React.useState("");
+  const [isRelocationCovered, setRelocation] = React.useState(false);
 
   // Reset/pre-populate fields each time the modal opens
   React.useEffect(() => {
@@ -872,8 +876,10 @@ export function RoleFormModal(props: {
       setSalary(initialRole?.salary ?? "");
       setSkillsText(initialRole?.skills.join(", ") ?? "");
       setPostUrl(initialRole?.postUrl ?? "");
+      setWorkType(initialRole?.workType ?? "");
+      setRelocation(initialRole?.isRelocationCovered ?? false); //if not true, auto false
     }
-  }, [visible, initialRole?.title, initialRole?.salary, initialRole?.skills, initialRole?.postUrl]);
+  }, [visible, initialRole?.title, initialRole?.salary, initialRole?.workType, initialRole?.skills, initialRole?.postUrl]);
 
   const canSave = title.trim().length > 0;
 
@@ -890,6 +896,8 @@ export function RoleFormModal(props: {
       postedAt: initialRole?.postedAt ?? new Date().toISOString().slice(0, 10),
       skills,
       postUrl: postUrl.trim(),
+      workType: workType.trim(),
+      isRelocationCovered: false,
     });
     onClose();
   }
@@ -941,6 +949,26 @@ export function RoleFormModal(props: {
               style={[styles.input, { marginBottom: 20 }]}
               autoCorrect={false}
             />
+
+            <LLightText style={styles.label}>Work Type</LLightText>
+            <TextInput
+              value={workType}
+              onChangeText={setWorkType}
+              placeholder="e.g. Full-time, Remote, Hybrid"
+              placeholderTextColor={UI.hint}
+              style={[styles.input, { marginBottom: 14 }]}
+              autoCorrect={false}
+            />
+
+            <LLightText style={styles.label}>Relocation Covered</LLightText>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14, gap: 10 }}>
+              <Switch
+                value={isRelocationCovered}
+                onValueChange={(val) => setRelocation(val)}
+                trackColor={{ false: UI.hint, true: UI.text }}
+              />
+              <LLightText>{isRelocationCovered ? "Yes" : "No"}</LLightText>
+            </View>
 
             <LLightText style={styles.label}>Job Posting URL </LLightText>
             <TextInput
