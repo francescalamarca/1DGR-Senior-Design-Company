@@ -25,10 +25,12 @@ import KeyboardScreen from "@/src/components/KeyboardScreen";
 import { RequireUserType } from "@/src/components/RequireUserType";
 import { useProfile } from "@/src/features/profile/profile.store";
 import { useSession } from "@/src/state/session";
+import { signIn, signOut } from "@/src/utils/auth";
 import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActionSheetIOS,
+  ActivityIndicator,
   Alert,
   Animated,
   Easing,
@@ -605,9 +607,40 @@ function AccordionHeader({
 // settings.tsx (PART 3/4)
 // =========================
 export default function SettingsScreen() {
-  const { accessToken } = useSession();
+  const { accessToken, setAccessToken } = useSession();
   const scrollRef = useRef<ScrollView>(null);
   const { profile, setProfile } = useProfile();
+
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+
+  async function handleSignIn() {
+    const email = loginEmail.trim();
+    const password = loginPassword;
+    if (!email || !password) {
+      Alert.alert("Sign in", "Please enter your email and password.");
+      return;
+    }
+    setLoginLoading(true);
+    try {
+      const result = await signIn(email, password);
+      if (result.success && result.idToken) {
+        setAccessToken(result.idToken);
+        setLoginPassword("");
+        Alert.alert("Signed in", "You are now signed in.");
+      } else {
+        Alert.alert("Sign in failed", result.error ?? "Unknown error");
+      }
+    } finally {
+      setLoginLoading(false);
+    }
+  }
+
+  async function handleSignOut() {
+    await signOut();
+    setAccessToken(null);
+  }
 
   type SectionKey = "account" | "profile" | "support" | "about";
   const [openSection, setOpenSection] = useState<SectionKey | null>(null);
@@ -1007,6 +1040,75 @@ export default function SettingsScreen() {
           {/* ✅ ACCOUNT INFORMATION now uses Lexend Light components */}
           <Collapsible open={openSection === "account"} openBg>
             <FullWidthStack>
+
+              {/* ── Sign In / Signed In row ── */}
+              <View style={[styles.linkItemWrap, styles.linkItemDivider]}>
+                {accessToken ? (
+                  <View style={[styles.row, { justifyContent: "space-between", alignItems: "center" }]}>
+                    <LLText style={styles.rowTitle}>Signed in ✓</LLText>
+                    <Pressable onPress={handleSignOut} hitSlop={10}>
+                      <LLText style={{ opacity: 0.7 }}>Sign out</LLText>
+                    </Pressable>
+                  </View>
+                ) : (
+                  <View style={{ gap: 10, paddingVertical: 4 }}>
+                    <LLText style={styles.blockTitle}>Sign in to your account</LLText>
+                    <TextInput
+                      value={loginEmail}
+                      onChangeText={setLoginEmail}
+                      placeholder="Email"
+                      placeholderTextColor="#999"
+                      keyboardType="email-address"
+                      autoCapitalize="none"
+                      autoComplete="email"
+                      style={{
+                        borderWidth: 1,
+                        borderColor: "#d9d9d9",
+                        borderRadius: 8,
+                        paddingHorizontal: 12,
+                        paddingVertical: 9,
+                        fontFamily: FONTS.LEXEND_LIGHT,
+                        fontSize: 14,
+                        color: "#202020",
+                      }}
+                    />
+                    <TextInput
+                      value={loginPassword}
+                      onChangeText={setLoginPassword}
+                      placeholder="Password"
+                      placeholderTextColor="#999"
+                      secureTextEntry
+                      style={{
+                        borderWidth: 1,
+                        borderColor: "#d9d9d9",
+                        borderRadius: 8,
+                        paddingHorizontal: 12,
+                        paddingVertical: 9,
+                        fontFamily: FONTS.LEXEND_LIGHT,
+                        fontSize: 14,
+                        color: "#202020",
+                      }}
+                    />
+                    <Pressable
+                      onPress={handleSignIn}
+                      disabled={loginLoading}
+                      style={{
+                        backgroundColor: "#202020",
+                        borderRadius: 8,
+                        paddingVertical: 10,
+                        alignItems: "center",
+                        opacity: loginLoading ? 0.6 : 1,
+                      }}
+                    >
+                      {loginLoading
+                        ? <ActivityIndicator color="#fff" />
+                        : <LLText style={{ color: "#fff", fontSize: 14 }}>Sign In</LLText>
+                      }
+                    </Pressable>
+                  </View>
+                )}
+              </View>
+
               {/* 0) Title row */}
               <View style={styles.linkItemWrap}>
                 <View style={styles.rowStatic}>

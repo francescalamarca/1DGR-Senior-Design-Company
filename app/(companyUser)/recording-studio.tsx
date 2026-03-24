@@ -85,7 +85,10 @@ function buildCdnUrlFromKey(keyOrUrl: string) {
 
 export default function RecordingStudioScreen() {
   const params = useLocalSearchParams<{ uri?: string; prompt?: string }>();
-  const uriStr = typeof params.uri === "string" ? params.uri : "";
+  // Strip the MIME-type hash appended by the web recorder (blob:...#video/webm)
+  const uriStr = typeof params.uri === "string"
+    ? params.uri.split("#")[0]
+    : "";
 
   const { accessToken } = useSession();
   const { setProfile } = useProfile();
@@ -191,17 +194,49 @@ export default function RecordingStudioScreen() {
     return true;
   }
 
+// Capture a thumbnail frame from a blob/file URI using an HTML canvas (web only).
+  function generateWebThumbnail(videoUri: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const video = document.createElement("video");
+      video.crossOrigin = "anonymous";
+      video.muted = true;
+      video.src = videoUri;
+
+      video.onerror = () => reject(new Error("Video failed to load for thumbnail"));
+
+      video.onloadedmetadata = () => {
+        video.currentTime = Math.min(1, video.duration * 0.1);
+      };
+
+      video.onseeked = () => {
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth || 640;
+        canvas.height = video.videoHeight || 360;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) { reject(new Error("Canvas unavailable")); return; }
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/jpeg", 0.7));
+      };
+    });
+  }
+
 // Generate a thumbnail frame from the recorded video and store it as the selected thumbnail.
   const generateThumbFromVideo = useCallback(async () => {
     if (!uriStr) return;
     try {
       setThumbBusy(true);
-      const res = await VideoThumbnails.getThumbnailAsync(uriStr, {
-        time: 1000,
-        quality: 0.7,
-      });
-      if (res?.uri) {
-        setThumbLocalUri(res.uri);
+      let uri = "";
+      if (Platform.OS === "web") {
+        uri = await generateWebThumbnail(uriStr);
+      } else {
+        const res = await VideoThumbnails.getThumbnailAsync(uriStr, {
+          time: 1000,
+          quality: 0.7,
+        });
+        uri = res?.uri ?? "";
+      }
+      if (uri) {
+        setThumbLocalUri(uri);
         setThumbPicked(false);
       }
     } catch (e) {
@@ -287,20 +322,55 @@ export default function RecordingStudioScreen() {
   async function handleUpload() {
     try {
       setUploading(true);
-      if (!accessToken) throw new Error("No access token found.");
+
+      // ── No-auth fallback: store locally for this session only ──
+      if (!accessToken) {
+        const titleToSend = caption.trim() || promptText || "New video";
+        let localThumb = thumbLocalUri;
+        if (!localThumb && Platform.OS === "web") {
+          try { localThumb = await generateWebThumbnail(uriStr); } catch {}
+        }
+        const newItem: LibraryVideo = {
+          id: `local_${Date.now()}`,
+          url: uriStr,
+          s3Key: "",
+          thumbnailUrl: localThumb,
+          thumbnailS3Key: "",
+          caption: titleToSend,
+          source: "recording-studio",
+          createdAt: Date.now(),
+        };
+        setProfile((p) => ({
+          ...p,
+          videoLibrary: [newItem, ...(p.videoLibrary ?? [])],
+        }));
+        router.replace("/(companyUser)/video-library");
+        return;
+      }
 
       const uploadToS3 = async (localUri: string, type: "video" | "image") => {
-        const ext = localUri.split(".").pop()?.toLowerCase();
+        // Blob URLs from the web recorder encode their MIME type after '#'
+        const hashMime = localUri.includes("#")
+          ? decodeURIComponent(localUri.split("#")[1])
+          : "";
+        const cleanUri = localUri.split("#")[0];
+
+        const ext = cleanUri.split(".").pop()?.toLowerCase();
 
         let contentType = "application/octet-stream";
-        if (type === "video") {
+        if (hashMime) {
+          contentType = hashMime;
+        } else if (cleanUri.startsWith("data:")) {
+          // data:image/jpeg;base64,... — extract MIME from the data URL itself
+          contentType = cleanUri.split(":")[1]?.split(";")[0] ?? "image/jpeg";
+        } else if (type === "video") {
           contentType = ext === "mov" ? "video/quicktime" : "video/mp4";
         } else {
           contentType = "image/jpeg";
         }
 
         const urlRes = await fetch(
-          `${aws_config.apiBaseUrl}/upload-video?contentType=${contentType}`,
+          `${aws_config.apiBaseUrl}/upload-video?contentType=${encodeURIComponent(contentType)}`,
           { headers: { Authorization: accessToken } }
         );
 
@@ -308,7 +378,7 @@ export default function RecordingStudioScreen() {
           throw new Error(`Get Upload URL Failed: ${urlRes.status}`);
 
         const { uploadUrl, key } = await urlRes.json();
-        const fileData = await fetch(localUri);
+        const fileData = await fetch(cleanUri);
         const blob = await fileData.blob();
 
         const s3Res = await fetch(uploadUrl, {
