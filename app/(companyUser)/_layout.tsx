@@ -18,6 +18,7 @@
  */
 import { RequireUserType } from "@/src/components/RequireUserType";
 import { useProfile } from "@/src/features/profile/profile.store";
+import { useSession } from "@/src/state/session";
 import { getCurrentSessionToken } from "@/src/utils/auth";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import AntDesign from "@expo/vector-icons/AntDesign";
@@ -85,6 +86,7 @@ const TAB_SCREEN_OPTIONS = ({ route }: { route: { name: string } }) => ({
 
 export default function CompanyUserLayout() {
   const { refreshProfile } = useProfile();
+  const { setAccessToken } = useSession();
   const didInit = useRef(false);
 
   useEffect(() => {
@@ -94,14 +96,17 @@ export default function CompanyUserLayout() {
     const loadUserData = async () => {
       try {
         const token = await getCurrentSessionToken();
-        if (token) await refreshProfile(token);
+        if (token) {
+          setAccessToken(token);
+          await refreshProfile(token);
+        }
       } catch (error) {
         console.error("Failed to init profile:", error);
       }
     };
 
     loadUserData();
-  }, [refreshProfile]); // ✅ empty deps — didInit.current prevents double-runs
+  }, [refreshProfile, setAccessToken]); // ✅ empty deps — didInit.current prevents double-runs
 
   return (
     <>

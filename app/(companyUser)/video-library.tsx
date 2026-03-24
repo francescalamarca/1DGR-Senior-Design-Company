@@ -541,8 +541,27 @@ useFocusEffect(
 
       const s3Key = (selected.s3Key ?? "").trim() || deriveS3KeyFromUrl(selected.url);
 
-      if (!s3Key) {
-        Alert.alert("Can't save yet", "This video is missing s3Key.");
+      // No-auth / local-only path: skip backend, just update local profile state
+      if (!accessToken || !s3Key) {
+        const target = getTargetFromSlot(slot);
+        setProfile((p: any) => {
+          const media = [...(p.media ?? [])];
+          for (let i = 0; i < 5; i++) {
+            if (!media[i]) media[i] = { id: String(i + 1), imageUri: "", videoUri: "", caption: "" };
+          }
+          if (target.type === "avatar") return { ...p, avatarVideoUri: selected.url };
+          media[target.index] = {
+            ...media[target.index],
+            videoUri: selected.url,
+            imageUri: selected.thumbnailUrl ?? "",
+            caption: finalCaption,
+          };
+          return { ...p, media };
+        });
+        setSelectedVideoUrl(null);
+        setSelectedSlot(null);
+        setSelectedCaption("");
+        router.replace(returnTo as any);
         return;
       }
 
