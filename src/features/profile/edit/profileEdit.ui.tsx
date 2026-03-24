@@ -794,23 +794,7 @@ export function CityPickerModal(props: {
                   alignItems: "center",
                 }}
               >
-                <LLightText style={{ fontWeight: "800" }}>Close</LLightText>
-              </Pressable>
-
-              <Pressable
-                onPress={onApply}
-                disabled={!canApply}
-                style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  borderWidth: 1,
-                  borderColor: UI.text,
-                  borderRadius: 12,
-                  alignItems: "center",
-                  opacity: canApply ? 1 : 0.4,
-                }}
-              >
-                <LLightText style={{ fontWeight: "800" }}>Apply</LLightText>
+                <LLightText style={{ fontWeight: "800" }}>Done</LLightText>
               </Pressable>
             </View>
           </View>

@@ -1002,14 +1002,14 @@ export default function SettingsScreen() {
       >
         <View style={styles.groupCard}>
           <AccordionHeader
-            title="ACCOUNT"
+            title="ABOUT"
             open={openSection === "account"}
             onToggle={() => toggleSection("account")}
             isFirst
           />                 
                  
 
-          <AccordionHeader title="PROFILE DISPLAY" open={openSection === "profile"} onToggle={() => toggleSection("profile")} />
+          <AccordionHeader title="SUPPORT" open={openSection === "profile"} onToggle={() => toggleSection("profile")} />
 
           {/* ✅ PROFILE DISPLAY now uses Lexend Light components */}
           <Collapsible open={openSection === "profile"} openBg>
