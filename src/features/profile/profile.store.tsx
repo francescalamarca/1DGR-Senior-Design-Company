@@ -372,8 +372,6 @@ const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
    * - Maps backend payload into Profile shape:
    *   - videoLibrary / deletedVideoLibrary
    *   - avatar urls/keys
-   *   - higher education
-   *   - share links
    * - Merges backend libraries with local-only items (so locally-created items aren't lost)
    */
   const refreshProfile = useCallback(async (token: string) => {
@@ -533,15 +531,19 @@ const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
           caption: v ? (v.caption ?? "").trim() : "",
         };
       });
-
+      //updated to match all profile variables so they persist when company user logs in
+      //unsure if contact display settings need to persist - loads from async
       const mappedProfile: Partial<Profile> = {
         companyName: userData.company_name || "",
+        email: userData.email || "",
         industry: Array.isArray(userData.industry) ? (userData.industry[0] ?? "") : (userData.industry || ""),
         businessAge: userData.business_age || "",
         workType: userData.work_type || "",
         locations: Array.isArray(userData.locations) ? userData.locations : [],
         missionStatement: userData.mission_statement || "",
         coreValues: Array.isArray(userData.core_values) ? userData.core_values : [],
+        openRoles: Array.isArray(userData.open_roles) ? userData.open_roles: [],
+        currentEmployees: Array.isArray(userData.current_employees) ? userData.current_employees: [],
         benefitsSummary: userData.benefits_summary || "",
         customBackgroundColor: userData.custom_background_color || "",
         contactUrl1: userData.contact_url_1 || "",

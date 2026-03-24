@@ -15,13 +15,14 @@ import {
   useMicrophonePermissions,
 } from "expo-camera";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
   Animated,
   Dimensions,
   Easing,
+  Platform,
   Pressable,
   Text,
   View,
@@ -47,7 +48,12 @@ const RING_STROKE = 4;
 const R = (RING_SIZE - RING_STROKE) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * R;
 
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+// Wraps Circle to strip the `collapsable` prop that React Native's Animated adds,
+// which is invalid on SVG DOM elements when running on web.
+const SafeCircle = forwardRef<any, any>(({ collapsable: _c, ...props }, ref) => (
+  <Circle {...props} ref={ref} />
+));
+const AnimatedCircle = Animated.createAnimatedComponent(SafeCircle);
 
 // Formats seconds into mm:ss for the on-screen recording timer.
 function formatTime(seconds: number) {
@@ -126,21 +132,21 @@ export default function CameraUIScreen() {
   // - stopProgressAnimation(): stops Animated.timing and optionally resets progress to 0
   // - startVisualTimer(): starts both the text tick + ring animation (0→1 over MAX_MS)
   // - endVisualTimer(): shared cleanup for stop/unmount paths
-  function clearTimer() {
+  const clearTimer = useCallback(() => {
     if (tickIntervalRef.current) {
       clearInterval(tickIntervalRef.current);
       tickIntervalRef.current = null;
     }
     recordingStartMsRef.current = null;
     setElapsedSec(0);
-  }
+  }, []);
 
-  function stopProgressAnimation(resetToZero = false) {
+  const stopProgressAnimation = useCallback((resetToZero = false) => {
     progressAnimRef.current?.stop();
     progressAnimRef.current = null;
     progress.stopAnimation();
     if (resetToZero) progress.setValue(0);
-  }
+  }, [progress]);
 
   function startVisualTimer() {
     clearTimer();
@@ -177,10 +183,10 @@ export default function CameraUIScreen() {
     progressAnimRef.current.start();
   }
 
-  function endVisualTimer({ reset }: { reset: boolean }) {
+  const endVisualTimer = useCallback(({ reset }: { reset: boolean }) => {
     clearTimer();
     stopProgressAnimation(reset);
-  }
+  }, [clearTimer, stopProgressAnimation]); //has stable render
 
   // Focus lifecycle: on enter/exit, stop any ongoing recording, clear the last URI/prompt, and reset the ring/timer.
   useFocusEffect(
@@ -329,6 +335,43 @@ export default function CameraUIScreen() {
     endVisualTimer({ reset: true });
   }
 
+  if (Platform.OS === "web") {
+    return (
+      <SafeAreaView
+        style={{
+          flex: 1,
+          backgroundColor: "black",
+          justifyContent: "center",
+          padding: 24,
+        }}
+      >
+        <Text
+          style={{
+            color: "white",
+            fontFamily: FONT_LEXEND_REGULAR,
+            fontSize: 16,
+            textAlign: "center",
+            marginBottom: 12,
+          }}
+        >
+          Video recording is not supported in the web browser.{"\n\n"}Please
+          open this app on your iOS or Android device to record videos.
+        </Text>
+        <Pressable onPress={goBack} style={{ marginTop: 14, alignItems: "center" }}>
+          <Text
+            style={{
+              color: "white",
+              fontFamily: FONT_LEXEND_REGULAR,
+              opacity: 0.8,
+            }}
+          >
+            Back
+          </Text>
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
+
   if (!camPerm || !micPerm) {
     return <SafeAreaView style={{ flex: 1, backgroundColor: "black" }} />;
   }
@@ -444,7 +487,13 @@ export default function CameraUIScreen() {
             <Svg
               width={RING_SIZE}
               height={RING_SIZE}
-              style={{ position: "absolute", top: 0, left: 0 }}
+              style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                // rotate so progress starts at top (12 o'clock)
+                transform: [{ rotate: "-90deg" }],
+              }}
             >
               {/* Track */}
               <Circle
@@ -466,10 +515,6 @@ export default function CameraUIScreen() {
                 strokeDasharray={`${CIRCUMFERENCE} ${CIRCUMFERENCE}`}
                 strokeDashoffset={dashOffset}
                 strokeLinecap="round"
-                // rotate so it starts at top (12 o'clock)
-                originX={RING_SIZE / 2}
-                originY={RING_SIZE / 2}
-                rotation={-90}
               />
             </Svg>
 

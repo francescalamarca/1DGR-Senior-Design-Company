@@ -21,32 +21,37 @@
  *   (replaces Crimson + DM Mono ONLY in those sections)
  */
 
-import KeyboardScreen from "@/src/components/KeyboardScreen";
-import { RequireUserType } from "@/src/components/RequireUserType";
-import { useProfile } from "@/src/features/profile/profile.store";
-import { useSession } from "@/src/state/session";
-import { router, useFocusEffect } from "expo-router";
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
-  ActionSheetIOS,
-  Alert,
-  Animated,
-  Easing,
-  Platform,
+  View,
+  Text,
   Pressable,
   ScrollView,
-  StyleSheet,
-  Text,
+  Alert,
+  Platform,
   TextInput,
+  Modal,
+  StyleSheet,
+  Animated,
+  Easing,
   UIManager,
-  View,
 } from "react-native";
+import { router, useFocusEffect } from "expo-router";
+import { useActionSheet } from "@expo/react-native-action-sheet";
+import { Feather } from "@expo/vector-icons";
+import { RequireUserType } from "@/src/components/RequireUserType";
+import { useProfile } from "@/src/features/profile/profile.store";
+import * as Clipboard from "expo-clipboard";
+import type { Profile } from "@/src/features/profile/profile.types";
+import { aws_config } from "@/constants/aws-config";
+import { useSession } from "@/src/state/session";
+import KeyboardScreen from "@/src/components/KeyboardScreen";
+import { BrandColors, BrandFonts } from "@/src/theme/brand";
 
 const FONTS = {
-  LEXEND_REGULAR: "Lexend-Regular",
-  LEXEND_LIGHT: "Lexend-Light",
+  LEXEND_REGULAR: BrandFonts.lexendRegular,
+  LEXEND_LIGHT: BrandFonts.lexendLight,
   CRIMSON_REGULAR: "CrimsonText-Regular",
-  DM_MONO_LIGHT: "DMMono-Light",
 } as const;
 
 /** --- Typography helpers --- */
@@ -64,9 +69,14 @@ function LLText(props: React.ComponentProps<typeof Text>) {
 }
 function MText(props: React.ComponentProps<typeof Text>) {
   const { style, ...rest } = props;
-  return <Text {...rest} style={[{ fontFamily: FONTS.DM_MONO_LIGHT }, style]} />;
+  return <Text {...rest} style={[{ fontFamily: FONTS.LEXEND_LIGHT }, style]} />;
 }
 
+const ENABLE_SUPPORT_SECTION = false; // set true to bring back Share Profile section
+
+function makeId() {
+  return Math.random().toString(36).slice(2) + Date.now().toString(36);
+}
 
 function formatPhone(input: string) {
   let digits = (input || "").replace(/\D/g, "");
@@ -85,18 +95,22 @@ function formatPhone(input: string) {
 
 /** ---- Design tokens ---- */
 const COLORS = {
-  bg: "#fbfbfb",
+  bg: BrandColors.surfaceSubtle,
 
-  text: "#202020", // primary text
-  subtle: "#484848", // secondary text (readable)
-  divider: "#d9d9d9", // lines/borders (NOT text)
+  text: BrandColors.textPrimary, // primary text
+  subtle: BrandColors.textSecondary, // secondary text (readable)
+  divider: BrandColors.gray300, // lines/borders (NOT text)
 
-  pressed: "#f2f2f2",
-  inputBorder: "#d9d9d9",
+  pressed: BrandColors.gray100,
+  inputBorder: BrandColors.gray300,
 
   dangerText: "#8a2a2a",
   dangerPressed: "rgba(220,0,0,0.10)",
-  sectionOpenBg: "#efefef",
+  sectionOpenBg: BrandColors.gray100,
+  sectionHeaderBg: BrandColors.gray100,
+  sectionHeaderPressed: BrandColors.gray200,
+  primaryCtaBg: BrandColors.ctaPrimaryBg,
+  primaryCtaText: BrandColors.ctaPrimaryText,
 } as const;
 
 /** ✅ Dot-toggle colors (requested) */
@@ -114,7 +128,6 @@ const RADII = {
 
 const SPACING = {
   screenPad: 16,
-  footerPad: 12,
   headerPad: 12,
   rowPadX: 16,
   rowPadY: 16,
@@ -438,13 +451,13 @@ function InputRowLL({
 }
 
 function CircleIconButton({
-  icon,
+  iconName,
   onPress,
   disabled,
   danger,
   label,
 }: {
-  icon: string;
+  iconName: React.ComponentProps<typeof Feather>["name"];
   onPress: () => void;
   disabled?: boolean;
   danger?: boolean;
@@ -463,15 +476,11 @@ function CircleIconButton({
         disabled && styles.iconBtnDisabled,
       ]}
     >
-      <Text
-        style={{
-          fontFamily: FONTS.LEXEND_REGULAR,
-          fontSize: 18,
-          color: danger ? SHARE_CARD.dangerText : SHARE_CARD.text,
-        }}
-      >
-        {icon}
-      </Text>
+      <Feather
+        name={iconName}
+        size={18}
+        color={danger ? SHARE_CARD.dangerText : SHARE_CARD.text}
+      />
     </Pressable>
   );
 }
@@ -605,11 +614,13 @@ function AccordionHeader({
 // settings.tsx (PART 3/4)
 // =========================
 export default function SettingsScreen() {
+  const { showActionSheetWithOptions } = useActionSheet();
   const { accessToken } = useSession();
   const scrollRef = useRef<ScrollView>(null);
   const { profile, setProfile } = useProfile();
 
-  type SectionKey = "account" | "profile" | "support" | "about";
+
+  type SectionKey = "account" | "profile settings" | "support";
   const [openSection, setOpenSection] = useState<SectionKey | null>(null);
 
   useEffect(() => {
@@ -635,7 +646,6 @@ export default function SettingsScreen() {
     },
   }));
 
-  //these are all transferable to company, all components stay
   const [editingAccountInfo, setEditingAccountInfo] = useState(false);
   const [draftEmail, setDraftEmail] = useState(profile.email ?? "");
   const [draftPhone, setDraftPhone] = useState(() => formatPhone(profile.phoneNumber ?? ""));
@@ -648,55 +658,22 @@ export default function SettingsScreen() {
   const [draftContactUrl1Label, setDraftContactUrl1Label] = useState(profileContactUrl1Label);
   const [draftContactUrl2Label, setDraftContactUrl2Label] = useState(profileContactUrl2Label);
 
-  const profileNameSettingsRef = useRef(profile.nameDisplaySettings);
-  const profileContactSettingsRef = useRef(profile.contactDisplaySettings);
-  profileNameSettingsRef.current = profile.nameDisplaySettings;
-  profileContactSettingsRef.current = profile.contactDisplaySettings;
-  
   useFocusEffect(
     useCallback(() => {
       setDraftSettings({
-        nameDisplaySettings: profileNameSettingsRef.current,
-        contactDisplaySettings: profileContactSettingsRef.current ?? {
+        nameDisplaySettings: profile.nameDisplaySettings,
+        contactDisplaySettings: profile.contactDisplaySettings ?? {
           showEmail: false,
           showPhoneNumber: false,
           showUrl1: false,
           showUrl2: false,
         },
       });
+
       requestAnimationFrame(() => {
         scrollRef.current?.scrollTo({ y: 0, animated: false });
       });
-    }, []) // ✅ empty deps - reads latest values via refs
-  );
-  
-  const profileContactRef = useRef({
-    email: profile.email,
-    phoneNumber: profile.phoneNumber,
-    contactUrl1: profileContactUrl1,
-    contactUrl2: profileContactUrl2,
-    contactUrl1Label: profileContactUrl1Label,
-    contactUrl2Label: profileContactUrl2Label,
-  });
-  profileContactRef.current = {
-    email: profile.email,
-    phoneNumber: profile.phoneNumber,
-    contactUrl1: profileContactUrl1,
-    contactUrl2: profileContactUrl2,
-    contactUrl1Label: profileContactUrl1Label,
-    contactUrl2Label: profileContactUrl2Label,
-  };
-  
-  useFocusEffect(
-    useCallback(() => {
-      const c = profileContactRef.current;
-      setDraftEmail(c.email ?? "");
-      setDraftPhone(formatPhone(c.phoneNumber ?? ""));
-      setDraftContactUrl1(c.contactUrl1);
-      setDraftContactUrl2(c.contactUrl2);
-      setDraftContactUrl1Label(c.contactUrl1Label);
-      setDraftContactUrl2Label(c.contactUrl2Label);
-    }, []) // ✅ empty deps - reads latest values via refs
+    }, [profile.nameDisplaySettings, profile.contactDisplaySettings])
   );
 
   useFocusEffect(
@@ -783,28 +760,10 @@ export default function SettingsScreen() {
     setEditingAccountInfo(false);
   }
 
-  const showCompanyName = draftSettings.nameDisplaySettings.showCompanyName;
-
   const showEmailPublic = !!draftSettings.contactDisplaySettings.showEmail;
   const showPhonePublic = !!draftSettings.contactDisplaySettings.showPhoneNumber;
   const showUrl1Public = !!draftSettings.contactDisplaySettings.showUrl1;
   const showUrl2Public = !!draftSettings.contactDisplaySettings.showUrl2;
-
-  function setNameToggles(companyFull: boolean) {
-    //this is the correct logic because company name MUST be shown - always up
-    if (!companyFull) {
-      Alert.alert("Name display", "Company name must be enabled.");
-      return;
-    }
-
-    setDraftSettings((d) => ({
-      ...d,
-      nameDisplaySettings: {
-        ...d.nameDisplaySettings,
-        showCompanyName: companyFull,
-      },
-    }));
-  }
 
   function setContactToggles(nextShowEmail: boolean, nextShowPhone: boolean, nextShowUrl1: boolean, nextShowUrl2: boolean) {
     setDraftSettings((d) => ({
@@ -857,91 +816,46 @@ export default function SettingsScreen() {
       </LLText>
 
       <Pressable
-        onPress={() => {
-          setProfile((p) => ({
-            ...p,
-            nameDisplaySettings: draftSettings.nameDisplaySettings,
-            contactDisplaySettings: draftSettings.contactDisplaySettings,
-            email: draftEmail.trim().toLowerCase(),
-            phoneNumber: draftPhone.trim(),
-            contactUrl1: draftContactUrl1.trim(),
-            contactUrl2: draftContactUrl2.trim(),
-            contactUrl1Label: draftContactUrl1Label.trim() || "URL 1",
-            contactUrl2Label: draftContactUrl2Label.trim() || "URL 2",
-          }));
+        onPress={async () => {
+          if (!accessToken) return;
 
-          setEditingAccountInfo(false);
-          router.replace("/(companyUser)/profile");
-        }}
-        disabled={!canSaveTop}
-        style={[styles.headerRight, { opacity: canSaveTop ? 1 : 0.4 }]}
-        hitSlop={10}
-        accessibilityRole="button"
-        accessibilityLabel="Save settings"
-        accessibilityHint={canSaveTop ? "Saves your changes" : "No changes to save"}
-      >
-        <LText style={styles.headerActionText}>Save</LText>
-      </Pressable>
-    </View>
-  );
-
-  /**
-   * I am making this on my own because I need a footer that has the contact information at all times
-   * want this to be clean format as is on Figma
-   */
-  const Footer = (
-    <View style={styles.footer}>
-      <Pressable
-        onPress={() => {
-          setDraftSettings({
-            nameDisplaySettings: profile.nameDisplaySettings,
-            contactDisplaySettings:
-              profile.contactDisplaySettings ?? {
-                showEmail: false,
-                showPhoneNumber: false,
-                showUrl1: false,
-                showUrl2: false,
+          try {
+            const res = await fetch(`${aws_config.apiBaseUrl}/update-profile`, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: accessToken,
               },
-          });
+              body: JSON.stringify({
+                email: draftEmail.trim().toLowerCase(),
+                phoneNumber: draftPhone.trim(),
+                urls: [
+                  { title: draftContactUrl1Label, url: draftContactUrl1 },
+                  { title: draftContactUrl2Label, url: draftContactUrl2 }
+                ].filter(u => u.url),
+                contactDisplaySettings: draftSettings.contactDisplaySettings,
+              }),
+            });
 
-          setDraftEmail(profile.email ?? "");
-          setDraftPhone(formatPhone(profile.phoneNumber ?? ""));
-          setDraftContactUrl1(profileContactUrl1);
-          setDraftContactUrl2(profileContactUrl2);
-          setDraftContactUrl1Label(profileContactUrl1Label);
-          setDraftContactUrl2Label(profileContactUrl2Label);
-          setEditingAccountInfo(false);
+            if (!res.ok) throw new Error("Failed to update profile");
 
-          router.replace("/(companyUser)/profile");
-        }}
-        style={styles.headerLeft}
-        hitSlop={10}
-        accessibilityRole="button"
-        accessibilityLabel="Cancel settings"
-      >
-        <LText style={styles.headerActionText}>Cancel</LText>
-      </Pressable>
+            setProfile((p) => ({
+              ...p,
+              nameDisplaySettings: draftSettings.nameDisplaySettings,
+              contactDisplaySettings: draftSettings.contactDisplaySettings,
+              email: draftEmail.trim().toLowerCase(),
+              phoneNumber: draftPhone.trim(),
+              contactUrl1: draftContactUrl1.trim(),
+              contactUrl2: draftContactUrl2.trim(),
+              contactUrl1Label: draftContactUrl1Label.trim() || "URL 1",
+              contactUrl2Label: draftContactUrl2Label.trim() || "URL 2",
+            }));
 
-      <LLText pointerEvents="none" style={styles.headerTitle}>
-        Settings & Privacy
-      </LLText>
+            router.replace("/(companyUser)/profile");
 
-      <Pressable
-        onPress={() => {
-          setProfile((p) => ({
-            ...p,
-            nameDisplaySettings: draftSettings.nameDisplaySettings,
-            contactDisplaySettings: draftSettings.contactDisplaySettings,
-            email: draftEmail.trim().toLowerCase(),
-            phoneNumber: draftPhone.trim(),
-            contactUrl1: draftContactUrl1.trim(),
-            contactUrl2: draftContactUrl2.trim(),
-            contactUrl1Label: draftContactUrl1Label.trim() || "URL 1",
-            contactUrl2Label: draftContactUrl2Label.trim() || "URL 2",
-          }));
-
-          setEditingAccountInfo(false);
-          router.replace("/(companyUser)/profile");
+          } catch {
+            Alert.alert("Error", "Failed to save settings.");
+          }
         }}
         disabled={!canSaveTop}
         style={[styles.headerRight, { opacity: canSaveTop ? 1 : 0.4 }]}
@@ -968,44 +882,15 @@ export default function SettingsScreen() {
         contentContainerStyle={styles.screenContent}
       >
         <View style={styles.groupCard}>
-          <AccordionHeader
-            title="ACCOUNT"
-            open={openSection === "account"}
-            onToggle={() => toggleSection("account")}
-            isFirst
-          />                 
-                 
-
-          <AccordionHeader title="PROFILE DISPLAY" open={openSection === "profile"} onToggle={() => toggleSection("profile")} />
-
-          {/* ✅ PROFILE DISPLAY now uses Lexend Light components */}
-          <Collapsible open={openSection === "profile"} openBg>
-            <FullWidthStack>
-              <SwitchRowLL
-                title="Show company name"
-                subtitle="Displays your company name."
-                value={showCompanyName}
-                onValueChange={(v) => setNameToggles(v)} //idk about that one
-                accessibilityLabel="Show company name"
+          <>
+              <AccordionHeader
+                title="Account"
+                open={openSection === "account"}
+                onToggle={() => toggleSection("account")}
+                isFirst
               />
 
-              <View style={[styles.row, { justifyContent: "space-between" }]}>
-                <LLText style={styles.labelTiny}>Preview</LLText>
-                <LLText style={[styles.previewName, { textAlign: "right" }]} numberOfLines={1}>
-                  {profile.companyName}
-                </LLText>
-              </View>
-            </FullWidthStack>
-          </Collapsible>
-
-          <AccordionHeader
-            title="ACCOUNT INFORMATION"
-            open={openSection === "account"}
-            onToggle={() => toggleSection("account")}
-          />
-
-          {/* ✅ ACCOUNT INFORMATION now uses Lexend Light components */}
-          <Collapsible open={openSection === "account"} openBg>
+              <Collapsible open={openSection === "account"} openBg>
             <FullWidthStack>
               {/* 0) Title row */}
               <View style={styles.linkItemWrap}>
@@ -1014,49 +899,7 @@ export default function SettingsScreen() {
                 </View>
               </View>
 
-              {/* 1) Show email */}
-              <View style={[styles.linkItemWrap, styles.linkItemDivider]}>
-                <SwitchRowLL
-                  title="Show email"
-                  subtitle={`Current: ${profile.email?.trim() ? profile.email : "—"}`}
-                  value={showEmailPublic}
-                  onValueChange={(v) => setContactToggles(v, showPhonePublic, showUrl1Public, showUrl2Public)}
-                  accessibilityLabel="Show email publicly"
-                />
-              </View>
-
-              {/* 2) Show phone */}
-              <View style={[styles.linkItemWrap, styles.linkItemDivider]}>
-                <SwitchRowLL
-                  title="Show phone number"
-                  subtitle={`Current: ${profile.phoneNumber?.trim() ? profile.phoneNumber : ""}`}
-                  value={showPhonePublic}
-                  onValueChange={(v) => setContactToggles(showEmailPublic, v, showUrl1Public, showUrl2Public)}
-                  accessibilityLabel="Show phone number publicly"
-                />
-              </View>
-
-              <View style={[styles.linkItemWrap, styles.linkItemDivider]}>
-                <SwitchRowLL
-                  title={`Show ${draftContactUrl1Label || "URL 1"}`}
-                  subtitle={`Current: ${draftContactUrl1.trim() ? draftContactUrl1 : "—"}`}
-                  value={showUrl1Public}
-                  onValueChange={(v) => setContactToggles(showEmailPublic, showPhonePublic, v, showUrl2Public)}
-                  accessibilityLabel="Show first URL publicly"
-                />
-              </View>
-
-              <View style={[styles.linkItemWrap, styles.linkItemDivider]}>
-                <SwitchRowLL
-                  title={`Show ${draftContactUrl2Label || "URL 2"}`}
-                  subtitle={`Current: ${draftContactUrl2.trim() ? draftContactUrl2 : "—"}`}
-                  value={showUrl2Public}
-                  onValueChange={(v) => setContactToggles(showEmailPublic, showPhonePublic, showUrl1Public, v)}
-                  accessibilityLabel="Show second URL publicly"
-                />
-              </View>
-
-              {/* 3) Account information header row */}
+              {/* 1) Account information header row */}
               <View style={[styles.linkItemWrap, styles.linkItemDivider]}>
                 <View style={[styles.row, { justifyContent: "space-between" }]}>
                   <LLText style={styles.rowTitle}>Account information</LLText>
@@ -1186,14 +1029,44 @@ export default function SettingsScreen() {
 
             </FullWidthStack>
           </Collapsible>
+              
+          <AccordionHeader title="Profile Display" open={openSection === "profile settings"} onToggle={() => toggleSection("profile settings")} />
+
+          {/* PROFILE DISPLAY now uses Lexend Light components */}
+          <Collapsible open={openSection === "profile settings"} openBg>
+            <View style={styles.accordionBodyPad}>
+                  <LLText style={styles.bodyDescription}>
+                    {`Profile Settings - Light, dark, system aligned`}
+                  </LLText>
+                </View>`
+          </Collapsible>
+
+          <AccordionHeader
+            title="Support"
+            open={openSection === "support"}
+            onToggle={() => toggleSection("support")}
+          />
+
+          {/* support settings, for contacting admin, deleting account, etc */}
+          <Collapsible open={openSection === "support"} openBg>
+            <View style={styles.accordionBodyPad}>
+                  <LLText style={styles.bodyDescription}>
+                    {`support settings, for contacting admin, deleting account, etc `}
+                  </LLText>
+                </View>`
+          </Collapsible>
+
+          </>
         </View>
       </KeyboardScreen>
     </>
   );
 }
+
 // =========================
 // settings.tsx (PART 4/4)
 // =========================
+
 const styles = StyleSheet.create({
   screenContent: {
     paddingHorizontal: 0,
@@ -1220,31 +1093,6 @@ const styles = StyleSheet.create({
     zIndex: 1,
   },
   headerActionText: {
-    fontFamily: FONTS.LEXEND_LIGHT,
-    fontSize: 14,
-    fontWeight: "400",
-    letterSpacing: 0.2,
-    color: COLORS.text,
-  },
-
-  /** Footer (taller like the sample) */
-  footer: {
-    height: 76,
-    paddingHorizontal: SPACING.footerPad,
-    justifyContent: "center",
-    borderTopWidth: 1, //change for footer
-    borderTopColor: "rgba(0,0,0,0.06)", //changes for footer
-    backgroundColor: COLORS.bg,
-  },
-  footerLeft: { position: "absolute", left: SPACING.headerPad, zIndex: 2 },
-  footerRight: { position: "absolute", right: SPACING.headerPad, zIndex: 2 },
-  footerTitle: {
-    fontSize: 20,
-    fontWeight: "400",
-    textAlign: "center",
-    zIndex: 1,
-  },
-  footerActionText: {
     fontFamily: FONTS.LEXEND_LIGHT,
     fontSize: 14,
     fontWeight: "400",
@@ -1285,17 +1133,17 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    backgroundColor: COLORS.bg,
+    backgroundColor: COLORS.sectionHeaderBg,
   },
 
   /** ✅ stays highlighted while open */
   accordionHeaderRowOpen: {
-    backgroundColor: "rgba(0,0,0,0.045)",
+    backgroundColor: COLORS.sectionHeaderBg,
   },
 
   /** ✅ press feedback */
   accordionHeaderPressed: {
-    backgroundColor: "rgba(0,0,0,0.07)",
+    backgroundColor: COLORS.sectionHeaderPressed,
   },
 
   accordionTitle: {
@@ -1452,7 +1300,7 @@ const styles = StyleSheet.create({
     borderRadius: RADII.md,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    fontFamily: FONTS.CRIMSON_REGULAR, // default input font (InputRowLL overrides this inline)
+    fontFamily: FONTS.LEXEND_LIGHT,
     backgroundColor: COLORS.bg,
   },
 
@@ -1463,12 +1311,17 @@ const styles = StyleSheet.create({
     borderRadius: RADII.md,
     paddingVertical: 14,
     alignItems: "center",
-    backgroundColor: COLORS.bg,
-    borderColor: "rgba(0,0,0,0.22)",
+    backgroundColor: COLORS.primaryCtaBg,
+    borderColor: COLORS.primaryCtaBg,
   },
-  primaryButtonPressed: { backgroundColor: COLORS.pressed },
+  primaryButtonPressed: { opacity: 0.88 },
   primaryButtonDisabled: { opacity: 0.5 },
-  primaryButtonText: { fontWeight: "600" },
+  primaryButtonText: {
+    fontFamily: FONTS.LEXEND_REGULAR,
+    fontSize: 15,
+    fontWeight: "600",
+    color: COLORS.primaryCtaText,
+  },
   emptyState: {
     color: COLORS.subtle,
     marginTop: 14,
@@ -1479,7 +1332,7 @@ const styles = StyleSheet.create({
     width: "100%",
     backgroundColor: "transparent",
     paddingHorizontal: SPACING.rowPadX,
-    paddingVertical: SPACING.rowPadY,
+    paddingVertical: 14,
   },
   shareTitle: { fontSize: 16, fontWeight: "300", color: COLORS.text },
   renameInput: {
@@ -1489,16 +1342,16 @@ const styles = StyleSheet.create({
     borderRadius: RADII.md,
     paddingVertical: 10,
     paddingHorizontal: 12,
-    fontFamily: FONTS.CRIMSON_REGULAR,
+    fontFamily: FONTS.LEXEND_LIGHT,
     fontWeight: "600",
   },
-  shareActionsRow: { flexDirection: "row", alignItems: "center", marginTop: 14 },
-  renameFooter: { marginTop: 12, flexDirection: "row", justifyContent: "flex-end" },
+  shareActionsRow: { flexDirection: "row", alignItems: "center", marginTop: 10 },
+  renameFooter: { marginTop: 10, flexDirection: "row", justifyContent: "flex-end" },
   textBtn: { marginLeft: 14 },
   textBtnLabel: { opacity: 0.8, fontWeight: "600" },
 
   /** Icon buttons */
-  iconBtn: { width: 42, height: 42, borderRadius: RADII.pill, alignItems: "center", justifyContent: "center" },
+  iconBtn: { width: 40, height: 40, borderRadius: RADII.pill, alignItems: "center", justifyContent: "center" },
   iconBtnPressed: { backgroundColor: "rgba(0,0,0,0.06)" },
   iconBtnDangerPressed: { backgroundColor: COLORS.dangerPressed },
   iconBtnDisabled: { opacity: 0.35 },
