@@ -3,7 +3,7 @@ import { RequireUserType } from "@/src/components/RequireUserType";
 import {
   HIGHER_ED_ITEM_GAP,
   softWrapLongTokens,
-  useProfileScreenData,
+  useCompanyProfileScreenData,
   type QualRow,
   type QualRowValue,
 } from "@/src/features/profile/edit/profileScreen.shared";
@@ -134,13 +134,9 @@ export default function ProfileWebScreen() {
     refreshing,
     fetchLatestProfile,
     displayName,
-    canToggleName,
-    toggleDisplayName,
-    headlineText,
-    hookText,
-    qualCol1,
-    qualCol2,
-    workTypeDisplay,
+    missionStatement,
+    industry,
+    locations,
     videos,
     contactEmail,
     contactPhone,
@@ -151,7 +147,16 @@ export default function ProfileWebScreen() {
     showUrl1,
     showUrl2,
     openVideo,
-  } = useProfileScreenData();
+  } = useCompanyProfileScreenData();
+
+  // Company-specific derived values (replacing individual-user fields)
+  const canToggleName = false;
+  const toggleDisplayName = () => {};
+  const headlineText = industry || "";
+  const hookText = missionStatement || "";
+  const qualCol1: any[] = [];
+  const qualCol2: any[] = locations.map((loc) => ({ label: "Location", value: loc }));
+  const workTypeDisplay = String((profile as any).workType ?? "").trim();
 
   const [liveQrModalOpen, setLiveQrModalOpen] = useState(false);
   const [liveQrCopyToken, setLiveQrCopyToken] = useState<number | undefined>(undefined);

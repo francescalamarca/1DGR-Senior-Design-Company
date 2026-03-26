@@ -18,7 +18,7 @@
  */
 import { aws_config } from "@/constants/aws-config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 import type {
   ContactDisplaySettings,
   HigherEdEntry,
@@ -396,7 +396,7 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
    * - Recomputes display name
    * - Persists deltas to AsyncStorage
    */
-  const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
+  const updateProfileState = useCallback((nextOrUpdater: React.SetStateAction<Profile>) => {
     _setProfile((prev) => {
       const next =
         typeof nextOrUpdater === "function"
@@ -449,8 +449,8 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
 
       return finalProfile;
     });
-  };
-  
+  }, []); // _setProfile is stable (from useState), so no deps needed
+
 
 
   /**

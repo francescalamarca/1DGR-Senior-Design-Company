@@ -141,23 +141,31 @@ export function useProfileEditController() {
   function handleSave() {
     const apiPayload = mapDraftToApiPayload(draft);
 
-    // Navigate first — always, regardless of token state.
-    router.navigate("/(companyUser)/profile");
-
-    // Update local store — use CDN URL if upload succeeded, local URI as fallback, else keep existing.
+    // Update local store FIRST so the profile screen shows the new data immediately.
     setProfile((p: any) => ({
       ...p,
-      ...draft,
+      companyName: draft.companyName || (p as any).companyName || "",
+      missionStatement: draft.missionStatement || (p as any).missionStatement || "",
+      benefitsSummary: draft.benefitsSummary || (p as any).benefitsSummary || "",
+      coreValues: (draft.coreValues && draft.coreValues.length > 0) ? draft.coreValues : ((p as any).coreValues ?? []),
+      openRoles: (draft.openRoles && draft.openRoles.length > 0) ? draft.openRoles : ((p as any).openRoles ?? []),
+      industry: draft.industry || (p as any).industry || "",
+      locations: (draft.locations && draft.locations.length > 0) ? draft.locations : ((p as any).locations ?? []),
+      workType: draft.workType || (p as any).workType || "",
+      businessAge: draft.businessAge || (p as any).businessAge || "",
+      customBackgroundColor: draft.customBackgroundColor || (p as any).customBackgroundColor || "",
       avatarImageUri:
         buildCdnUrlFromKey(draft.avatarImageUri ?? "") ||
         avatarLocalUri ||
         (p as any).avatarImageUri,
     }));
 
+    // Navigate after updating state so the profile screen renders with the new name.
+    router.navigate("/(companyUser)/profile");
+
     // Backend sync only if we have a token.
     if (accessToken) {
       updateUserProfile(apiPayload as any, accessToken)
-        .then(() => refreshProfile(accessToken))
         .catch((err) => console.warn("[handleSave] backend sync failed:", err));
     } else {
       console.warn("[handleSave] No access token — local save only.");

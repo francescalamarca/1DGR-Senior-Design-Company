@@ -624,17 +624,17 @@ export function useCompanyProfileScreenData() {
   
         setProfile((prev: any) => ({
           ...prev,
-          companyName: user?.company_name ?? user?.companyName ?? prev.companyName ?? "",
-          email: user?.email ?? "",
-          phoneNumber: user?.phone_number ?? "",
-          missionStatement: user?.mission_statement ?? user?.missionStatement ?? prev.missionStatement ?? "",
-          benefitsSummary: user?.benefits_summary ?? user?.benefitsSummary ?? prev.benefitsSummary ?? "",
+          companyName: user?.company_name || user?.companyName || prev.companyName || "",
+          email: user?.email || prev.email || "",
+          phoneNumber: user?.phone_number || prev.phoneNumber || "",
+          missionStatement: user?.mission_statement || user?.missionStatement || prev.missionStatement || "",
+          benefitsSummary: user?.benefits_summary || user?.benefitsSummary || prev.benefitsSummary || "",
           coreValues: Array.isArray(user?.core_values) ? user.core_values : (Array.isArray(user?.coreValues) ? user.coreValues : prev.coreValues ?? []),
           openRoles: Array.isArray(user?.open_roles) ? user.open_roles : (Array.isArray(user?.openRoles) ? user.openRoles : prev.openRoles ?? []),
-          industry: user?.industry ?? prev.industry ?? "",
+          industry: user?.industry || prev.industry || "",
           locations: Array.isArray(user?.locations) ? user.locations : prev.locations ?? [],
-          workType: user?.work_type ?? user?.workType ?? prev.workType ?? "",
-          businessAge: user?.business_age ?? user?.businessAge ?? prev.businessAge ?? "",
+          workType: user?.work_type || user?.workType || prev.workType || "",
+          businessAge: user?.business_age || user?.businessAge || prev.businessAge || "",
           avatarImageUri: toCloudFrontUrl(user?.avatar_image_url ?? user?.avatar_image_key ?? ""),
           avatarVideoUri: toCloudFrontUrl(user?.avatar_video_url ?? user?.avatar_video_key ?? ""),
           media: (Array.isArray(videoLibrary) ? videoLibrary : [])
@@ -658,8 +658,6 @@ export function useCompanyProfileScreenData() {
   
     useFocusEffect(
       useCallback(() => {
-        if (didFetchOnceRef.current) return;
-        didFetchOnceRef.current = true;
         fetchLatestProfile();
       }, [fetchLatestProfile])
     );
