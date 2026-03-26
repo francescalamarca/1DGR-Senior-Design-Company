@@ -13,19 +13,17 @@ import { UI, styles } from "./profileEdit.styles";
 import {
   AvatarSection,
   BackgroundColorSection,
+  BenefitsSection,
   CoreValuesPickerModal,
   CoreValuesSection,
   IndustryTypeSection,
   MissionSection,
   NameSection,
   ProfileMediaResetSection,
+  RoleFormModal,
+  RolesSection,
   SinglePickerModal,
   WorkTypePickerModal,
-  CoreValuesPickerModal,
-  BackgroundColorSection,
-  BenefitsSection,
-  RolesSection,
-  RoleFormModal,
 } from "./profileEdit.ui";
 import { useProfileEditController } from "./useProfileEditController";
 

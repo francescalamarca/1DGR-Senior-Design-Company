@@ -14,7 +14,9 @@
  * Supported user types for routing and access control.
  * `null` represents a logged-out or uninitialized session.
  */
-import React, { createContext, useContext, useMemo, useState } from "react";
+import { storage } from "@/src/platform/storage";
+import { getCurrentSessionToken, signOut } from "@/src/utils/auth";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 
 type UserType = "home" | "company" | null;
 
@@ -24,12 +26,18 @@ type UserType = "home" | "company" | null;
  * Used by routing guards, layouts, and auth-dependent screens.
  */
 type SessionContextValue = {
-    userType: UserType;
-    setUserType: (t: UserType) => void;
+  userType: UserType;
+  setUserType: (t: UserType) => void;
     accessToken: string | null;
     setAccessToken: (token: string | null) => void;
-    logout: () => void;
+  
+  isHydrated: boolean;
+  logout: () => Promise<void>;
 };
+
+const STORAGE_KEYS = {
+    USER_TYPE: "session:userType",
+} as const;
 
 /**
  * React context holding the current session state.
@@ -44,29 +52,74 @@ const SessionContext = createContext<SessionContextValue | null>(null);
  * a centralized logout method that clears both.
  */
 export function SessionProvider({ children }: { children: React.ReactNode }) {
-    const [userType, setUserType] = useState<UserType>("company"); //hardcoding this here to work for our side
+    const [userType, setUserType] = useState<UserType>(null);
     const [accessToken, setAccessToken] = useState<string | null>(null);
+    const [isHydrated, setIsHydrated] = useState(false);
+
+    useEffect(() => {
+        let alive = true;
+
+        const hydrateSession = async () => {
+            try {
+                const [token, storedUserType] = await Promise.all([
+                    getCurrentSessionToken(),
+                    storage.getItem(STORAGE_KEYS.USER_TYPE),
+                ]);
+
+                if (!alive) return;
+
+                if (token && token.length > 0) {
+                    setAccessToken(token);
+                } else {
+                    setAccessToken(null);
+                }
+                if (storedUserType === "home" || storedUserType === "company") {
+                    setUserType(storedUserType);
+                }
+            } catch {
+                // no-op: app should continue even if local session restore fails
+            } finally {
+                if (alive) setIsHydrated(true);
+            }
+        };
+
+        hydrateSession();
+
+        return () => {
+            alive = false;
+        };
+    }, []);
+
+    const setUserTypeWithPersist = useCallback((t: UserType) => {
+        setUserType(t);
+        if (t) void storage.setItem(STORAGE_KEYS.USER_TYPE, t);
+        else void storage.removeItem(STORAGE_KEYS.USER_TYPE);
+    }, []);
 
      /**
      * Memoized context value to avoid unnecessary re-renders
      * when unrelated parts of the app update.
      */
-    const value = useMemo(
-        () => ({
-            userType,
-            setUserType,
-            accessToken,
-            setAccessToken,
+    const value = useMemo(() => ({
+        userType,
+        setUserType: setUserTypeWithPersist,
+        accessToken,
+        setAccessToken,
+        isHydrated,
              /**
              * Clears all session state.
              * Used when logging out or invalidating a session.
              */
-            logout: () => {
-                setUserType(null);
-                setAccessToken(null);
-            },
+            logout: async () => {
+                try {
+                    await signOut();
+                } finally {
+                    setUserTypeWithPersist(null);
+                    setAccessToken(null);
+                }
+            }
         }),
-        [userType, accessToken]
+        [userType, accessToken, isHydrated, setUserTypeWithPersist]
     );
 
     return <SessionContext.Provider value={value}>{children}</SessionContext.Provider>;

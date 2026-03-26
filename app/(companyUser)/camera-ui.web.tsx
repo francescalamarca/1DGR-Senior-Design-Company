@@ -162,6 +162,7 @@ export default function CameraUIScreen() {
           videoPreviewRef.current.play().catch(() => {});
         }
         setCameraReady(true);
+        console.log(stream.getAudioTracks())
       } catch {
         if (mounted) setPermDenied(true);
       }
@@ -169,6 +170,7 @@ export default function CameraUIScreen() {
 
     startCamera();
 
+    
     return () => {
       mounted = false;
       streamRef.current?.getTracks().forEach((t) => t.stop());
@@ -233,6 +235,15 @@ export default function CameraUIScreen() {
       if (e.data.size > 0) chunksRef.current.push(e.data);
     };
 
+    console.log(
+      "Audio tracks at stop:",
+      streamRef.current?.getAudioTracks().map(t => ({
+        enabled: t.enabled,
+        readyState: t.readyState,
+        label: t.label
+      }))
+    );
+    
     recorder.onstop = () => {
       const type = mimeType.split(";")[0] || "video/webm";
       const blob = new Blob(chunksRef.current, { type });

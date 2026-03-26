@@ -18,40 +18,86 @@
  */
 import { aws_config } from "@/constants/aws-config";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "react";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import type {
   ContactDisplaySettings,
+  HigherEdEntry,
   LibraryVideo,
   NameDisplaySettings,
   Profile,
+  ValueSummaryItem,
 } from "./profile.types";
 
 /** ======================
- *  AsyncStorage keys - THESE WILL HAVE TO CHANGE FOR COMPANY THINGS
+ *  AsyncStorage keys
  *  ====================== */
 const STORAGE_KEYS = {
   NAME_DISPLAY_SETTINGS: "@1dgr_nameDisplaySettings",
   CONTACT_DISPLAY_SETTINGS: "@1dgr_contactDisplaySettings",
   VIDEO_LIBRARY: "@1dgr_videoLibrary",
   DELETED_VIDEO_LIBRARY: "@1dgr_deletedVideoLibrary",
+  SHARE_LINKS: "@1dgr_shareLinks",
 };
 
-function normalizeNameToggles(s?: NameDisplaySettings): NameDisplaySettings {
-  return {
-    showCompanyName: s?.showCompanyName ?? true,
-  };
+/** ======================
+ *  Name helpers
+ *  ====================== */
+function getLegalFullName(p: Pick<Profile, "legalFirstName" | "legalMiddleName" | "legalLastName">) {
+  const first = (p.legalFirstName ?? "").trim();
+  const middle = (p.legalMiddleName ?? "").trim();
+  const last = (p.legalLastName ?? "").trim();
+  return `${first}${middle ? ` ${middle}` : ""}${last ? ` ${last}` : ""}`.trim();
 }
 
-function normalizeContactToggles(
-  s?: ContactDisplaySettings,
-): ContactDisplaySettings {
+/**
+ * Resolves the displayed name based on:
+ * - preferredName / legal name parts
+ * - nameDisplaySettings toggles + "firstWhenBothOn"
+ */
+function getDisplayName(
+  p: Pick<Profile, "preferredName" | "legalFirstName" | "legalMiddleName" | "legalLastName" | "nameDisplaySettings">
+) {
+  const legal = getLegalFullName(p).trim();
+  const preferred = (p.preferredName ?? "").trim();
+
+  const { showPreferredName, showLegalName, firstWhenBothOn } = p.nameDisplaySettings;
+ 
+  // Safety: never allow a state where both are "off"
+  const safeShowPreferred = showPreferredName || !showLegalName;
+  const safeShowLegal = showLegalName || !showPreferredName;
+  
+  // If both are enabled, pick the "first" preference, then fall back to the other.
+  if (safeShowPreferred && safeShowLegal) {
+    const first = firstWhenBothOn === "legal" ? legal : preferred;
+    const second = firstWhenBothOn === "legal" ? preferred : legal;
+
+    if (first.length > 0) return first;
+    if (second.length > 0) return second;
+    return "Your Name";
+  }
+
+  if (safeShowPreferred && preferred.length > 0) return preferred;
+  if (safeShowLegal && legal.length > 0) return legal;
+
+  return "Your Name";
+}
+
+/**
+ * Ensures name toggles are always valid:
+ * - If both toggles are off, default to preferred name ON.
+ * - Ensures firstWhenBothOn always exists.
+ */
+function normalizeNameToggles(s: NameDisplaySettings): NameDisplaySettings {
+  const firstWhenBothOn = s.firstWhenBothOn ?? "preferred";
+
+  if (!s.showPreferredName && !s.showLegalName) {
+    return { showPreferredName: true, showLegalName: false, firstWhenBothOn };
+  }
+
+  return { ...s, firstWhenBothOn };
+}
+
+function normalizeContactToggles(s?: ContactDisplaySettings): ContactDisplaySettings {
   return {
     showEmail: !!s?.showEmail,
     showPhoneNumber: !!s?.showPhoneNumber,
@@ -60,9 +106,23 @@ function normalizeContactToggles(
   };
 }
 
+
 /** ======================
- *  Immutable DOB helper - maybe lets change this to business age helper
+ *  Immutable DOB helper
  *  ====================== */
+/**
+ * dateOfBirth can be set once, then becomes immutable.
+ * - If prev had a DOB, keep it.
+ * - Otherwise accept next's DOB.
+ */
+function lockDateOfBirth(prev: Profile, next: Profile): Profile {
+  const prevDob = (prev.dateOfBirth ?? "").trim();
+  const nextDob = (next.dateOfBirth ?? "").trim();
+
+  if (prevDob.length > 0) return { ...next, dateOfBirth: prevDob };
+  return { ...next, dateOfBirth: nextDob };
+}
+
 
 /** ======================
  *  URL/key helper
@@ -83,6 +143,7 @@ function extractS3KeyFromUrl(urlOrKey: string) {
   }
 }
 
+
 /** ======================
  *  Initial Profile
  *  ====================== */
@@ -93,14 +154,7 @@ function extractS3KeyFromUrl(urlOrKey: string) {
  * - videoLibrary / deletedVideoLibrary are canonical lists
  */
 const initialProfileBase = {
-  companyName: "",
-  missionStatement: "",
-  coreValues: [],
-  locations: [],
-  currentEmployees: [],
-  industry: "",
-  benefitsSummary: "",
-  openRoles: [],
+  bio: "",
   avatarImageUri: "",
   avatarVideoUri: "",
   // ✅ profile slots (NOT the library)
@@ -117,12 +171,15 @@ const initialProfileBase = {
   // ✅ soft-deleted library list (recover screen)
   deletedVideoLibrary: [] as LibraryVideo[],
 
+  // ✅ NEW: Higher Education
+  higherEducation: [] as HigherEdEntry[],
+
   email: "",
   phoneNumber: "",
   contactUrl1: "",
   contactUrl2: "",
 
-  customBackgroundColor: "",
+  linkedinUrl: "",
 };
 
 /** ======================
@@ -135,28 +192,22 @@ async function loadPersistedSettings() {
       contactSerialized,
       videoSerialized,
       deletedVideoSerialized,
+      shareLinksSerialized,
     ] = await Promise.all([
       AsyncStorage.getItem(STORAGE_KEYS.NAME_DISPLAY_SETTINGS),
       AsyncStorage.getItem(STORAGE_KEYS.CONTACT_DISPLAY_SETTINGS),
       AsyncStorage.getItem(STORAGE_KEYS.VIDEO_LIBRARY),
       AsyncStorage.getItem(STORAGE_KEYS.DELETED_VIDEO_LIBRARY),
+      AsyncStorage.getItem(STORAGE_KEYS.SHARE_LINKS),
     ]);
 
     const nameSettings = nameSerialized ? JSON.parse(nameSerialized) : null;
-    const contactSettings = contactSerialized
-      ? JSON.parse(contactSerialized)
-      : null;
+    const contactSettings = contactSerialized ? JSON.parse(contactSerialized) : null;
     const videoLibrary = videoSerialized ? JSON.parse(videoSerialized) : null;
-    const deletedVideoLibrary = deletedVideoSerialized
-      ? JSON.parse(deletedVideoSerialized)
-      : null;
+    const deletedVideoLibrary = deletedVideoSerialized ? JSON.parse(deletedVideoSerialized) : null;
+    const shareLinks = shareLinksSerialized ? JSON.parse(shareLinksSerialized) : null;
 
-    return {
-      nameSettings,
-      contactSettings,
-      videoLibrary,
-      deletedVideoLibrary,
-    };
+    return { nameSettings, contactSettings, videoLibrary, deletedVideoLibrary, shareLinks };
   } catch (error) {
     console.error("[loadPersistedSettings] Error:", error);
     return {
@@ -164,17 +215,12 @@ async function loadPersistedSettings() {
       contactSettings: null,
       videoLibrary: null,
       deletedVideoLibrary: null,
+      shareLinks: null,
     };
   }
 }
 
-function getDisplayName(
-  p: Pick<Profile, "companyName" | "nameDisplaySettings">
-) {
-  return p.companyName ?? "";
-}
-
-// Helper: Save settings to AsyncStorage
+// ✅ Helper: Save settings to AsyncStorage
 async function saveNameDisplaySettings(settings: NameDisplaySettings) {
   try {
     await AsyncStorage.setItem(STORAGE_KEYS.NAME_DISPLAY_SETTINGS, JSON.stringify(settings));
@@ -185,41 +231,46 @@ async function saveNameDisplaySettings(settings: NameDisplaySettings) {
 
 async function saveContactDisplaySettings(settings: ContactDisplaySettings) {
   try {
-    await AsyncStorage.setItem(
-      STORAGE_KEYS.CONTACT_DISPLAY_SETTINGS,
-      JSON.stringify(settings),
-    );
+    await AsyncStorage.setItem(STORAGE_KEYS.CONTACT_DISPLAY_SETTINGS, JSON.stringify(settings));
   } catch (error) {
     console.error("[saveContactDisplaySettings] Error:", error);
   }
 }
 
-async function saveVideoLibraries(
-  videoLibrary: LibraryVideo[],
-  deletedVideoLibrary: LibraryVideo[],
-) {
+async function saveVideoLibraries(videoLibrary: LibraryVideo[], deletedVideoLibrary: LibraryVideo[]) {
   try {
     await Promise.all([
-      AsyncStorage.setItem(
-        STORAGE_KEYS.VIDEO_LIBRARY,
-        JSON.stringify(videoLibrary),
-      ),
-      AsyncStorage.setItem(
-        STORAGE_KEYS.DELETED_VIDEO_LIBRARY,
-        JSON.stringify(deletedVideoLibrary),
-      ),
+      AsyncStorage.setItem(STORAGE_KEYS.VIDEO_LIBRARY, JSON.stringify(videoLibrary)),
+      AsyncStorage.setItem(STORAGE_KEYS.DELETED_VIDEO_LIBRARY, JSON.stringify(deletedVideoLibrary)),
     ]);
   } catch (error) {
     console.error("[saveVideoLibraries] Error:", error);
   }
 }
 
+async function saveShareLinks(shareLinks: any[] | undefined) {
+  try {
+    await AsyncStorage.setItem(STORAGE_KEYS.SHARE_LINKS, JSON.stringify(shareLinks || []));
+  } catch (error) {
+    console.error("[saveShareLinks] Error:", error);
+  }
+}
+
 const initialProfile: Profile = {
+  name: "Your Name",
   ...initialProfileBase,
 
+  legalFirstName: "",
+  legalLastName: "",
+  legalMiddleName: "",
+  preferredName: "Your Name",
   nameDisplaySettings: {
-    showCompanyName: true,
+    showPreferredName: true,
+    showLegalName: false,
+    firstWhenBothOn: "preferred",
   },
+
+  dateOfBirth: "",
 
   phoneNumber: "",
   email: "",
@@ -227,15 +278,19 @@ const initialProfile: Profile = {
   contactUrl2: "",
   contactUrl1Label: "URL 1",
   contactUrl2Label: "URL 2",
+  linkedinUrl: "",
 
-  industry: "",
-  businessAge: "",
-  locations: [],
+  residencyStatus: "",
+  industryInterests: [],
+  industryExperience: "",
+  geographicLocation: "",
+  highestEducationCompleted: "",
 
-  missionStatement: "",
-  coreValues: [],
-  currentEmployees: [],
-  openRoles: [],
+  // ✅ NEW
+  higherEducation: [],
+
+  additionalDetails: "",
+  valuesSummary: [],
 
   contactDisplaySettings: {
     showEmail: false,
@@ -243,9 +298,12 @@ const initialProfile: Profile = {
     showUrl1: false,
     showUrl2: false,
   },
+
+  shareLinks: [],
 };
 
-initialProfile.companyName = getDisplayName(initialProfile);
+initialProfile.name = getDisplayName(initialProfile);
+
 
 /** ======================
  *  Context types
@@ -272,15 +330,12 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
    * - nameDisplaySettings
    * - contactDisplaySettings
    * - videoLibrary / deletedVideoLibrary
+   * - shareLinks
    */
-  useEffect(() => {
+    useEffect(() => {
     const hydrate = async () => {
-      const {
-        nameSettings,
-        contactSettings,
-        videoLibrary,
-        deletedVideoLibrary,
-      } = await loadPersistedSettings();
+      const { nameSettings, contactSettings, videoLibrary, deletedVideoLibrary, shareLinks } =
+        await loadPersistedSettings();
 
       _setProfile((prev) => {
         let updated = { ...prev };
@@ -313,6 +368,19 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
           };
         }
 
+        if (shareLinks) {
+          updated = {
+            ...updated,
+            shareLinks,
+          };
+        }
+
+        // Ensure higherEducation exists (backwards compatibility)
+        if (!Array.isArray((updated as any).higherEducation)) {
+          (updated as any).higherEducation = prev.higherEducation ?? [];
+        }
+
+
         return { ...updated, name: getDisplayName(updated) };
       });
 
@@ -322,49 +390,68 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
     hydrate();
   }, []);
 
-   /**
- * updateProfileState:
- * - Normalizes invariants (name toggles, arrays)
- * - Recomputes display name
- * - Persists deltas to AsyncStorage
- */
-const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
-  _setProfile((prev) => {
-    const next =
-      typeof nextOrUpdater === "function"
-        ? (nextOrUpdater as (p: Profile) => Profile)(prev)
-        : nextOrUpdater;
+    /**
+   * updateProfileState:
+   * - Normalizes invariants (DOB lock, name toggles, arrays)
+   * - Recomputes display name
+   * - Persists deltas to AsyncStorage
+   */
+  const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
+    _setProfile((prev) => {
+      const next =
+        typeof nextOrUpdater === "function"
+          ? (nextOrUpdater as (p: Profile) => Profile)(prev)
+          : nextOrUpdater;
 
-    const fixed: Profile = {
-      ...next,
-      nameDisplaySettings: normalizeNameToggles(next.nameDisplaySettings),
-      contactDisplaySettings: normalizeContactToggles(
-        next.contactDisplaySettings ?? prev.contactDisplaySettings,
-      ),
-      videoLibrary: next.videoLibrary ?? prev.videoLibrary ?? [],
-      deletedVideoLibrary: next.deletedVideoLibrary ?? prev.deletedVideoLibrary ?? [],
-      coreValues: next.coreValues ?? prev.coreValues ?? [],
-      locations: next.locations ?? prev.locations ?? [],
-    };
+      const dobLocked = lockDateOfBirth(prev, next);
+      const normalizedToggles = normalizeNameToggles(dobLocked.nameDisplaySettings);
 
-    const finalProfile = { ...fixed, companyName: getDisplayName(fixed) };
+      const fixed: Profile = {
+        ...dobLocked,
+        nameDisplaySettings: normalizedToggles,
+        contactDisplaySettings: normalizeContactToggles(dobLocked.contactDisplaySettings ?? prev.contactDisplaySettings),
+        shareLinks: dobLocked.shareLinks ?? prev.shareLinks ?? [],
 
-    if (JSON.stringify(prev.nameDisplaySettings) !== JSON.stringify(finalProfile.nameDisplaySettings)) {
-      saveNameDisplaySettings(finalProfile.nameDisplaySettings);
-    }
-    if (JSON.stringify(prev.contactDisplaySettings) !== JSON.stringify(finalProfile.contactDisplaySettings)) {
-      saveContactDisplaySettings(finalProfile.contactDisplaySettings);
-    }
-    if (
-      JSON.stringify(prev.videoLibrary) !== JSON.stringify(finalProfile.videoLibrary) ||
-      JSON.stringify(prev.deletedVideoLibrary) !== JSON.stringify(finalProfile.deletedVideoLibrary)
-    ) {
-      saveVideoLibraries(finalProfile.videoLibrary, finalProfile.deletedVideoLibrary);
-    }
+        // ✅ ensure both libraries always exist
+        videoLibrary: dobLocked.videoLibrary ?? prev.videoLibrary ?? [],
+        deletedVideoLibrary: dobLocked.deletedVideoLibrary ?? prev.deletedVideoLibrary ?? [],
 
-    return finalProfile;
-  });
-};
+        // ✅ ensure higherEducation always exists (so it never gets dropped)
+        higherEducation:
+          (dobLocked as any).higherEducation ?? (prev as any).higherEducation ?? [],
+      };
+
+      const finalProfile = { ...fixed, name: getDisplayName(fixed) };
+
+      // Persist when changed (kept lightweight by comparing JSON)
+      if (JSON.stringify(prev.nameDisplaySettings) !== JSON.stringify(finalProfile.nameDisplaySettings)) {
+        saveNameDisplaySettings(finalProfile.nameDisplaySettings);
+      }
+
+      if (
+        JSON.stringify(prev.contactDisplaySettings) !==
+        JSON.stringify(finalProfile.contactDisplaySettings)
+      ) {
+        saveContactDisplaySettings(finalProfile.contactDisplaySettings);
+      }
+
+      // ✅ Persist video libraries whenever they change
+      if (
+        JSON.stringify(prev.videoLibrary) !== JSON.stringify(finalProfile.videoLibrary) ||
+        JSON.stringify(prev.deletedVideoLibrary) !== JSON.stringify(finalProfile.deletedVideoLibrary)
+      ) {
+        saveVideoLibraries(finalProfile.videoLibrary, finalProfile.deletedVideoLibrary);
+      }
+
+      if (JSON.stringify(prev.shareLinks) !== JSON.stringify(finalProfile.shareLinks)) {
+        saveShareLinks(finalProfile.shareLinks);
+      }
+
+      return finalProfile;
+    });
+  };
+  
+
 
   /**
    * refreshProfile:
@@ -376,7 +463,7 @@ const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
    *   - share links
    * - Merges backend libraries with local-only items (so locally-created items aren't lost)
    */
-  const refreshProfile = useCallback(async (token: string) => {
+    const refreshProfile = async (token: string) => {
     if (!token) {
       console.log("[refreshProfile] token is missing");
       return;
@@ -417,39 +504,26 @@ const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
       }
 
       const data = text ? JSON.parse(text) : {};
-      console.log(
-        "[refreshProfile] RAW SERVER DATA:",
-        JSON.stringify(data, null, 2),
-      );
+      console.log("[refreshProfile] RAW SERVER DATA:", JSON.stringify(data, null, 2));
 
       // API returns { user, videos }
       const userData = data.user ?? data.users?.[0] ?? data;
       //const serverVideos = Array.isArray(data.videos) ? data.videos : [];
-      const serverVideos = Array.isArray(data.videoLibrary)
-        ? data.videoLibrary
-        : [];
-      const serverDeletedVideos = Array.isArray(data.deletedVideoLibrary)
-        ? data.deletedVideoLibrary
-        : [];
+      const serverVideos = Array.isArray(data.videoLibrary) ? data.videoLibrary : [];
+      const serverDeletedVideos = Array.isArray(data.deletedVideoLibrary) ? data.deletedVideoLibrary : [];
       console.log("[refreshProfile] Active videos count:", serverVideos.length);
-      console.log(
-        "[refreshProfile] Deleted videos count:",
-        serverDeletedVideos.length,
-      );
+      console.log("[refreshProfile] Deleted videos count:", serverDeletedVideos.length);
       // ✅ Avatar: use url if present, else key if present, else empty
       const serverAvatarVideo =
-        (typeof userData.avatar_video_url === "string" &&
-          userData.avatar_video_url.trim()) ||
-        (typeof userData.avatar_video_key === "string" &&
-          userData.avatar_video_key.trim()) ||
+        (typeof userData.avatar_video_url === "string" && userData.avatar_video_url.trim()) ||
+        (typeof userData.avatar_video_key === "string" && userData.avatar_video_key.trim()) ||
         "";
 
       const serverAvatarImage =
-        (typeof userData.avatar_image_url === "string" &&
-          userData.avatar_image_url.trim()) ||
-        (typeof userData.avatar_image_key === "string" &&
-          userData.avatar_image_key.trim()) ||
+        (typeof userData.avatar_image_url === "string" && userData.avatar_image_url.trim()) ||
+        (typeof userData.avatar_image_key === "string" && userData.avatar_image_key.trim()) ||
         "";
+
 
       const mappedLibrary: LibraryVideo[] = serverVideos
         .map((v: any) => {
@@ -467,11 +541,8 @@ const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
             slot: typeof v.slot === "number" ? v.slot : null,
             thumbnailUrl: thumb,
             caption,
-            source: (v.source ?? "camera-roll") as
-              | "recording-studio"
-              | "camera-roll",
-            createdAt:
-              typeof v.createdAt === "number" ? v.createdAt : Date.now(),
+            source: (v.source ?? "camera-roll") as "recording-studio" | "camera-roll",
+            createdAt: typeof v.createdAt === "number" ? v.createdAt : Date.now(),
           };
         })
         .filter((x: LibraryVideo) => !!x.url);
@@ -491,34 +562,20 @@ const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
             s3Key: s3KeyFromServer || derivedKey,
             thumbnailUrl: thumb,
             caption,
-            source: (v.source ?? "camera-roll") as
-              | "recording-studio"
-              | "camera-roll",
-            createdAt:
-              typeof v.createdAt === "number" ? v.createdAt : Date.now(),
+            source: (v.source ?? "camera-roll") as "recording-studio" | "camera-roll",
+            createdAt: typeof v.createdAt === "number" ? v.createdAt : Date.now(),
           };
         })
         .filter((x: LibraryVideo) => !!x.url);
 
-      console.log(
-        "[refreshProfile] Mapped active library:",
-        mappedLibrary.length,
-      );
-      console.log(
-        "[refreshProfile] Mapped deleted library:",
-        mappedDeletedLibrary.length,
-      );
+      console.log("[refreshProfile] Mapped active library:", mappedLibrary.length);
+      console.log("[refreshProfile] Mapped deleted library:", mappedDeletedLibrary.length);
 
       // Profile slots: hydrate from explicit backend slot assignment (1..5)
       const bySlot = new Map<number, LibraryVideo>();
       for (const v of mappedLibrary) {
         const slot = Number((v as any).slot);
-        if (
-          Number.isInteger(slot) &&
-          slot >= 1 &&
-          slot <= 5 &&
-          !bySlot.has(slot)
-        ) {
+        if (Number.isInteger(slot) && slot >= 1 && slot <= 5 && !bySlot.has(slot)) {
           bySlot.set(slot, v);
         }
       }
@@ -534,24 +591,70 @@ const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
         };
       });
 
+      const mappedHigherEducation: any[] = Array.isArray(data.higher_education)
+        ? data.higher_education.map((edu: any) => ({
+            unitid: String(edu.unitid ?? "").trim(),
+            label: String(edu.label ?? "").trim(),
+            degrees: Array.isArray(edu.degrees)
+              ? edu.degrees.map((d: any) => String(d).trim()).filter(Boolean)
+              : [],
+            degreeDetails: Array.isArray(edu?.degreeDetails)
+              ? edu.degreeDetails
+              : Array.isArray(edu?.degree_details)
+                ? edu.degree_details
+                : [],
+            estimatedGraduation: String(edu?.estimatedGraduation ?? edu?.estimated_graduation ?? "").trim(),
+          }))
+        : [];
+
+
+
       const mappedProfile: Partial<Profile> = {
-        companyName: userData.company_name || "",
-        industry: Array.isArray(userData.industry) ? (userData.industry[0] ?? "") : (userData.industry || ""),
-        businessAge: userData.business_age || "",
-        workType: userData.work_type || "",
-        locations: Array.isArray(userData.locations) ? userData.locations : [],
-        missionStatement: userData.mission_statement || "",
-        coreValues: Array.isArray(userData.core_values) ? userData.core_values : [],
-        benefitsSummary: userData.benefits_summary || "",
-        customBackgroundColor: userData.custom_background_color || "",
-        contactUrl1: userData.contact_url_1 || "",
-        contactUrl2: userData.contact_url_2 || "",
-        contactUrl1Label: userData.contact_url_1_label || "URL 1",
-        contactUrl2Label: userData.contact_url_2_label || "URL 2",
+        legalFirstName: userData.legal_first_name || "",
+        legalLastName: userData.legal_last_name || "",
+        preferredName: userData.preferred_name || userData.email || "User",
+        bio: userData.bio || "",
+        contactUrl1: userData.contact_url_1 || userData.contactUrl1 || userData.website_url_1 || "",
+        contactUrl2: userData.contact_url_2 || userData.contactUrl2 || userData.website_url_2 || "",
+        contactUrl1Label: userData.contact_url_1_label || userData.contactUrl1Label || "URL 1",
+        contactUrl2Label: userData.contact_url_2_label || userData.contactUrl2Label || "URL 2",
+
+        workType: userData.work_type || userData.workType || userData.employment_type || "",
+        workPreference:
+          userData.work_preference || userData.workPreference || userData.work_location_preference || "",
+        residencyStatus: userData.residency || "",
+        industryExperience: userData.experience || "",
+        geographicLocation: userData.location || "",
+        industryInterests: userData.industry_interests || [],
+        additionalDetails: userData.bio_facts || "",
+        valuesSummary: Array.isArray(userData.values_summary)
+          ? userData.values_summary
+              .map((item: any, idx: number): ValueSummaryItem | null => {
+                const label = String(item?.label ?? "").trim();
+                const value = String(item?.value ?? "").trim();
+                if (!label && !value) return null;
+                return {
+                  key: String(item?.key ?? `value_${idx + 1}`).trim() || `value_${idx + 1}`,
+                  label,
+                  value: value || label,
+                };
+              })
+              .filter((item: ValueSummaryItem | null): item is ValueSummaryItem => !!item)
+          : [],
+        highestEducationCompleted: userData.highest_education || "",
+        higherEducation: mappedHigherEducation,
+
+
         media: finalMedia,
+
+        // ✅ Active + Deleted libraries
         videoLibrary: mappedLibrary,
         deletedVideoLibrary: mappedDeletedLibrary,
+
+        shareLinks: data.shareLinks || [],
       };
+
+      console.log("MAPPED HIGHER EDUCATION:", mappedHigherEducation);
 
       updateProfileState((prev) => {
         // ✅ Merge backend libraries with local libraries (prefer local for videos created locally)
@@ -560,26 +663,46 @@ const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
           ...mappedDeletedLibrary.map((v) => v.id),
         ]);
 
-        const localOnlyActive = prev.videoLibrary.filter(
-          (v) => !backendIds.has(v.id),
-        );
-        const localOnlyDeleted = prev.deletedVideoLibrary.filter(
-          (v) => !backendIds.has(v.id),
-        );
+        const localOnlyActive = prev.videoLibrary.filter((v) => !backendIds.has(v.id));
+        const localOnlyDeleted = prev.deletedVideoLibrary.filter((v) => !backendIds.has(v.id));
 
         const mergedLibrary = [...mappedLibrary, ...localOnlyActive];
-        const mergedDeletedLibrary = [
-          ...mappedDeletedLibrary,
-          ...localOnlyDeleted,
-        ];
+        const mergedDeletedLibrary = [...mappedDeletedLibrary, ...localOnlyDeleted];
+
+        const prevHigherEdByUnit = new Map<string, any>(
+          (Array.isArray(prev?.higherEducation) ? prev.higherEducation : []).map((e: any) => [String(e?.unitid ?? ""), e])
+        );
+        const mergedHigherEducation = mappedHigherEducation.map((e: any) => {
+          const prevE = prevHigherEdByUnit.get(String(e?.unitid ?? ""));
+          return {
+            ...(prevE ?? {}),
+            ...e,
+            degreeDetails:
+              Array.isArray(e?.degreeDetails) && e.degreeDetails.length > 0
+                ? e.degreeDetails
+                : Array.isArray(prevE?.degreeDetails)
+                  ? prevE.degreeDetails
+                  : [],
+            estimatedGraduation:
+              String(e?.estimatedGraduation ?? "").trim() || String(prevE?.estimatedGraduation ?? "").trim(),
+          };
+        });
 
         return {
           ...prev,
           ...mappedProfile,
+
+          // ✅ Use merged libraries
           videoLibrary: mergedLibrary,
           deletedVideoLibrary: mergedDeletedLibrary,
+
+          // ✅ Avatar slot 0: ONLY overwrite if backend provided real value
           avatarVideoUri: serverAvatarVideo ? serverAvatarVideo : prev.avatarVideoUri,
           avatarImageUri: serverAvatarImage ? serverAvatarImage : prev.avatarImageUri,
+
+          shareLinks: mappedProfile.shareLinks || prev.shareLinks,
+
+          higherEducation: mergedHigherEducation,
         };
       });
     } catch (error) {
@@ -587,21 +710,13 @@ const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  };
+  
 
-  const value = useMemo(
-    () => ({
-      profile,
-      setProfile: updateProfileState,
-      refreshProfile,
-      isLoading,
-    }),
-    [profile, isLoading],
-  );
 
-  return (
-    <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>
-  );
+  const value = { profile, setProfile: updateProfileState, refreshProfile, isLoading };
+
+  return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;
 }
 
 export function useProfile() {
