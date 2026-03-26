@@ -15,7 +15,7 @@ import { RequireUserType } from "@/src/components/RequireUserType";
 import {
   HIGHER_ED_ITEM_GAP,
   softWrapLongTokens,
-  useProfileScreenData,
+  useCompanyProfileScreenData,
   type QualRowValue,
 } from "@/src/features/profile/edit/profileScreen.shared";
 import { useSession } from "@/src/state/session";
@@ -94,7 +94,7 @@ export default function ProfileScreen() {
   const { showActionSheetWithOptions } = useActionSheet();
   const { logout } = useSession();
   const { profile, liveProfileUrl, copyLiveAsUrl, copyEmail, copyPhone, copyUrl, refreshing, fetchLatestProfile, displayName, canToggleName, toggleDisplayName, headlineText, hookText, qualCol1, qualCol2, workTypeDisplay, videos, contactEmail, contactPhone, contactUrl1, contactUrl2, contactUrl1Label, contactUrl2Label, showUrl1, showUrl2, openVideo } =
-    useProfileScreenData();
+    useCompanyProfileScreenData();
 
   const [liveQrModalOpen, setLiveQrModalOpen] = useState(false);
   const [liveQrCopyToken, setLiveQrCopyToken] = useState<number | undefined>(undefined);
@@ -559,7 +559,7 @@ export default function ProfileScreen() {
 
           <View style={{ height: 1, backgroundColor: BORDER }} />
 
-          {/* Block C */}
+          {/* Block C — Company Info */}
           <View
             style={{ backgroundColor: WHITE, paddingHorizontal: 22, paddingVertical: 12 }}
             onLayout={(event) => setQualSectionY(event.nativeEvent.layout.y)}
@@ -574,16 +574,14 @@ export default function ProfileScreen() {
                 paddingVertical: 4,
               }}
             >
-              <Text style={s.qualHeader}>QUALIFICATIONS</Text>
-
+              <Text style={s.qualHeader}>COMPANY INFO</Text>
               <Animated.View style={{ transform: [{ rotate: qualChevronRotate }] }}>
                 <Feather name="chevron-down" size={24} color={HINT} />
               </Animated.View>
             </Pressable>
 
-            {/* ✅ Premium animated reveal container */}
             <Animated.View style={{ height: qualHeight, overflow: "hidden" }}>
-              {/* ✅ Hidden measurer */}
+              {/* Hidden measurer */}
               <View
                 pointerEvents="none"
                 style={{ opacity: 0, position: "absolute", left: 0, right: 0 }}
@@ -592,123 +590,100 @@ export default function ProfileScreen() {
                   if (h > 0 && Math.abs(h - qualContentH) > 2) setQualContentH(h);
                 }}
               >
-                <View style={{ marginTop: 12 }}>
-                  <View style={{ overflow: "hidden" }}>
-                    <View style={{ width: panelW * 2, flexDirection: "row" }}>
-                      <View style={{ width: panelW }}>
-                        <View style={{ gap: 14 }}>
-                          {qualCol1.map((row) => (
-                            <View key={row.label} style={{ gap: 6, paddingRight: QUAL_RIGHT_GUTTER }}>
-                              <Text style={s.qualLabel}>{`${row.label}:`}</Text>
-                              <QualValue value={row.value} textStyle={s.qualValue} />
-                            </View>
-                          ))}
-                        </View>
-                      </View>
-
-                      <View style={{ width: panelW }}>
-                        <View style={{ gap: 14 }}>
-                          {qualCol2.map((row) => (
-                            <View key={row.label} style={{ gap: 6, paddingRight: QUAL_RIGHT_GUTTER }}>
-                              <Text style={s.qualLabel}>{`${row.label}:`}</Text>
-                              <QualValue value={row.value} textStyle={s.qualValue} />
-                            </View>
-                          ))}
-                        </View>
-                      </View>
+                <View style={{ marginTop: 12, gap: 14 }}>
+                  {!!missionStatement && (
+                    <View style={{ gap: 4 }}>
+                      <Text style={s.qualLabel}>Mission:</Text>
+                      <Text style={s.qualValue}>{missionStatement}</Text>
                     </View>
-                  </View>
-
-                  <View style={{ marginTop: 12, flexDirection: "row", justifyContent: "center" }}>
-                    {[0, 1].map((idx) => {
-                      const active = qualPage === idx;
-                      return (
-                        <View
-                          key={`qual-dot-measure-${idx}`}
-                          style={{
-                            width: 5,
-                            height: 5,
-                            borderRadius: 999,
-                            marginHorizontal: 3.5,
-                            backgroundColor: active ? "#202020" : HINT,
-                            opacity: active ? 1 : 0.95,
-                          }}
-                        />
-                      );
-                    })}
-                  </View>
+                  )}
+                  {coreValues.length > 0 && (
+                    <View style={{ gap: 4 }}>
+                      <Text style={s.qualLabel}>Core Values:</Text>
+                      <Text style={s.qualValue}>{coreValues.join("  ·  ")}</Text>
+                    </View>
+                  )}
+                  {!!benefitsSummary && (
+                    <View style={{ gap: 4 }}>
+                      <Text style={s.qualLabel}>Benefits:</Text>
+                      <Text style={s.qualValue}>{benefitsSummary}</Text>
+                    </View>
+                  )}
+                  {!!industry && (
+                    <View style={{ gap: 4 }}>
+                      <Text style={s.qualLabel}>Industry:</Text>
+                      <Text style={s.qualValue}>{industry}</Text>
+                    </View>
+                  )}
+                  {locations.length > 0 && (
+                    <View style={{ gap: 4 }}>
+                      <Text style={s.qualLabel}>Locations:</Text>
+                      <Text style={s.qualValue}>{locations.join("  ·  ")}</Text>
+                    </View>
+                  )}
+                  {openRoles.length > 0 && (
+                    <View style={{ gap: 8 }}>
+                      <Text style={s.qualLabel}>Open Roles:</Text>
+                      {openRoles.map((role: any) => (
+                        <View key={role.id} style={{ gap: 2 }}>
+                          <Text style={s.qualValue}>{role.title}</Text>
+                          {!!role.salary?.trim() && (
+                            <Text style={[s.qualValue, { opacity: 0.65, fontSize: 12 }]}>{role.salary}</Text>
+                          )}
+                        </View>
+                      ))}
+                    </View>
+                  )}
                 </View>
               </View>
 
               {/* Visible animated content */}
               {qualOpen ? (
                 <Animated.View style={{ opacity: qualOpacity, transform: [{ translateY: qualTranslateY }] }}>
-                  <View style={{ marginTop: 12 }}>
-                    <View style={{ overflow: "hidden" }} {...qualSwipeResponder.panHandlers}>
-                      <Animated.View
-                        style={{
-                          width: panelW * 2,
-                          flexDirection: "row",
-                          transform: [{ translateX: pageTranslateX }],
-                        }}
-                      >
-                        <View style={{ width: panelW }}>
-                          <View style={{ gap: 14 }}>
-                            {qualCol1.map((row) => (
-                              <View key={row.label} style={{ gap: 6, paddingRight: QUAL_RIGHT_GUTTER }}>
-                                <Text style={s.qualLabel}>{`${row.label}:`}</Text>
-                                <QualValue value={row.value} textStyle={s.qualValue} />
-                              </View>
-                            ))}
+                  <View style={{ marginTop: 12, gap: 14 }}>
+                    {!!missionStatement && (
+                      <View style={{ gap: 4 }}>
+                        <Text style={s.qualLabel}>Mission:</Text>
+                        <Text style={s.qualValue}>{missionStatement}</Text>
+                      </View>
+                    )}
+                    {coreValues.length > 0 && (
+                      <View style={{ gap: 4 }}>
+                        <Text style={s.qualLabel}>Core Values:</Text>
+                        <Text style={s.qualValue}>{coreValues.join("  ·  ")}</Text>
+                      </View>
+                    )}
+                    {!!benefitsSummary && (
+                      <View style={{ gap: 4 }}>
+                        <Text style={s.qualLabel}>Benefits:</Text>
+                        <Text style={s.qualValue}>{benefitsSummary}</Text>
+                      </View>
+                    )}
+                    {!!industry && (
+                      <View style={{ gap: 4 }}>
+                        <Text style={s.qualLabel}>Industry:</Text>
+                        <Text style={s.qualValue}>{industry}</Text>
+                      </View>
+                    )}
+                    {locations.length > 0 && (
+                      <View style={{ gap: 4 }}>
+                        <Text style={s.qualLabel}>Locations:</Text>
+                        <Text style={s.qualValue}>{locations.join("  ·  ")}</Text>
+                      </View>
+                    )}
+                    {openRoles.length > 0 && (
+                      <View style={{ gap: 8 }}>
+                        <Text style={s.qualLabel}>Open Roles:</Text>
+                        {openRoles.map((role: any) => (
+                          <View key={role.id} style={{ gap: 2 }}>
+                            <Text style={s.qualValue}>{role.title}</Text>
+                            {!!role.salary?.trim() && (
+                              <Text style={[s.qualValue, { opacity: 0.65, fontSize: 12 }]}>{role.salary}</Text>
+                            )}
                           </View>
-                        </View>
-
-                        <View style={{ width: panelW }}>
-                          <View style={{ gap: 14 }}>
-                            {qualCol2.map((row) => (
-                              <View key={row.label} style={{ gap: 6, paddingRight: QUAL_RIGHT_GUTTER }}>
-                                <Text style={s.qualLabel}>{`${row.label}:`}</Text>
-                                <QualValue value={row.value} textStyle={s.qualValue} />
-                              </View>
-                            ))}
-                          </View>
-                        </View>
-                      </Animated.View>
-
-                      {/* Page toggle button */}
-                      <Pressable
-                        onPress={toggleQualPage}
-                        hitSlop={10}
-                        style={{
-                          position: "absolute",
-                          right: 0,
-                          top: 0,
-                          bottom: 0,
-                          width: QUAL_PAGE_BUTTON_W,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      />
-                    </View>
-
-                    <View style={{ marginTop: 12, flexDirection: "row", justifyContent: "center" }}>
-                      {[0, 1].map((idx) => {
-                        const active = qualPage === idx;
-                        return (
-                          <View
-                            key={`qual-dot-${idx}`}
-                            style={{
-                              width: 5,
-                              height: 5,
-                              borderRadius: 999,
-                              marginHorizontal: 3.5,
-                              backgroundColor: active ? "#202020" : HINT,
-                              opacity: active ? 1 : 0.95,
-                            }}
-                          />
-                        );
-                      })}
-                    </View>
+                        ))}
+                      </View>
+                    )}
                   </View>
                 </Animated.View>
               ) : null}

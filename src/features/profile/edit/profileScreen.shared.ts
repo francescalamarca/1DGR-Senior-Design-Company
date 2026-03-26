@@ -500,7 +500,7 @@ export function useProfileScreenData() {
   const openVideo = useCallback(
     (uri: string) => {
       router.push({
-        pathname: "/(homeUser)/video",
+        pathname: "/(companyUser)/video",
         params: {
           uri,
           returnTo: pathname,
@@ -544,3 +544,171 @@ export function useProfileScreenData() {
     openVideo,
   };
 }
+export function useCompanyProfileScreenData() {
+    const { accessToken } = useSession();
+    const { profile, setProfile } = useProfile();
+    const pathname = usePathname();
+  
+    const [refreshing, setRefreshing] = useState(false);
+    const fetchingRef = useRef(false);
+    const didFetchOnceRef = useRef(false);
+  
+    const displayName = String(profile.companyName ?? "").trim() || "Company";
+  
+    const liveProfileUrl = useMemo(() => {
+      const base =
+        (aws_config as any).liveProfileBaseUrl ||
+        (aws_config as any).webBaseUrl ||
+        (aws_config as any).publicBaseUrl ||
+        (aws_config as any).apiBaseUrl;
+      const handle = (profile as any).liveHandle || (profile as any).handle || (profile as any).username || "me";
+      return `${String(base).replace(/\/$/, "")}/u/${encodeURIComponent(String(handle))}`;
+    }, [profile]);
+  
+    const copyLiveAsUrl = useCallback(async () => {
+      await Clipboard.setStringAsync(liveProfileUrl);
+      Alert.alert("Copied", "Live profile URL copied to clipboard.");
+    }, [liveProfileUrl]);
+  
+    const contactEmail = String(profile.email ?? "").trim();
+    const contactPhone = String(profile.phoneNumber ?? "").trim();
+    const contactUrl1 = String((profile as any).contactUrl1 ?? "").trim();
+    const contactUrl2 = String((profile as any).contactUrl2 ?? "").trim();
+    const contactUrl1Label = String((profile as any).contactUrl1Label ?? "URL 1").trim() || "URL 1";
+    const contactUrl2Label = String((profile as any).contactUrl2Label ?? "URL 2").trim() || "URL 2";
+    const showUrl1 = !!(profile as any)?.contactDisplaySettings?.showUrl1;
+    const showUrl2 = !!(profile as any)?.contactDisplaySettings?.showUrl2;
+  
+    const copyEmail = useCallback(async () => {
+      if (!contactEmail) return;
+      await Clipboard.setStringAsync(contactEmail);
+      Alert.alert("Copied", "Email copied to clipboard.");
+    }, [contactEmail]);
+  
+    const copyPhone = useCallback(async () => {
+      if (!contactPhone) return;
+      await Clipboard.setStringAsync(contactPhone);
+      Alert.alert("Copied", "Phone number copied to clipboard.");
+    }, [contactPhone]);
+  
+    const copyUrl = useCallback(async (url: string) => {
+      if (!url) return;
+      await Clipboard.setStringAsync(url);
+      Alert.alert("Copied", "URL copied to clipboard.");
+    }, []);
+  
+    const fetchLatestProfile = useCallback(async () => {
+      try {
+        if (!accessToken) return;
+        if (fetchingRef.current) return;
+        fetchingRef.current = true;
+        setRefreshing(true);
+  
+        const url = `${aws_config.apiBaseUrl}/profile`;
+        const doFetch = async (authHeader: string) => {
+          const res = await fetch(url, { headers: { Authorization: authHeader } });
+          const text = await res.text().catch(() => "");
+          return { res, text };
+        };
+  
+        let { res, text } = await doFetch(`Bearer ${accessToken}`);
+        if (res.status === 401) ({ res, text } = await doFetch(accessToken));
+        if (!res.ok) { console.error("Failed to fetch profile:", res.status, text); return; }
+  
+        const data = text ? JSON.parse(text) : {};
+        const user = data?.user ?? data?.users?.[0] ?? null;
+        const videoLibrary = data?.videoLibrary ?? data?.videos ?? [];
+  
+        setProfile((prev: any) => ({
+          ...prev,
+          companyName: user?.company_name ?? user?.companyName ?? prev.companyName ?? "",
+          email: user?.email ?? "",
+          phoneNumber: user?.phone_number ?? "",
+          missionStatement: user?.mission_statement ?? user?.missionStatement ?? prev.missionStatement ?? "",
+          benefitsSummary: user?.benefits_summary ?? user?.benefitsSummary ?? prev.benefitsSummary ?? "",
+          coreValues: Array.isArray(user?.core_values) ? user.core_values : (Array.isArray(user?.coreValues) ? user.coreValues : prev.coreValues ?? []),
+          openRoles: Array.isArray(user?.open_roles) ? user.open_roles : (Array.isArray(user?.openRoles) ? user.openRoles : prev.openRoles ?? []),
+          industry: user?.industry ?? prev.industry ?? "",
+          locations: Array.isArray(user?.locations) ? user.locations : prev.locations ?? [],
+          workType: user?.work_type ?? user?.workType ?? prev.workType ?? "",
+          businessAge: user?.business_age ?? user?.businessAge ?? prev.businessAge ?? "",
+          avatarImageUri: toCloudFrontUrl(user?.avatar_image_url ?? user?.avatar_image_key ?? ""),
+          avatarVideoUri: toCloudFrontUrl(user?.avatar_video_url ?? user?.avatar_video_key ?? ""),
+          media: (Array.isArray(videoLibrary) ? videoLibrary : [])
+            .filter((v: any) => v.slot !== null && v.slot !== undefined)
+            .sort((a: any, b: any) => (a.slot ?? 0) - (b.slot ?? 0))
+            .map((v: any, index: number) => ({
+              id: v.id || `vid_${index}`,
+              videoUri: toCloudFrontUrl(v.url || v.s3_key),
+              imageUri: toCloudFrontUrl(v.thumbnailUrl || v.thumbnail_key || ""),
+              caption: (v.caption ?? v.title ?? "").trim?.() ? (v.caption ?? v.title).trim() : "Untitled",
+              slot: v.slot,
+            })),
+        }));
+      } catch (error) {
+        console.error("Error fetching company profile:", error);
+      } finally {
+        fetchingRef.current = false;
+        setRefreshing(false);
+      }
+    }, [accessToken, setProfile]);
+  
+    useFocusEffect(
+      useCallback(() => {
+        if (didFetchOnceRef.current) return;
+        didFetchOnceRef.current = true;
+        fetchLatestProfile();
+      }, [fetchLatestProfile])
+    );
+  
+    // Company info sections
+    const missionStatement = String(profile.missionStatement ?? "").trim();
+    const benefitsSummary = String(profile.benefitsSummary ?? "").trim();
+    const coreValues: string[] = Array.isArray(profile.coreValues) ? profile.coreValues : [];
+    const openRoles: any[] = Array.isArray(profile.openRoles) ? profile.openRoles : [];
+    const industry = String(profile.industry ?? "").trim();
+    const locations: string[] = Array.isArray(profile.locations) ? profile.locations : [];
+  
+    const videos = useMemo(() => {
+      const list = Array.isArray(profile.media) ? profile.media : [];
+      return list.filter((m: any) => m?.videoUri?.trim());
+    }, [profile.media]);
+  
+    const openVideo = useCallback(
+      (uri: string) => {
+        router.push({
+          pathname: "/(companyUser)/video",
+          params: { uri, returnTo: pathname, playId: String(Date.now()) },
+        });
+      },
+      [pathname]
+    );
+  
+    return {
+      profile,
+      refreshing,
+      fetchLatestProfile,
+      liveProfileUrl,
+      copyLiveAsUrl,
+      copyEmail,
+      copyPhone,
+      copyUrl,
+      displayName,
+      missionStatement,
+      benefitsSummary,
+      coreValues,
+      openRoles,
+      industry,
+      locations,
+      videos,
+      contactEmail,
+      contactPhone,
+      contactUrl1,
+      contactUrl2,
+      contactUrl1Label,
+      contactUrl2Label,
+      showUrl1,
+      showUrl2,
+      openVideo,
+    };
+  }
