@@ -1,11 +1,11 @@
 import { ProfileBrandWordmark } from "@/src/components/ProfileBrandWordmark";
 import { RequireUserType } from "@/src/components/RequireUserType";
 import {
-    HIGHER_ED_ITEM_GAP,
-    softWrapLongTokens,
-    useProfileScreenData,
-    type QualRow,
-    type QualRowValue,
+  HIGHER_ED_ITEM_GAP,
+  softWrapLongTokens,
+  useProfileScreenData,
+  type QualRow,
+  type QualRowValue,
 } from "@/src/features/profile/edit/profileScreen.shared";
 import { useSession } from "@/src/state/session";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -13,16 +13,16 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useMemo, useRef, useState } from "react";
 import {
-    Animated,
-    FlatList,
-    Image,
-    Modal,
-    Pressable,
-    RefreshControl,
-    ScrollView,
-    Text,
-    View,
-    useWindowDimensions,
+  Animated,
+  FlatList,
+  Image,
+  Modal,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+  useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
@@ -651,7 +651,7 @@ export default function ProfileWebScreen() {
                           color: TEXT,
                         }}
                       >
-                        QUALIFICATIONS
+                        ABOUT US
                       </Text>
 
                       <Animated.View
@@ -686,7 +686,7 @@ export default function ProfileWebScreen() {
                             <View style={{ gap: 14 }}>
                               <View style={{ gap: 6 }}>
                                 <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED }}>
-                                  Current Location
+                                  Mission
                                 </Text>
                                 <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 15, lineHeight: 22, color: TEXT }}>
                                   {softWrapLongTokens(collapsedLocationPreview)}
@@ -695,7 +695,7 @@ export default function ProfileWebScreen() {
 
                               <View style={{ gap: 6 }}>
                                 <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED }}>
-                                  Seeking
+                                  Core Values
                                 </Text>
                                 <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 15, lineHeight: 22, color: TEXT }}>
                                   {softWrapLongTokens(collapsedSeekingPreview)}
@@ -704,7 +704,7 @@ export default function ProfileWebScreen() {
 
                               <View style={{ gap: 6 }}>
                                 <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED }}>
-                                  Education
+                                  Locations
                                 </Text>
                                 <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 15, lineHeight: 22, color: TEXT }}>
                                   {softWrapLongTokens(collapsedEducationPreview)}

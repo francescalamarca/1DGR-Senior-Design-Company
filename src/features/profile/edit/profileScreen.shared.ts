@@ -468,8 +468,8 @@ export function useProfileScreenData() {
         : [];
 
     return [
-      { label: "Location", value: location },
-      { label: "Education", value: higherEdItems.length ? higherEdItems : "—" },
+      //{ label: "Location", value: location },
+      //{ label: "Education", value: higherEdItems.length ? higherEdItems : "—" },
     ];
   }, [higherEd, profile]);
 
@@ -485,10 +485,13 @@ export function useProfileScreenData() {
       .slice(0, 3);
 
     return [
-      { label: "Residency status", value: residency },
-      { label: "Industry experience", value: experience },
-      { label: "Industry interests", value: interests },
-      { label: "Fun facts", value: funFacts.length ? funFacts.join("\n") : "—" },
+      { label: "Industry Type", value: residency },
+      { label: "Company Age", value: experience },
+      { label: "Culture", value: interests },
+      { label: "Work Type", value: funFacts.length ? funFacts.join("\n") : "—" },
+      { label: "Benefits", value: residency },
+      { label: "Job Openings", value: experience },
+      { label: "Employees", value: interests }
     ];
   }, [profile]);
 
