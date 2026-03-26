@@ -1,22 +1,23 @@
 // src/features/profile/edit/profileEdit.ui.tsx
+import { Feather } from "@expo/vector-icons";
 import React from "react";
 import {
-  View,
-  Pressable,
   ActivityIndicator,
-  Image,
-  TextInput,
-  Modal,
   FlatList,
-  ScrollView,
+  Image,
   KeyboardAvoidingView,
+  Modal,
   Platform,
+  Pressable,
+  ScrollView,
+  TextInput,
+  View,
 } from "react-native";
 
-import { styles, UI } from "./profileEdit.styles";
-import { LLightText, BtnText } from "./profileEdit.components";
-import { BACKGROUND_COLOR_OPTIONS, CORE_VALUES } from "./profileEdit.constants";
 import type { OpenRole } from "@/src/features/profile/profile.types";
+import { BtnText, LLightText } from "./profileEdit.components";
+import { BACKGROUND_COLOR_OPTIONS, CORE_VALUES } from "./profileEdit.constants";
+import { UI, styles } from "./profileEdit.styles";
 
 // ---------- Types the screen expects ----------
 export type IndustryRow =
@@ -95,87 +96,97 @@ export function AvatarSection(props: {
 
   return (
     <>
-      <LLightText style={[styles.sectionTitle, { marginTop: 17 }]}>Logo</LLightText>
-      <LLightText style={styles.sectionHelper}>Add a company logo image here.</LLightText>
-
-      <View style={[styles.inlineCard, { marginTop: 14, flexDirection: "row", alignItems: "center", gap: 14 }]}>
-        <View
+      <LLightText style={[styles.sectionTitle, { marginTop: 9 }]}>Company Logo</LLightText>
+      <View style={{ marginTop: -5, alignItems: "center" }}>
+        <Pressable
+          onPress={onPickAvatarImage}
+          disabled={pickingAvatarImage || isSaving}
+          hitSlop={10}
           style={{
-            width: 100,
-            height: 50,
-            borderWidth: 1,
-            borderColor: UI.border,
-            overflow: "hidden",
-            backgroundColor: "#f3f3f3",
+            width: 126,
+            height: 126,
+            borderRadius: 63,
+            backgroundColor: "#eceff1",
+            overflow: "visible",
             alignItems: "center",
             justifyContent: "center",
+            opacity: pickingAvatarImage || isSaving ? 0.7 : 1,
           }}
         >
           {avatarPreviewUri ? (
-            <Image source={{ uri: avatarPreviewUri }} style={{ width: "100%", height: "100%" }} />
+            <Image source={{ uri: avatarPreviewUri }} style={{ width: "100%", height: "100%", borderRadius: 63 }} />
           ) : (
-            <LLightText style={{ opacity: 0.5 }}>—</LLightText>
+            <LLightText style={{ opacity: 0.45, fontSize: 28 }}>+</LLightText>
           )}
-        </View>
 
-        <View style={{ flex: 1, gap: 10 }}>
-          <LLightText style={{ fontSize: 12, opacity: 0.6 }}>Displays over video thumbnail</LLightText>
-
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            <Pressable
-              onPress={onPickAvatarImage}
-              disabled={pickingAvatarImage || isSaving}
-              style={[styles.pill, { flex: 1 }, pickingAvatarImage || isSaving ? { opacity: 0.5 } : null]}
-            >
-              {pickingAvatarImage ? <ActivityIndicator size="small" color="black" /> : null}
-              <BtnText>Choose</BtnText>
-            </Pressable>
-
-            <Pressable
-              onPress={onRemoveAvatarImage}
-              disabled={!hasAvatar || isSaving}
-              style={[
-                styles.pill,
-                { flex: 1, borderColor: UI.borderStrong },
-                !hasAvatar || isSaving ? { opacity: 0.5 } : null,
-              ]}
-            >
-              <BtnText>Remove</BtnText>
-            </Pressable>
+          <View
+            style={{
+              position: "absolute",
+              right: -15,
+              bottom: 0,
+              width: 42,
+              height: 42,
+              borderRadius: 21,
+              backgroundColor: UI.card,
+              borderWidth: 1,
+              borderColor: UI.border,
+              alignItems: "center",
+              justifyContent: "center",
+              shadowColor: "#000",
+              shadowOpacity: 0.08,
+              shadowRadius: 8,
+              shadowOffset: { width: 0, height: 2 },
+              elevation: 2,
+            }}
+          >
+            {pickingAvatarImage ? (
+              <ActivityIndicator size="small" color="black" />
+            ) : (
+              <Feather name="edit-2" size={20} color={UI.text} />
+            )}
           </View>
+        </Pressable>
 
-          {/* URL input row */}
-          <View style={{ flexDirection: "row", gap: 10 }}>
-            <TextInput
-              style={[styles.input, { flex: 1, fontSize: 12 }]}
-              placeholder="Paste image URL"
-              placeholderTextColor={UI.hint}
-              value={urlInput}
-              onChangeText={setUrlInput}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="url"
-              editable={!isSaving}
-            />
-            <Pressable
-              onPress={() => {
-                if (urlInput.trim()) {
-                  onSetAvatarFromUrl(urlInput.trim());
-                  setUrlInput("");
-                }
-              }}
-              disabled={!urlInput.trim() || isSaving}
-              style={[styles.pill, { paddingHorizontal: 14 }, !urlInput.trim() || isSaving ? { opacity: 0.4 } : null]}
-            >
-              <BtnText>Use URL</BtnText>
-            </Pressable>
-          </View>
+        {hasAvatar ? (
+          <Pressable
+            onPress={onRemoveAvatarImage}
+            disabled={isSaving}
+            hitSlop={8}
+            style={{ marginTop: 10, opacity: isSaving ? 0.5 : 1 }}
+          >
+            <BtnText style={{ color: UI.subtext }}>Remove logo</BtnText>
+          </Pressable>
+        ) : null}
+
+        <View style={{ flexDirection: "row", gap: 10, marginTop: 14, paddingHorizontal: 16, width: "100%" }}>
+          <TextInput
+            style={[styles.input, { flex: 1, fontSize: 12 }]}
+            placeholder="Or paste image URL"
+            placeholderTextColor={UI.hint}
+            value={urlInput}
+            onChangeText={setUrlInput}
+            autoCapitalize="none"
+            autoCorrect={false}
+            keyboardType="url"
+            editable={!isSaving}
+          />
+          <Pressable
+            onPress={() => {
+              if (urlInput.trim()) {
+                onSetAvatarFromUrl(urlInput.trim());
+                setUrlInput("");
+              }
+            }}
+            disabled={!urlInput.trim() || isSaving}
+            style={[styles.pill, { paddingHorizontal: 14 }, !urlInput.trim() || isSaving ? { opacity: 0.4 } : null]}
+          >
+            <BtnText>Use URL</BtnText>
+          </Pressable>
         </View>
       </View>
     </>
   );
 }
-
 //altered to fit the name we need here which is company only
 export function NameSection(props: {
   companyName: string;
@@ -188,10 +199,10 @@ export function NameSection(props: {
 
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Company Name</LLightText>
+      <LLightText style={styles.sectionTitle}>Name</LLightText>
 
       <View style={styles.fieldStack}>
-        <LLightText style={styles.label}>Company Name</LLightText>
+        <LLightText style={styles.label}></LLightText>
         <TextInput
           value={companyName}
           onChangeText={onChangeCompanyName}
@@ -249,7 +260,7 @@ export function MissionSection(props: { mission: string; onChangeMission: (v: st
 
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Company Mission</LLightText>
+      <LLightText style={styles.sectionTitle}>Mission</LLightText>
       <LLightText style={styles.sectionHelper}>The mission of the company.</LLightText>
 
       <View style={styles.fieldStack}>
@@ -271,7 +282,7 @@ export function BenefitsSection(props: {benefits: string; onChangeBenefits: (v: 
 
   return (
     <>
-    <LLightText style={styles.sectionTitle}> Company Benefits </LLightText>
+    <LLightText style={styles.sectionTitle}>Benefits </LLightText>
     <LLightText style={styles.sectionHelper}>The benefits of the company. 401k, work schedule, overtime, etc.</LLightText>
 
     <View style={styles.fieldStack}>
@@ -312,7 +323,7 @@ export function IndustryTypeSection(props: {
   } = props;
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Company Logistics</LLightText>
+      <LLightText style={styles.sectionTitle}>Logistics</LLightText>
       <LLightText style={styles.sectionHelper}>Residency requirements, company age, work, and location.</LLightText>
 
       <GroupCard>
@@ -824,8 +835,9 @@ export function RolesSection(props: {
   roles: OpenRole[];
   onPressAdd: () => void;
   onRemove: (id: string) => void;
+  onPressEdit: (role: OpenRole) => void; // ADD
 }) {
-  const { roles, onPressAdd, onRemove } = props;
+  const { roles, onPressAdd, onRemove, onPressEdit } = props;
 
   return (
     <>
@@ -843,9 +855,14 @@ export function RolesSection(props: {
           <View key={role.id} style={[styles.rowPressable, { paddingVertical: 14, gap: 4 }]}>
             <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
               <LLightText style={[styles.rowTitle, { flex: 1, paddingRight: 10 }]}>{role.title}</LLightText>
-              <Pressable onPress={() => onRemove(role.id)} hitSlop={8}>
-                <LLightText style={{ color: UI.danger, fontSize: 13 }}>Remove</LLightText>
-              </Pressable>
+              <View style={{ flexDirection: "row", gap: 12 }}>
+                <Pressable onPress={() => onPressEdit(role)} hitSlop={8}>
+                  <LLightText style={{ fontSize: 13 }}>Edit</LLightText>
+                </Pressable>
+                <Pressable onPress={() => onRemove(role.id)} hitSlop={8}>
+                  <LLightText style={{ fontSize: 13, color: UI.danger }}>Remove</LLightText>
+                </Pressable>
+              </View>
             </View>
             {!!role.salary.trim() && (
               <LLightText style={styles.rowSub}>{role.salary}</LLightText>
@@ -866,21 +883,22 @@ export function RoleFormModal(props: {
   visible: boolean;
   onClose: () => void;
   onSave: (role: OpenRole) => void;
+  initialRole?: OpenRole; // ADD
 }) {
-  const { visible, onClose, onSave } = props;
+  const { visible, onClose, onSave, initialRole } = props;
 
   const [title, setTitle] = React.useState("");
   const [salary, setSalary] = React.useState("");
   const [skillsText, setSkillsText] = React.useState("");
 
-  // Reset fields each time the modal opens
+  // Reset fields each time the modal opens, pre-fill if editing
   React.useEffect(() => {
     if (visible) {
-      setTitle("");
-      setSalary("");
-      setSkillsText("");
+      setTitle(initialRole?.title ?? "");
+      setSalary(initialRole?.salary ?? "");
+      setSkillsText(initialRole?.skills.join(", ") ?? "");
     }
-  }, [visible]);
+  }, [visible, initialRole]);
 
   const canSave = title.trim().length > 0;
 
@@ -891,10 +909,10 @@ export function RoleFormModal(props: {
       .map((s) => s.trim())
       .filter(Boolean);
     onSave({
-      id: String(Date.now()),
+      id: initialRole?.id ?? String(Date.now()), // preserve id if editing
       title: title.trim(),
       salary: salary.trim(),
-      postedAt: new Date().toISOString().slice(0, 10),
+      postedAt: initialRole?.postedAt ?? new Date().toISOString().slice(0, 10),
       skills,
     });
     onClose();
@@ -918,7 +936,9 @@ export function RoleFormModal(props: {
               paddingBottom: 32,
             }}
           >
-            <LLightText style={{ fontSize: 18, fontWeight: "800", marginBottom: 16 }}>Add Role</LLightText>
+            <LLightText style={{ fontSize: 18, fontWeight: "800", marginBottom: 16 }}>
+              {initialRole ? "Edit Role" : "Add Role"}
+            </LLightText>
 
             <LLightText style={styles.label}>Role Title *</LLightText>
             <TextInput

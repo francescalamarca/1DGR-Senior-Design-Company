@@ -1,6 +1,7 @@
-import { router, useFocusEffect } from "expo-router";
+
+import { router } from "expo-router";
 import * as VideoThumbnails from "expo-video-thumbnails";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Alert, ScrollView } from "react-native";
 
 import { aws_config } from "@/constants/aws-config";
@@ -8,13 +9,13 @@ import { useProfile } from "@/src/features/profile/profile.store";
 import { useSession } from "@/src/state/session";
 import { updateUserProfile } from "@/src/utils/update_api";
 
-import { hasProfileChanged, type DraftProfile } from "./profileEdit.compare";
 import type { OpenRole } from "@/src/features/profile/profile.types";
+import { hasProfileChanged, type DraftProfile } from "./profileEdit.compare";
 import { INDUSTRIES } from "./profileEdit.constants";
 import { mapDraftToApiPayload } from "./profileEdit.data";
 import { filterCitiesByQuery, mapCitiesFromJson } from "./profileEdit.mappers"; //label is defined in this map function
 import { buildCdnUrlFromKey, pickImageFromLibrary, pickVideoFromLibrary, uploadToS3 } from "./profileEdit.media";
-import {type CityRow, type IndustryRow } from "./profileEdit.ui";
+import { type CityRow, type IndustryRow } from "./profileEdit.ui";
 
 
 
@@ -272,6 +273,12 @@ function removeRole(id: string) {
   }));
 }
 
+function updateRole(role: OpenRole) {
+  setDraft((p) => ({
+    ...p,
+    openRoles: (p.openRoles ?? []).map((r) => (r.id === role.id ? role : r)),
+  }));
+}
 
   async function onPickAvatarImage() {
     try {
@@ -373,6 +380,8 @@ function removeRole(id: string) {
     setMediaThumbUri(uri);
     scrollToBottomSoon();
   }
+
+
 
   async function onUploadSelectedMediaToLibrary() {
     if (!accessToken) return Alert.alert("Error", "No access token");
@@ -604,5 +613,6 @@ function removeRole(id: string) {
     setRoleFormVisible,
     addRole,
     removeRole,
+    updateRole,
   };
 }

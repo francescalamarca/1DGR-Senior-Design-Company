@@ -491,8 +491,8 @@ export default function ProfileScreen() {
                 <Pressable
                   onPress={() =>
                     router.push({
-                      pathname: "/(homeUser)/video-library",
-                      params: { returnTo: "/(homeUser)/profile" },
+                      pathname: "/(companyUser)/video-library",
+                      params: { returnTo: "/(companyUser)/profile" },
                     })
                   }
                   hitSlop={10}
@@ -500,11 +500,11 @@ export default function ProfileScreen() {
                   <Feather name="layers" size={18} color={TEXT} />
                 </Pressable>
 
-                <Pressable onPress={() => router.push("/(homeUser)/profile-edit")} hitSlop={10}>
+                <Pressable onPress={() => router.push("/(companyUser)/profile-edit")} hitSlop={10}>
                   <Feather name="edit-2" size={18} color={TEXT} />
                 </Pressable>
 
-                <Pressable onPress={() => router.push("/(homeUser)/settings")} hitSlop={10}>
+                <Pressable onPress={() => router.push("/(companyUser)/settings")} hitSlop={10}>
                   <Feather name="settings" size={18} color={TEXT} />
                 </Pressable>
                 </View>

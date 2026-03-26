@@ -12,10 +12,11 @@ import {
 import { UI, styles } from "./profileEdit.styles";
 import {
   AvatarSection,
-  BackgroundColorSection,
   BenefitsSection,
+  CityPickerModal,
   CoreValuesPickerModal,
   CoreValuesSection,
+  IndustryPickerModal,
   IndustryTypeSection,
   MissionSection,
   NameSection,
@@ -23,7 +24,8 @@ import {
   RoleFormModal,
   RolesSection,
   SinglePickerModal,
-  WorkTypePickerModal,
+  VideoLibrarySection,
+  WorkTypePickerModal
 } from "./profileEdit.ui";
 import { useProfileEditController } from "./useProfileEditController";
 
@@ -98,7 +100,7 @@ export default function ProfileEditScreen() {
     openCoreValuesPicker,
     coreValuesPickerVisible,
     setCoreValuesPickerVisible,
-    selectBackgroundColor,
+    //selectBackgroundColor,
     roleFormVisible,
     setRoleFormVisible,
     addRole,
@@ -159,11 +161,6 @@ export default function ProfileEditScreen() {
         <NameSection
           companyName={draft.companyName ?? ""}
           onChangeCompanyName={(v: string) => setDraft((p) => ({ ...p, companyName: v }))}
-        />
-
-        <BackgroundColorSection
-          selectedColor={draft.customBackgroundColor ?? ""}
-          onSelect={selectBackgroundColor}
         />
 
         <CoreValuesSection
