@@ -805,23 +805,7 @@ export function CityPickerModal(props: {
                   alignItems: "center",
                 }}
               >
-                <LLightText style={{ fontWeight: "800" }}>Close</LLightText>
-              </Pressable>
-
-              <Pressable
-                onPress={onApply}
-                disabled={!canApply}
-                style={{
-                  flex: 1,
-                  paddingVertical: 12,
-                  borderWidth: 1,
-                  borderColor: UI.text,
-                  borderRadius: 12,
-                  alignItems: "center",
-                  opacity: canApply ? 1 : 0.4,
-                }}
-              >
-                <LLightText style={{ fontWeight: "800" }}>Apply</LLightText>
+                <LLightText style={{ fontWeight: "800" }}>Done</LLightText>
               </Pressable>
             </View>
           </View>
@@ -879,6 +863,18 @@ export function RolesSection(props: {
   );
 }
 
+const SALARY_OPTIONS = [
+  "Less than $25,000",
+  "$25,000 – $49,999",
+  "$50,000 – $74,999",
+  "$75,000 – $99,999",
+  "$100,000 – $124,999",
+  "$125,000 – $149,999",
+  "$150,000 – $174,999",
+  "$175,000 – $199,999",
+  "$200,000+",
+];
+
 export function RoleFormModal(props: {
   visible: boolean;
   onClose: () => void;
@@ -889,6 +885,7 @@ export function RoleFormModal(props: {
 
   const [title, setTitle] = React.useState("");
   const [salary, setSalary] = React.useState("");
+  const [salaryPickerOpen, setSalaryPickerOpen] = React.useState(false);
   const [skillsText, setSkillsText] = React.useState("");
 
   // Reset fields each time the modal opens, pre-fill if editing
@@ -897,6 +894,7 @@ export function RoleFormModal(props: {
       setTitle(initialRole?.title ?? "");
       setSalary(initialRole?.salary ?? "");
       setSkillsText(initialRole?.skills.join(", ") ?? "");
+      setSalaryPickerOpen(false);
     }
   }, [visible, initialRole]);
 
@@ -950,13 +948,34 @@ export function RoleFormModal(props: {
             />
 
             <LLightText style={styles.label}>Salary / Range</LLightText>
-            <TextInput
-              value={salary}
-              onChangeText={setSalary}
-              placeholder="e.g. $80k–$100k or Competitive"
-              placeholderTextColor={UI.hint}
-              style={[styles.input, { marginBottom: 14 }]}
-            />
+            <Pressable
+              onPress={() => setSalaryPickerOpen((v) => !v)}
+              style={[styles.input, { marginBottom: salaryPickerOpen ? 0 : 14, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}
+            >
+              <LLightText style={{ color: salary ? UI.text : UI.hint }}>
+                {salary || "Select a range"}
+              </LLightText>
+              <Feather name={salaryPickerOpen ? "chevron-up" : "chevron-down"} size={16} color={UI.hint} />
+            </Pressable>
+            {salaryPickerOpen && (
+              <View style={{ borderWidth: 1, borderColor: UI.border, borderRadius: 10, marginBottom: 14, overflow: "hidden" }}>
+                {SALARY_OPTIONS.map((opt) => (
+                  <Pressable
+                    key={opt}
+                    onPress={() => { setSalary(opt); setSalaryPickerOpen(false); }}
+                    style={{
+                      paddingVertical: 11,
+                      paddingHorizontal: 14,
+                      borderBottomWidth: opt === SALARY_OPTIONS[SALARY_OPTIONS.length - 1] ? 0 : 1,
+                      borderBottomColor: UI.border,
+                      backgroundColor: salary === opt ? UI.bg : UI.card,
+                    }}
+                  >
+                    <LLightText style={{ color: salary === opt ? UI.text : UI.subtext }}>{opt}</LLightText>
+                  </Pressable>
+                ))}
+              </View>
+            )}
 
             <LLightText style={styles.label}>Skills (comma-separated)</LLightText>
             <TextInput

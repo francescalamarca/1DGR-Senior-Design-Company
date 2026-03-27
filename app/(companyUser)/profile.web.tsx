@@ -135,6 +135,8 @@ export default function ProfileWebScreen() {
     fetchLatestProfile,
     displayName,
     missionStatement,
+    benefitsSummary,
+    coreValues,
     industry,
     locations,
     videos,
@@ -152,11 +154,18 @@ export default function ProfileWebScreen() {
   // Company-specific derived values (replacing individual-user fields)
   const canToggleName = false;
   const toggleDisplayName = () => {};
-  const headlineText = industry || "";
-  const hookText = missionStatement || "";
-  const qualCol1: any[] = [];
-  const qualCol2: any[] = locations.map((loc) => ({ label: "Location", value: loc }));
   const workTypeDisplay = String((profile as any).workType ?? "").trim();
+
+  // Sidebar rows shown in the expanded ABOUT US panel
+  const qualCol1: any[] = [];
+  const qualCol2: any[] = [
+    { label: "Mission Statement", value: missionStatement || "—" },
+    { label: "Core Values", value: coreValues.length ? coreValues.join(", ") : "—" },
+    { label: "Industry", value: industry || "—" },
+    { label: "Benefits", value: benefitsSummary || "—" },
+    { label: "Work Type", value: workTypeDisplay || "—" },
+    { label: "Locations", value: locations.length ? locations.join(", ") : "—" },
+  ];
 
   const [liveQrModalOpen, setLiveQrModalOpen] = useState(false);
   const [liveQrCopyToken, setLiveQrCopyToken] = useState<number | undefined>(undefined);
@@ -171,30 +180,8 @@ export default function ProfileWebScreen() {
   const railStep = railCardWidth + 20;
   const sidebarRows = useMemo(() => [...qualCol1, ...qualCol2], [qualCol1, qualCol2]);
   const sidebarPanelHeight = isCompact ? 540 : Math.max(sidebarColumnHeight, 760);
-  const collapsedPanelHeight = 250;
+  const collapsedPanelHeight = 64; // just the header row (ABOUT US + chevron)
   const sidebarWidth = isCompact ? 0 : 450;
-  const locationRow = useMemo(
-    () => sidebarRows.find((row) => row.label.toLowerCase().includes("location")),
-    [sidebarRows]
-  );
-  const educationRow = useMemo(
-    () => sidebarRows.find((row) => row.label.toLowerCase().includes("education")),
-    [sidebarRows]
-  );
-  const collapsedEducationPreview = useMemo(() => {
-    if (!educationRow) return "—";
-    if (Array.isArray(educationRow.value)) return educationRow.value[0] ?? "—";
-    return educationRow.value;
-  }, [educationRow]);
-  const collapsedLocationPreview = useMemo(() => {
-    if (!locationRow) return "—";
-    if (Array.isArray(locationRow.value)) return locationRow.value[0] ?? "—";
-    return locationRow.value;
-  }, [locationRow]);
-  const collapsedSeekingPreview = useMemo(() => {
-    const trimmed = workTypeDisplay.replace(/^Seeking\s+/i, "").replace(/\s+Work$/i, "").trim();
-    return trimmed || "—";
-  }, [workTypeDisplay]);
   const navReturnTo = "/(homeUser)/profile";
 
   function scrollRail(direction: -1 | 1) {
@@ -224,10 +211,6 @@ export default function ProfileWebScreen() {
   const animatedExpandedHeight = sidebarAnimation.interpolate({
     inputRange: [0, 1],
     outputRange: [0, Math.max(0, sidebarPanelHeight - collapsedPanelHeight)],
-  });
-  const animatedSummaryOpacity = sidebarAnimation.interpolate({
-    inputRange: [0, 0.4, 1],
-    outputRange: [1, 0.25, 0],
   });
   return (
     <>
@@ -377,17 +360,20 @@ export default function ProfileWebScreen() {
                       </Text>
                     </Pressable>
 
-                    <Text
-                      style={{
-                        fontFamily: FONTS.CRIMSON_REGULAR,
-                        fontSize: isCompact ? 22 : 27,
-                        lineHeight: isCompact ? 31 : 37,
-                        color: TEXT,
-                        maxWidth: 700,
-                      }}
-                    >
-                      {hookText || "—"}
-                    </Text>
+                    {!!missionStatement && (
+                      <Text
+                        style={{
+                          fontFamily: FONTS.LEXEND_LIGHT,
+                          fontSize: 15,
+                          lineHeight: 22,
+                          color: MUTED,
+                          marginTop: 6,
+                        }}
+                      >
+                        {missionStatement}
+                      </Text>
+                    )}
+
                   </View>
 
                   <View
@@ -624,13 +610,13 @@ export default function ProfileWebScreen() {
               >
                 <Animated.View
                   style={{
-                    height: isCompact ? undefined : animatedPanelHeight,
+                    height: animatedPanelHeight,
                     backgroundColor: "rgba(251,251,251,0.95)",
                     borderLeftWidth: !sidebarOpen && !isCompact ? 1 : 0,
                     borderRightWidth: !sidebarOpen && !isCompact ? 1 : 0,
                     borderBottomWidth: 0,
                     borderColor: !sidebarOpen && !isCompact ? "rgba(214, 221, 226, 0.95)" : "transparent",
-                    overflow: sidebarOpen ? "hidden" : "visible",
+                    overflow: "hidden",
                   }}
                 >
                   <Pressable
@@ -659,81 +645,6 @@ export default function ProfileWebScreen() {
                         ABOUT US
                       </Text>
 
-                      <Animated.View
-                        pointerEvents={sidebarOpen ? "none" : "auto"}
-                        style={{
-                          paddingTop: 8,
-                          opacity: animatedSummaryOpacity,
-                          display: sidebarOpen ? "none" : "flex",
-                        }}
-                      >
-                        <LinearGradient
-                          colors={["rgba(251,251,251,1)", "rgba(251,251,251,0.98)", "rgba(251,251,251,0)"]}
-                          locations={[0, 0.72, 1]}
-                          start={{ x: 0.5, y: 0 }}
-                          end={{ x: 0.5, y: 1 }}
-                          style={{
-                            height: 205,
-                            marginLeft: -4,
-                            marginRight: -6,
-                            paddingLeft: 4,
-                            paddingRight: 6,
-                            paddingBottom: 2,
-                          }}
-                        >
-                          <View
-                            style={{
-                              height: 220,
-                              overflow: "hidden",
-                              position: "relative",
-                            }}
-                          >
-                            <View style={{ gap: 14 }}>
-                              <View style={{ gap: 6 }}>
-                                <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED }}>
-                                  Mission
-                                </Text>
-                                <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 15, lineHeight: 22, color: TEXT }}>
-                                  {softWrapLongTokens(collapsedLocationPreview)}
-                                </Text>
-                              </View>
-
-                              <View style={{ gap: 6 }}>
-                                <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED }}>
-                                  Core Values
-                                </Text>
-                                <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 15, lineHeight: 22, color: TEXT }}>
-                                  {softWrapLongTokens(collapsedSeekingPreview)}
-                                </Text>
-                              </View>
-
-                              <View style={{ gap: 6 }}>
-                                <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED }}>
-                                  Locations
-                                </Text>
-                                <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 15, lineHeight: 22, color: TEXT }}>
-                                  {softWrapLongTokens(collapsedEducationPreview)}
-                                </Text>
-                              </View>
-                            </View>
-
-                            <LinearGradient
-                              pointerEvents="none"
-                              colors={["rgba(251,251,251,0)", "rgba(251,251,251,0.72)", "rgba(251,251,251,1)"]}
-                              locations={[0, 0.28, 1]}
-                              start={{ x: 0.5, y: 0 }}
-                              end={{ x: 0.5, y: 1 }}
-                              style={{
-                                position: "absolute",
-                                left: -24,
-                                right: -20,
-                                bottom: 0,
-                                height: 84,
-                              }}
-                            />
-                          </View>
-                        </LinearGradient>
-                      </Animated.View>
                     </View>
 
                     <Feather
@@ -758,71 +669,74 @@ export default function ProfileWebScreen() {
                       {sidebarRows.map((row) => (
                         <DetailRow key={row.label} row={row} />
                       ))}
-
-                      <View style={{ height: 1, backgroundColor: BORDER }} />
-
-                      <View style={{ gap: 20 }}>
-                        <SidebarLink label="Live profile" value={liveProfileUrl} onPress={copyLiveAsUrl} />
-                        <SidebarLink label="Email" value={contactEmail} onPress={copyEmail} disabled={!contactEmail} />
-                        <SidebarLink label="Phone" value={contactPhone} onPress={copyPhone} disabled={!contactPhone} />
-                        {showUrl1 ? (
-                          <SidebarLink
-                            label={contactUrl1Label}
-                            value={contactUrl1}
-                            onPress={() => copyUrl(contactUrl1)}
-                            disabled={!contactUrl1}
-                          />
-                        ) : null}
-                        {showUrl2 ? (
-                          <SidebarLink
-                            label={contactUrl2Label}
-                            value={contactUrl2}
-                            onPress={() => copyUrl(contactUrl2)}
-                            disabled={!contactUrl2}
-                          />
-                        ) : null}
-                      </View>
-
-                      <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, paddingTop: 8 }}>
-                        <Pressable
-                          onPress={() => router.push("/(companyUser)/profile-edit")}
-                          style={{
-                            paddingHorizontal: 18,
-                            paddingVertical: 11,
-                            borderRadius: 12,
-                            backgroundColor: "#8ca1ae",
-                          }}
-                        >
-                          <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, color: WHITE }}>Edit Profile</Text>
-                        </Pressable>
-                        <Pressable
-                          onPress={() =>
-                            router.push({ pathname: "/(companyUser)/video-library", params: { returnTo: navReturnTo } })
-                          }
-                          style={{
-                            paddingHorizontal: 18,
-                            paddingVertical: 11,
-                            borderRadius: 12,
-                            backgroundColor: "#8ca1ae",
-                          }}
-                        >
-                          <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, color: WHITE }}>Video Library</Text>
-                        </Pressable>
-                        <Pressable
-                          onPress={() => router.push("/(companyUser)/settings")}
-                          style={{
-                            paddingHorizontal: 18,
-                            paddingVertical: 11,
-                            borderRadius: 12,
-                            backgroundColor: "#8ca1ae",
-                          }}
-                        >
-                          <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, color: WHITE }}>Settings</Text>
-                        </Pressable>
-                      </View>
                     </ScrollView>
                   </Animated.View>
                 </Animated.View>
+
+                {/* Contact links and action buttons — always visible regardless of collapse state */}
+                <View style={{ paddingLeft: 35, paddingRight: 22, paddingTop: 20, paddingBottom: 28, gap: 20 }}>
+                  <View style={{ height: 1, backgroundColor: BORDER }} />
+
+                  <View style={{ gap: 20 }}>
+                    <SidebarLink label="Live profile" value={liveProfileUrl} onPress={copyLiveAsUrl} />
+                    <SidebarLink label="Email" value={contactEmail} onPress={copyEmail} disabled={!contactEmail} />
+                    <SidebarLink label="Phone" value={contactPhone} onPress={copyPhone} disabled={!contactPhone} />
+                    {showUrl1 ? (
+                      <SidebarLink
+                        label={contactUrl1Label}
+                        value={contactUrl1}
+                        onPress={() => copyUrl(contactUrl1)}
+                        disabled={!contactUrl1}
+                      />
+                    ) : null}
+                    {showUrl2 ? (
+                      <SidebarLink
+                        label={contactUrl2Label}
+                        value={contactUrl2}
+                        onPress={() => copyUrl(contactUrl2)}
+                        disabled={!contactUrl2}
+                      />
+                    ) : null}
+                  </View>
+
+                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, paddingTop: 4 }}>
+                    <Pressable
+                      onPress={() => router.push("/(companyUser)/profile-edit")}
+                      style={{
+                        paddingHorizontal: 18,
+                        paddingVertical: 11,
+                        borderRadius: 12,
+                        backgroundColor: "#8ca1ae",
+                      }}
+                    >
+                      <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, color: WHITE }}>Edit Profile</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() =>
+                        router.push({ pathname: "/(companyUser)/video-library", params: { returnTo: navReturnTo } })
+                      }
+                      style={{
+                        paddingHorizontal: 18,
+                        paddingVertical: 11,
+                        borderRadius: 12,
+                        backgroundColor: "#8ca1ae",
+                      }}
+                    >
+                      <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, color: WHITE }}>Video Library</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => router.push("/(companyUser)/settings")}
+                      style={{
+                        paddingHorizontal: 18,
+                        paddingVertical: 11,
+                        borderRadius: 12,
+                        backgroundColor: "#8ca1ae",
+                      }}
+                    >
+                      <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, color: WHITE }}>Settings</Text>
+                    </Pressable>
+                  </View>
+                </View>
 
               </View>
             </View>
