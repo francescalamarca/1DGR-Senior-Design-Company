@@ -699,43 +699,6 @@ export default function ProfileWebScreen() {
                     ) : null}
                   </View>
 
-                  <View style={{ flexDirection: "row", flexWrap: "wrap", gap: 12, paddingTop: 4 }}>
-                    <Pressable
-                      onPress={() => router.push("/(companyUser)/profile-edit")}
-                      style={{
-                        paddingHorizontal: 18,
-                        paddingVertical: 11,
-                        borderRadius: 12,
-                        backgroundColor: "#8ca1ae",
-                      }}
-                    >
-                      <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, color: WHITE }}>Edit Profile</Text>
-                    </Pressable>
-                    <Pressable
-                      onPress={() =>
-                        router.push({ pathname: "/(companyUser)/video-library", params: { returnTo: navReturnTo } })
-                      }
-                      style={{
-                        paddingHorizontal: 18,
-                        paddingVertical: 11,
-                        borderRadius: 12,
-                        backgroundColor: "#8ca1ae",
-                      }}
-                    >
-                      <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, color: WHITE }}>Video Library</Text>
-                    </Pressable>
-                    <Pressable
-                      onPress={() => router.push("/(companyUser)/settings")}
-                      style={{
-                        paddingHorizontal: 18,
-                        paddingVertical: 11,
-                        borderRadius: 12,
-                        backgroundColor: "#8ca1ae",
-                      }}
-                    >
-                      <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, color: WHITE }}>Settings</Text>
-                    </Pressable>
-                  </View>
                 </View>
 
               </View>
