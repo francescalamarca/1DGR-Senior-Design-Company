@@ -105,7 +105,15 @@ export default function ProfileEditScreen() {
     setRoleFormVisible,
     addRole,
     removeRole,
+    updateRole,
   } = useProfileEditController();
+
+  const [editingRole, setEditingRole] = React.useState<import("@/src/features/profile/profile.types").OpenRole | undefined>(undefined);
+
+  const onPressEdit = React.useCallback((role: import("@/src/features/profile/profile.types").OpenRole) => {
+    setEditingRole(role);
+    setRoleFormVisible(true);
+  }, [setRoleFormVisible]);
 
   const workTypeSubtitle = React.useMemo(() => {
     const wt = String((draft as any).workType ?? "").trim();
@@ -204,14 +212,16 @@ export default function ProfileEditScreen() {
 
         <RolesSection
           roles={draft.openRoles ?? []}
-          onPressAdd={() => setRoleFormVisible(true)}
+          onPressAdd={() => { setEditingRole(undefined); setRoleFormVisible(true); }}
           onRemove={removeRole}
+          onPressEdit={onPressEdit}
         />
 
         <RoleFormModal
           visible={roleFormVisible}
-          onClose={() => setRoleFormVisible(false)}
-          onSave={addRole}
+          initialRole={editingRole}
+          onClose={() => { setRoleFormVisible(false); setEditingRole(undefined); }}
+          onSave={(role) => { editingRole ? updateRole(role) : addRole(role); }}
         />
 
         <VideoLibrarySection
