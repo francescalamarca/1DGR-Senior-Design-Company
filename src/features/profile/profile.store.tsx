@@ -459,8 +459,6 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
    * - Maps backend payload into Profile shape:
    *   - videoLibrary / deletedVideoLibrary
    *   - avatar urls/keys
-   *   - higher education
-   *   - share links
    * - Merges backend libraries with local-only items (so locally-created items aren't lost)
    */
     const refreshProfile = async (token: string) => {
@@ -590,61 +588,27 @@ export function ProfileProvider({ children }: { children: React.ReactNode }) {
           caption: v ? (v.caption ?? "").trim() : "",
         };
       });
-
-      const mappedHigherEducation: any[] = Array.isArray(data.higher_education)
-        ? data.higher_education.map((edu: any) => ({
-            unitid: String(edu.unitid ?? "").trim(),
-            label: String(edu.label ?? "").trim(),
-            degrees: Array.isArray(edu.degrees)
-              ? edu.degrees.map((d: any) => String(d).trim()).filter(Boolean)
-              : [],
-            degreeDetails: Array.isArray(edu?.degreeDetails)
-              ? edu.degreeDetails
-              : Array.isArray(edu?.degree_details)
-                ? edu.degree_details
-                : [],
-            estimatedGraduation: String(edu?.estimatedGraduation ?? edu?.estimated_graduation ?? "").trim(),
-          }))
-        : [];
-
-
-
+      //updated to match all profile variables so they persist when company user logs in
+      //unsure if contact display settings need to persist - loads from async
       const mappedProfile: Partial<Profile> = {
-        legalFirstName: userData.legal_first_name || "",
-        legalLastName: userData.legal_last_name || "",
-        preferredName: userData.preferred_name || userData.email || "User",
-        bio: userData.bio || "",
-        contactUrl1: userData.contact_url_1 || userData.contactUrl1 || userData.website_url_1 || "",
-        contactUrl2: userData.contact_url_2 || userData.contactUrl2 || userData.website_url_2 || "",
-        contactUrl1Label: userData.contact_url_1_label || userData.contactUrl1Label || "URL 1",
-        contactUrl2Label: userData.contact_url_2_label || userData.contactUrl2Label || "URL 2",
-
-        workType: userData.work_type || userData.workType || userData.employment_type || "",
-        workPreference:
-          userData.work_preference || userData.workPreference || userData.work_location_preference || "",
-        residencyStatus: userData.residency || "",
-        industryExperience: userData.experience || "",
-        geographicLocation: userData.location || "",
-        industryInterests: userData.industry_interests || [],
-        additionalDetails: userData.bio_facts || "",
-        valuesSummary: Array.isArray(userData.values_summary)
-          ? userData.values_summary
-              .map((item: any, idx: number): ValueSummaryItem | null => {
-                const label = String(item?.label ?? "").trim();
-                const value = String(item?.value ?? "").trim();
-                if (!label && !value) return null;
-                return {
-                  key: String(item?.key ?? `value_${idx + 1}`).trim() || `value_${idx + 1}`,
-                  label,
-                  value: value || label,
-                };
-              })
-              .filter((item: ValueSummaryItem | null): item is ValueSummaryItem => !!item)
-          : [],
-        highestEducationCompleted: userData.highest_education || "",
-        higherEducation: mappedHigherEducation,
-
-
+        companyName: userData.company_name || "",
+        email: userData.email || "",
+        industry: Array.isArray(userData.industry) ? (userData.industry[0] ?? "") : (userData.industry || ""),
+        businessAge: userData.business_age || "",
+        workType: userData.work_type || "",
+        locations: Array.isArray(userData.locations) ? userData.locations : [],
+        missionStatement: userData.mission_statement || "",
+        coreValues: Array.isArray(userData.core_values) ? userData.core_values : [],
+        openRoles: Array.isArray(userData.open_roles) ? userData.open_roles: [],
+        currentEmployees: Array.isArray(userData.current_employees) ? userData.current_employees: [],
+        benefitsSummary: userData.benefits_summary || "",
+        customBackgroundColor: userData.custom_background_color || "",
+        phoneNumber: userData.phone_number || "",
+        contactUrl1: userData.contact_url_1 || "",
+        contactUrl2: userData.contact_url_2 || "",
+        contactUrl1Label: userData.contact_url_1_label || "URL 1",
+        contactUrl2Label: userData.contact_url_2_label || "URL 2",
+        ...(userData.contact_display_settings ? { contactDisplaySettings: userData.contact_display_settings } : {}),
         media: finalMedia,
 
         // ✅ Active + Deleted libraries
