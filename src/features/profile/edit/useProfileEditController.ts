@@ -14,8 +14,8 @@ import { hasProfileChanged, type DraftProfile } from "./profileEdit.compare";
 import { INDUSTRIES } from "./profileEdit.constants";
 import { mapDraftToApiPayload } from "./profileEdit.data";
 import { filterCitiesByQuery, mapCitiesFromJson } from "./profileEdit.mappers"; //label is defined in this map function
-import { buildCdnUrlFromKey, pickImageFromLibrary, pickVideoFromLibrary, removeBackgroundAndSave, uploadToS3 } from "./profileEdit.media";
-import {type CityRow, type IndustryRow } from "./profileEdit.ui";
+import { buildCdnUrlFromKey, pickImageFromLibrary, pickVideoFromLibrary, uploadToS3 } from "./profileEdit.media";
+import { type CityRow, type IndustryRow } from "./profileEdit.ui";
 
 
 
@@ -63,14 +63,14 @@ export function useProfileEditController() {
   const avatarPreviewUri = useMemo(() => {
     if (avatarLocalUri) return avatarLocalUri;
 
-    const remote = buildCdnUrlFromKey(draft.avatarImageUri ?? draft.logoImageURI ?? "");
+    const remote = buildCdnUrlFromKey(draft.avatarImageUri ?? "");
     if (remote && remote.startsWith("http")) {
       return `${remote}${remote.includes("?") ? "&" : "?"}v=${Date.now()}`;
     }
     return remote;
-  }, [avatarLocalUri, draft.avatarImageUri, draft.logoImageURI]);
+  }, [avatarLocalUri, draft.avatarImageUri]);
 
-  const hasAvatar = !!(avatarLocalUri || (draft.avatarImageUri ?? draft.logoImageURI ?? "").trim());
+  const hasAvatar = !!(avatarLocalUri || (draft.avatarImageUri ?? "").trim());
 
   const changed = hasProfileChanged((profile as any) as DraftProfile, draft);
 
@@ -149,15 +149,15 @@ export function useProfileEditController() {
       ...p,
       ...draft,
       avatarImageUri:
-        // If the user explicitly cleared the avatar, keep it cleared.
-        draft.avatarImageUri === "" && !avatarLocalUri
-          ? ""
-          : buildCdnUrlFromKey(draft.avatarImageUri ?? "") || avatarLocalUri || (p as any).avatarImageUri,
+        buildCdnUrlFromKey(draft.avatarImageUri ?? "") ||
+        avatarLocalUri ||
+        (p as any).avatarImageUri,
     }));
 
     // Backend sync only if we have a token.
     if (accessToken) {
       updateUserProfile(apiPayload as any, accessToken)
+        .then(() => refreshProfile(accessToken))
         .catch((err) => console.warn("[handleSave] backend sync failed:", err));
     } else {
       console.warn("[handleSave] No access token — local save only.");
@@ -287,7 +287,6 @@ function updateRole(role: OpenRole) {
       const uri = await pickImageFromLibrary();
       if (!uri) return;
 
-      // Show original as preview immediately while processing
       setAvatarLocalUri(uri);
 
       if (!accessToken) {
@@ -295,12 +294,7 @@ function updateRole(role: OpenRole) {
         return;
       }
 
-      // Remove background, then upload the processed PNG to S3
-      const processedUri = await removeBackgroundAndSave({ localUri: uri });
-      const uploadUri = processedUri ?? uri;
-      if (processedUri) setAvatarLocalUri(processedUri);
-
-      const remoteKey = await uploadToS3({ localUri: uploadUri, type: "image", accessToken });
+      const remoteKey = await uploadToS3({ localUri: uri, type: "image", accessToken });
       if (remoteKey) setDraft((p) => ({ ...p, avatarImageUri: remoteKey }));
     } catch (e) {
       console.error(e);
@@ -324,31 +318,11 @@ function updateRole(role: OpenRole) {
     ]);
   }
 
-  async function onSetAvatarFromUrl(url: string) {
+  function onSetAvatarFromUrl(url: string) {
     const trimmed = url.trim();
     if (!trimmed) return;
-
-    if (!accessToken) {
-      Alert.alert("Error", "No access token");
-      return;
-    }
-
-    try {
-      setPickingAvatarImage(true);
-      const processedUri = await removeBackgroundAndSave({ imageUrl: trimmed });
-      if (!processedUri) {
-        Alert.alert("Failed", "Could not process logo from that URL.");
-        return;
-      }
-      setAvatarLocalUri(processedUri);
-      const remoteKey = await uploadToS3({ localUri: processedUri, type: "image", accessToken });
-      if (remoteKey) setDraft((p) => ({ ...p, avatarImageUri: remoteKey }));
-    } catch (e) {
-      console.error(e);
-      Alert.alert("Logo processing failed", "Please try again.");
-    } finally {
-      setPickingAvatarImage(false);
-    }
+    setAvatarLocalUri(trimmed);
+    setDraft((p) => ({ ...p, avatarImageUri: trimmed }));
   }
 
   function scrollToBottomSoon() {

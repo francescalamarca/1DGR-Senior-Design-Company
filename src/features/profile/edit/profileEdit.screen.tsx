@@ -1,23 +1,3 @@
-/*
-Here's the full avatar flow now:
-
-File upload (onPickAvatarImage)
-
-Pick image → show as preview immediately
-Run through remove.bg (image_file)
-Update preview to bg-removed version
-Upload processed PNG to S3 → store key
-URL input (onSetAvatarFromUrl)
-
-Validate .png extension
-Run through remove.bg (image_url)
-Set as local preview
-Upload processed PNG to S3 → store key
-Both reuse pickingAvatarImage as the loading state so the UI already shows the spinner during processing. The BackgroundRemover.tsx web component is unchanged and can still be used independently.
-
-*/
-
-
 import React from "react";
 import { ActivityIndicator, Platform, Pressable, View } from "react-native";
 
@@ -125,10 +105,7 @@ export default function ProfileEditScreen() {
     setRoleFormVisible,
     addRole,
     removeRole,
-    updateRole,
   } = useProfileEditController();
-
-  const [editingRole, setEditingRole] = React.useState<import("@/src/features/profile/profile.types").OpenRole | null>(null);
 
   const workTypeSubtitle = React.useMemo(() => {
     const wt = String((draft as any).workType ?? "").trim();
@@ -207,11 +184,13 @@ export default function ProfileEditScreen() {
         <MissionSection mission={draft.missionStatement ?? ""} onChangeMission={(v: string) => setDraft((p) => ({ ...p, missionStatement: v }))} />
 
         <IndustryTypeSection
+          workTypeSubtitle={workTypeSubtitle}
           companyAgeSubtitle={draft.businessAge?.trim() ? draft.businessAge : "Select"}
           industrySubtitle={summarizeIndustries(draft.industry ?? "")}
           locations={draft.locations ?? []}
           onPressAddLocation={openCityPicker}
           onRemoveLocation={removeLocation}
+          onPressWorkType={openWorkTypePicker}
           onPressCompanyAge={() =>
             openSingleSelectPicker({
               title: "Business Age",
@@ -225,16 +204,14 @@ export default function ProfileEditScreen() {
 
         <RolesSection
           roles={draft.openRoles ?? []}
-          onPressAdd={() => { setEditingRole(null); setRoleFormVisible(true); }}
+          onPressAdd={() => setRoleFormVisible(true)}
           onRemove={removeRole}
-          onPressEdit={(role) => { setEditingRole(role); setRoleFormVisible(true); }}
         />
 
         <RoleFormModal
           visible={roleFormVisible}
-          onClose={() => { setRoleFormVisible(false); setEditingRole(null);}}
-          onSave={(role) => { if (editingRole) { updateRole(role); } else { addRole(role); } }}
-          initialRole={editingRole ?? undefined}
+          onClose={() => setRoleFormVisible(false)}
+          onSave={addRole}
         />
 
         <VideoLibrarySection
