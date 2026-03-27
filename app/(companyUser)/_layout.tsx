@@ -126,17 +126,11 @@ export default function HomeUserLayout() {
           <Tabs.Screen name="video-recovery" options={{ href: null, tabBarStyle: { display: "none" } }} />
 
           {/* ───────────── Visible bottom tabs ───────────── */}
-          <Tabs.Screen name="companies" options={{ title: "Companies" }} />
-          <Tabs.Screen name="networks" options={{ title: "Networks" }} />
-          <Tabs.Screen name="explore" options={{ title: "Explore" }} />
-          <Tabs.Screen name="record" options={{ title: "Record" }} />
-          <Tabs.Screen
-            name="profile"
-            options={{
-              title: "Profile",
-              tabBarStyle: Platform.OS === "web" ? { display: "none" } : undefined,
-            }}
-          />
+          <Tabs.Screen name="candidates" options={{ title: "Companies", headerShown: false }} />
+          <Tabs.Screen name="message-inbox" options={{ title: "Messaging", headerShown: false  }} />
+          <Tabs.Screen name="explore" options={{ title: "Explore", headerShown: false  }} />
+          <Tabs.Screen name="record" options={{ title: "Record", headerShown: false  }} />
+          <Tabs.Screen name="profile" options={{ title: "Profile", headerShown: false  }} />
         </Tabs>
       </View>
     </>

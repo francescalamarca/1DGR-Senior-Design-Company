@@ -282,7 +282,7 @@ export function BenefitsSection(props: {benefits: string; onChangeBenefits: (v: 
 
   return (
     <>
-    <LLightText style={styles.sectionTitle}>Benefits </LLightText>
+    <LLightText style={styles.sectionTitle}> Benefits </LLightText>
     <LLightText style={styles.sectionHelper}>The benefits of the company. 401k, work schedule, overtime, etc.</LLightText>
 
     <View style={styles.fieldStack}>
@@ -963,6 +963,36 @@ export function RoleFormModal(props: {
               value={skillsText}
               onChangeText={setSkillsText}
               placeholder="e.g. React, Node.js, SQL"
+              placeholderTextColor={UI.hint}
+              style={[styles.input, { marginBottom: 20 }]}
+              autoCorrect={false}
+            />
+
+            <LLightText style={styles.label}>Work Type</LLightText>
+            <TextInput
+              value={workType}
+              onChangeText={setWorkType}
+              placeholder="e.g. Full-time, Remote, Hybrid"
+              placeholderTextColor={UI.hint}
+              style={[styles.input, { marginBottom: 14 }]}
+              autoCorrect={false}
+            />
+
+            <LLightText style={styles.label}>Relocation Allowance</LLightText>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14, gap: 10 }}>
+              <Switch
+                value={isRelocationCovered}
+                onValueChange={(val) => setRelocation(val)}
+                trackColor={{ false: UI.hint, true: UI.text }}
+              />
+              <LLightText>{isRelocationCovered ? "Yes" : "No"}</LLightText>
+            </View>
+
+            <LLightText style={styles.label}>Job Posting URL </LLightText>
+            <TextInput
+              value={postUrl}
+              onChangeText={setPostUrl}
+              placeholder="site link"
               placeholderTextColor={UI.hint}
               style={[styles.input, { marginBottom: 20 }]}
               autoCorrect={false}
