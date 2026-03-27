@@ -128,11 +128,11 @@ export default function CompanyUserLayout() {
           <Tabs.Screen name="video-recovery" options={{ href: null, tabBarStyle: { display: "none" } }} />
 
           {/* ───────────── Visible bottom tabs ───────────── */}
-          <Tabs.Screen name="candidates" options={{ title: "Companies" }} />
-          <Tabs.Screen name="message-inbox" options={{ title: "Messaging" }} />
-          <Tabs.Screen name="explore" options={{ title: "Explore" }} />
-          <Tabs.Screen name="record" options={{ title: "Record" }} />
-          <Tabs.Screen name="profile" options={{ title: "Profile" }} />
+          <Tabs.Screen name="candidates" options={{ title: "Companies", headerShown: false }} />
+          <Tabs.Screen name="message-inbox" options={{ title: "Messaging", headerShown: false  }} />
+          <Tabs.Screen name="explore" options={{ title: "Explore", headerShown: false  }} />
+          <Tabs.Screen name="record" options={{ title: "Record", headerShown: false  }} />
+          <Tabs.Screen name="profile" options={{ title: "Profile", headerShown: false  }} />
         </Tabs>
       </View>
     </>

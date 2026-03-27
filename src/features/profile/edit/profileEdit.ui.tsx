@@ -250,7 +250,7 @@ export function MissionSection(props: { mission: string; onChangeMission: (v: st
 
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Company Mission</LLightText>
+      <LLightText style={styles.sectionTitle}>Mission</LLightText>
       <LLightText style={styles.sectionHelper}>The mission of the company.</LLightText>
 
       <View style={styles.fieldStack}>
@@ -272,7 +272,7 @@ export function BenefitsSection(props: {benefits: string; onChangeBenefits: (v: 
 
   return (
     <>
-    <LLightText style={styles.sectionTitle}> Company Benefits </LLightText>
+    <LLightText style={styles.sectionTitle}> Benefits </LLightText>
     <LLightText style={styles.sectionHelper}>The benefits of the company. 401k, work schedule, overtime, etc.</LLightText>
 
     <View style={styles.fieldStack}>
@@ -309,7 +309,7 @@ export function IndustryTypeSection(props: {
   } = props;
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Company Logistics</LLightText>
+      <LLightText style={styles.sectionTitle}>Logistics</LLightText>
       <LLightText style={styles.sectionHelper}>Residency requirements, company age, work, and location.</LLightText>
 
       <GroupCard>
@@ -960,7 +960,7 @@ export function RoleFormModal(props: {
               autoCorrect={false}
             />
 
-            <LLightText style={styles.label}>Relocation Covered</LLightText>
+            <LLightText style={styles.label}>Relocation Allowance</LLightText>
             <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14, gap: 10 }}>
               <Switch
                 value={isRelocationCovered}
