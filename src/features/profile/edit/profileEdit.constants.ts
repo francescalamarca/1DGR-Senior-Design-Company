@@ -168,7 +168,7 @@ export const COMPANY_AGE_OPTIONS = [
 
 export const WORK_TYPE_OPTIONS = ["Part-Time", "Full Time", "Contract", "All"];
 
-export const WORK_PREFERENCE_OPTIONS = ["Remote", "Hybrid", "In Office"];
+export const WORK_PREFERENCE_OPTIONS = ["Remote", "Hybrid", "On Site", "All"];
 
 //these will come down in the dropdown of the core values options that can be attached to company profile
 export const CORE_VALUES = [
