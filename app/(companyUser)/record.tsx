@@ -5,6 +5,7 @@
  */
 
 import KeyboardScreen from "@/src/components/KeyboardScreen";
+import { useDynColors } from "@/src/state/theme-colors";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, Text, View } from "react-native";
@@ -13,21 +14,13 @@ import {
   CAMERA_PROMPT_DESCRIPTIONS,
 } from "../../constants/camera-prompts"; //moved this to constants because that is what they are - modular
 
-const COLORS = {
-  bg: "#fbfbfb",
-  card: "#ffffff",
-  text: "#202020",
-  subtext: "#464646",
-  border: "#d9d9d9",
-  accent: "#9bb4c0",
-} as const;
-
 const FONTS = {
   LEXEND_REGULAR: "Lexend-Regular",
   DMMONO_LIGHT: "DMMono-Light",
 } as const;
 
 export default function CameraScreen() {
+  const COLORS = useDynColors();
   const [showTips, setShowTips] = useState(false);
   const promptDescriptions = CAMERA_PROMPT_DESCRIPTIONS ?? [];
 

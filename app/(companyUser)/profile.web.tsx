@@ -8,6 +8,7 @@ import {
   type QualRowValue,
 } from "@/src/features/profile/edit/profileScreen.shared";
 import { useSession } from "@/src/state/session";
+import { useDynColors } from "@/src/state/theme-colors";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -71,26 +72,15 @@ function QualValue({ value, textStyle }: { value: QualRowValue; textStyle: any }
   return <Text style={textStyle}>{softWrapLongTokens(value)}</Text>;
 }
 
-function DetailRow({ row }: { row: QualRow }) {
+function DetailRow({ row, textColor = TEXT, mutedColor = MUTED }: { row: QualRow; textColor?: string; mutedColor?: string }) {
   return (
     <View style={{ gap: 8 }}>
-      <Text
-        style={{
-          fontFamily: FONTS.LEXEND_LIGHT,
-          fontSize: 13,
-          color: MUTED,
-        }}
-      >
+      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: mutedColor }}>
         {row.label}
       </Text>
       <QualValue
         value={row.value}
-        textStyle={{
-          fontFamily: FONTS.LEXEND_LIGHT,
-          fontSize: 14,
-          lineHeight: 21,
-          color: TEXT,
-        }}
+        textStyle={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, lineHeight: 21, color: textColor }}
       />
     </View>
   );
@@ -101,17 +91,21 @@ function SidebarLink({
   value,
   onPress,
   disabled,
+  textColor = TEXT,
+  mutedColor = MUTED,
 }: {
   label: string;
   value: string;
   onPress: () => void;
   disabled?: boolean;
+  textColor?: string;
+  mutedColor?: string;
 }) {
   return (
     <View style={{ gap: 8 }}>
-      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED }}>{label}</Text>
+      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: mutedColor }}>{label}</Text>
       <Pressable onPress={onPress} disabled={disabled} style={{ opacity: disabled ? 0.5 : 1 }}>
-        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, lineHeight: 21, color: TEXT }}>
+        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, lineHeight: 21, color: textColor }}>
           {value || "—"}
         </Text>
       </Pressable>
@@ -120,6 +114,7 @@ function SidebarLink({
 }
 
 export default function ProfileWebScreen() {
+  const C = useDynColors();
   const { logout } = useSession();
   const { width } = useWindowDimensions();
   const railRef = useRef<FlatList<any> | null>(null);
@@ -216,19 +211,19 @@ export default function ProfileWebScreen() {
     <>
       <RequireUserType type="home" />
 
-      <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: PAPER }}>
+      <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: C.bg }}>
         <ScrollView
-          style={{ flex: 1, backgroundColor: PAPER }}
+          style={{ flex: 1, backgroundColor: C.bg }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchLatestProfile} />}
         >
           <View
             style={{
               height: 64,
               borderBottomWidth: 1,
-              borderBottomColor: BORDER,
+              borderBottomColor: C.border,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: WHITE,
+              backgroundColor: C.card,
               position: "relative",
             }}
           >
@@ -245,7 +240,7 @@ export default function ProfileWebScreen() {
             >
               {TOP_NAV_ITEMS.map((item) => {
                 const active = item.key === "profile";
-                const color = active ? ACCENT : MUTED;
+                const color = active ? C.accent : C.subtle;
 
                 return (
                   <Pressable
@@ -289,7 +284,7 @@ export default function ProfileWebScreen() {
 
           <View
             style={{
-              backgroundColor: PAPER,
+              backgroundColor: C.bg,
               paddingHorizontal: 0,
               paddingTop: 0,
               paddingBottom: 0,
@@ -300,9 +295,9 @@ export default function ProfileWebScreen() {
                 flexDirection: "column",
                 alignItems: "stretch",
                 gap: 0,
-                backgroundColor: WHITE,
+                backgroundColor: C.card,
                 borderTopWidth: 1,
-                borderTopColor: BORDER,
+                borderTopColor: C.border,
                 position: "relative",
               }}
             >
@@ -353,7 +348,7 @@ export default function ProfileWebScreen() {
                           fontFamily: FONTS.LEXEND_LIGHT,
                           fontSize: isCompact ? 38 : 50,
                           lineHeight: isCompact ? 44 : 56,
-                          color: TEXT,
+                          color: C.text,
                         }}
                       >
                         {displayName}
@@ -366,7 +361,7 @@ export default function ProfileWebScreen() {
                           fontFamily: FONTS.LEXEND_LIGHT,
                           fontSize: 15,
                           lineHeight: 22,
-                          color: MUTED,
+                          color: C.subtle,
                           marginTop: 6,
                         }}
                       >
@@ -389,7 +384,7 @@ export default function ProfileWebScreen() {
                       onPress={() => router.push({ pathname: "/(companyUser)/video-library", params: { returnTo: navReturnTo } })}
                       style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
                     >
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>
                         LIBRARY
                       </Text>
                       <Feather name="layers" size={18} color={TEXT} />
@@ -399,7 +394,7 @@ export default function ProfileWebScreen() {
                       onPress={() => router.push("/(companyUser)/profile-edit")}
                       style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
                     >
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>
                         EDIT
                       </Text>
                       <Feather name="edit-2" size={18} color={TEXT} />
@@ -409,13 +404,13 @@ export default function ProfileWebScreen() {
                       onPress={() => router.push("/(companyUser)/settings")}
                       style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
                     >
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>
                         SETTINGS
                       </Text>
                       <Feather name="settings" size={18} color={TEXT} />
                     </Pressable>
 
-                    <View style={{ height: 1, backgroundColor: BORDER, marginVertical: 2 }} />
+                    <View style={{ height: 1, backgroundColor: C.border, marginVertical: 2 }} />
 
                     <Pressable
                       onPress={fetchLatestProfile}
@@ -427,7 +422,7 @@ export default function ProfileWebScreen() {
                         opacity: refreshing ? 0.45 : 1,
                       }}
                     >
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>
                         REFRESH
                       </Text>
                       <Feather name="refresh-cw" size={18} color={TEXT} />
@@ -437,7 +432,7 @@ export default function ProfileWebScreen() {
                       onPress={() => setLiveQrModalOpen(true)}
                       style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
                     >
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>
                         SHARE
                       </Text>
                       <Feather name="share" size={18} color={TEXT} />
@@ -452,7 +447,7 @@ export default function ProfileWebScreen() {
                     fontFamily: FONTS.LEXEND_LIGHT,
                     fontSize: 13,
                     letterSpacing: 2,
-                    color: TEXT,
+                    color: C.text,
                     marginBottom: 14,
                   }}
                 >
@@ -491,7 +486,7 @@ export default function ProfileWebScreen() {
                             borderWidth: 1,
                             borderColor: "#9eb2bf",
                             borderRadius: 18,
-                            backgroundColor: WHITE,
+                            backgroundColor: C.card,
                             overflow: "hidden",
                           }}
                         >
@@ -501,7 +496,7 @@ export default function ProfileWebScreen() {
                                 fontFamily: FONTS.CRIMSON_REGULAR,
                                 fontSize: 18,
                                 lineHeight: 25,
-                                color: TEXT,
+                                color: C.text,
                               }}
                             >
                               {caption}
@@ -520,9 +515,9 @@ export default function ProfileWebScreen() {
                           width: 320,
                           minHeight: 260,
                           borderWidth: 1,
-                          borderColor: BORDER,
+                          borderColor: C.border,
                           borderRadius: 18,
-                          backgroundColor: PAPER,
+                          backgroundColor: C.bg,
                           alignItems: "center",
                           justifyContent: "center",
                           padding: 24,
@@ -533,7 +528,7 @@ export default function ProfileWebScreen() {
                             fontFamily: FONTS.LEXEND_LIGHT,
                             fontSize: 14,
                             lineHeight: 21,
-                            color: MUTED,
+                            color: C.subtle,
                             textAlign: "center",
                           }}
                         >
@@ -561,7 +556,7 @@ export default function ProfileWebScreen() {
                           borderRadius: 999,
                           borderWidth: 1,
                           borderColor: "#9eb2bf",
-                          backgroundColor: WHITE,
+                          backgroundColor: C.card,
                           alignItems: "center",
                           justifyContent: "center",
                         }}
@@ -577,7 +572,7 @@ export default function ProfileWebScreen() {
                           borderRadius: 999,
                           borderWidth: 1,
                           borderColor: "#9eb2bf",
-                          backgroundColor: WHITE,
+                          backgroundColor: C.card,
                           alignItems: "center",
                           justifyContent: "center",
                         }}
@@ -603,7 +598,7 @@ export default function ProfileWebScreen() {
                   width: isCompact ? "100%" : sidebarWidth,
                   borderLeftWidth: isCompact || !sidebarOpen ? 0 : 1,
                   borderTopWidth: isCompact ? 1 : 0,
-                  borderColor: BORDER,
+                  borderColor: C.border,
                   backgroundColor: "transparent",
                   overflow: "visible",
                 }}
@@ -639,7 +634,7 @@ export default function ProfileWebScreen() {
                           fontFamily: FONTS.LEXEND_LIGHT,
                           fontSize: 13,
                           letterSpacing: 2,
-                          color: TEXT,
+                          color: C.text,
                         }}
                       >
                         ABOUT US
@@ -667,7 +662,7 @@ export default function ProfileWebScreen() {
                       showsVerticalScrollIndicator
                     >
                       {sidebarRows.map((row) => (
-                        <DetailRow key={row.label} row={row} />
+                        <DetailRow key={row.label} row={row} textColor={C.text} mutedColor={C.subtle} />
                       ))}
                     </ScrollView>
                   </Animated.View>
@@ -675,18 +670,20 @@ export default function ProfileWebScreen() {
 
                 {/* Contact links and action buttons — always visible regardless of collapse state */}
                 <View style={{ paddingLeft: 35, paddingRight: 22, paddingTop: 20, paddingBottom: 28, gap: 20 }}>
-                  <View style={{ height: 1, backgroundColor: BORDER }} />
+                  <View style={{ height: 1, backgroundColor: C.border }} />
 
                   <View style={{ gap: 20 }}>
-                    <SidebarLink label="Live profile" value={liveProfileUrl} onPress={copyLiveAsUrl} />
-                    <SidebarLink label="Email" value={contactEmail} onPress={copyEmail} disabled={!contactEmail} />
-                    <SidebarLink label="Phone" value={contactPhone} onPress={copyPhone} disabled={!contactPhone} />
+                    <SidebarLink label="Live profile" value={liveProfileUrl} onPress={copyLiveAsUrl} textColor={C.text} mutedColor={C.subtle} />
+                    <SidebarLink label="Email" value={contactEmail} onPress={copyEmail} disabled={!contactEmail} textColor={C.text} mutedColor={C.subtle} />
+                    <SidebarLink label="Phone" value={contactPhone} onPress={copyPhone} disabled={!contactPhone} textColor={C.text} mutedColor={C.subtle} />
                     {showUrl1 ? (
                       <SidebarLink
                         label={contactUrl1Label}
                         value={contactUrl1}
                         onPress={() => copyUrl(contactUrl1)}
                         disabled={!contactUrl1}
+                        textColor={C.text}
+                        mutedColor={C.subtle}
                       />
                     ) : null}
                     {showUrl2 ? (
@@ -695,6 +692,8 @@ export default function ProfileWebScreen() {
                         value={contactUrl2}
                         onPress={() => copyUrl(contactUrl2)}
                         disabled={!contactUrl2}
+                        textColor={C.text}
+                        mutedColor={C.subtle}
                       />
                     ) : null}
                   </View>
@@ -758,13 +757,13 @@ export default function ProfileWebScreen() {
           >
             <Pressable
               onPress={() => {}}
-              style={{ width: "100%", maxWidth: 460, borderRadius: 20, backgroundColor: WHITE, padding: 24 }}
+              style={{ width: "100%", maxWidth: 460, borderRadius: 20, backgroundColor: C.card, padding: 24 }}
             >
               <Text
                 style={{
                   fontFamily: FONTS.LEXEND_REGULAR,
                   fontSize: 20,
-                  color: TEXT,
+                  color: C.text,
                   textAlign: "center",
                 }}
               >
@@ -774,7 +773,7 @@ export default function ProfileWebScreen() {
                 style={{
                   fontFamily: FONTS.LEXEND_LIGHT,
                   fontSize: 13,
-                  color: MUTED,
+                  color: C.subtle,
                   textAlign: "center",
                   marginTop: 8,
                 }}
@@ -792,42 +791,42 @@ export default function ProfileWebScreen() {
                   style={{
                     flex: 1,
                     borderWidth: 1,
-                    borderColor: BORDER,
+                    borderColor: C.border,
                     borderRadius: 12,
                     paddingVertical: 12,
                     alignItems: "center",
-                    backgroundColor: PAPER,
+                    backgroundColor: C.bg,
                   }}
                 >
-                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: TEXT }}>Copy QR code</Text>
+                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: C.text }}>Copy QR code</Text>
                 </Pressable>
                 <Pressable
                   onPress={copyLiveAsUrl}
                   style={{
                     flex: 1,
                     borderWidth: 1,
-                    borderColor: BORDER,
+                    borderColor: C.border,
                     borderRadius: 12,
                     paddingVertical: 12,
                     alignItems: "center",
-                    backgroundColor: PAPER,
+                    backgroundColor: C.bg,
                   }}
                 >
-                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: TEXT }}>Copy URL</Text>
+                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: C.text }}>Copy URL</Text>
                 </Pressable>
                 <Pressable
                   onPress={() => setLiveQrModalOpen(false)}
                   style={{
                     flex: 1,
                     borderWidth: 1,
-                    borderColor: BORDER,
+                    borderColor: C.border,
                     borderRadius: 12,
                     paddingVertical: 12,
                     alignItems: "center",
-                    backgroundColor: WHITE,
+                    backgroundColor: C.card,
                   }}
                 >
-                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: TEXT }}>Close</Text>
+                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: C.text }}>Close</Text>
                 </Pressable>
               </View>
             </Pressable>

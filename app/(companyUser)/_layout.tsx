@@ -16,19 +16,26 @@
 import { RequireUserType } from "@/src/components/RequireUserType";
 import { useProfile } from "@/src/features/profile/profile.store";
 import { getCurrentSessionToken } from "@/src/utils/auth";
+import { useThemePreference } from "@/src/state/theme-preference";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { useEffect, useRef } from "react";
 import { Platform, View } from "react-native";
 
-const COLORS = {
-  bg: "#fbfbfb",        // App background
-  card: "#ffffff",      // Tab surface
-  text: "#202020",      // Primary text
-  subtext: "#464646",   // Secondary text
-  inactive: "#a4a4a4",  // Placeholder/disabled
-  border: "#d9d9d9",    // Dividers/borders
-  accent: "#9bb4c0",    // Primary
+const LIGHT = {
+  bg: "#fbfbfb",
+  card: "#ffffff",
+  inactive: "#a4a4a4",
+  border: "#d9d9d9",
+  accent: "#9bb4c0",
+} as const;
+
+const DARK = {
+  bg: "#3E424B",
+  card: "#474B54",
+  inactive: "#8A8F9A",
+  border: "#5A5F6B",
+  accent: "#9bb4c0",
 } as const;
 
 // ✅ MUST match EXACT keys from your useFonts(...)
@@ -39,6 +46,8 @@ const FONTS = {
 
 export default function HomeUserLayout() {
   const { refreshProfile } = useProfile();
+  const { colorScheme } = useThemePreference();
+  const COLORS = colorScheme === "dark" ? DARK : LIGHT;
   const didInit = useRef(false);
 
   useEffect(() => {

@@ -19,6 +19,7 @@ import {
   type QualRowValue,
 } from "@/src/features/profile/edit/profileScreen.shared";
 import { useSession } from "@/src/state/session";
+import { useDynColors } from "@/src/state/theme-colors";
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -91,6 +92,7 @@ function QualValue({ value, textStyle }: { value: QualRowValue; textStyle: any }
 }
 
 export default function ProfileScreen() {
+  const C = useDynColors();
   const { showActionSheetWithOptions } = useActionSheet();
   const { logout } = useSession();
   const { profile, liveProfileUrl, copyLiveAsUrl, copyEmail, copyPhone, copyUrl, refreshing, fetchLatestProfile, displayName, canToggleName, toggleDisplayName, headlineText, hookText, qualCol1, qualCol2, workTypeDisplay, videos, contactEmail, contactPhone, contactUrl1, contactUrl2, contactUrl1Label, contactUrl2Label, showUrl1, showUrl2, openVideo } =
@@ -112,14 +114,14 @@ export default function ProfileScreen() {
         ...lexLight,
         fontSize: 28,
         textAlign: "center" as const,
-        color: TEXT,
+        color: C.text,
       } as const,
 
       headline: {
         ...lexLight,
         fontSize: 13.5,
         textAlign: "center" as const,
-        color: TEXT,
+        color: C.text,
         marginTop: 10,
       } as const,
 
@@ -130,24 +132,24 @@ export default function ProfileScreen() {
         fontSize: 21,
         lineHeight: 31,
         paddingHorizontal: 4,
-        color: TEXT,
+        color: C.text,
       } as const,
 
       sectionHeader: {
         ...lexLight,
         fontSize: 13,
         letterSpacing: 2.2,
-        color: TEXT,
+        color: C.text,
       } as const,
       contactLabel: { ...lexLight, fontSize: 12.5, color: "#5E5E5E", opacity: 1 } as const,
       contactLinkLabel: { ...lexLight, fontSize: 12.5, color: "#5E5E5E", opacity: 1 } as const,
-      contactValue: { ...lexLight, fontSize: 14, color: TEXT, opacity: 1 } as const,
+      contactValue: { ...lexLight, fontSize: 14, color: C.text, opacity: 1 } as const,
 
       qualHeader: {
         ...lexLight,
         fontSize: 13,
         letterSpacing: 2.1,
-        color: TEXT,
+        color: C.text,
         opacity: 1,
       } as const,
 
@@ -157,7 +159,7 @@ export default function ProfileScreen() {
         ...lexLight,
         fontSize: 13,
         marginLeft: 10,
-        color: TEXT,
+        color: C.text,
         opacity: 1,
         lineHeight: 18,
         flexShrink: 1,
@@ -165,10 +167,10 @@ export default function ProfileScreen() {
         width: "90%", // ✅ keep as requested
       } as const,
 
-      videoCaption: { ...lexReg, fontSize: 16.5, lineHeight: 22, color: TEXT } as const,
-      logout: { ...lexLight, color: TEXT } as const,
+      videoCaption: { ...lexReg, fontSize: 16.5, lineHeight: 22, color: C.text } as const,
+      logout: { ...lexLight, color: C.text } as const,
     };
-  }, []);
+  }, [C.text]);
 
   function openLiveShareSheet() {
     const options = ["Copy URL", "Show QR code", "Cancel"];
@@ -450,10 +452,10 @@ export default function ProfileScreen() {
     <>
       <RequireUserType type="home" />
 
-      <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: BG }}>
+      <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: C.bg }}>
         <Animated.ScrollView
           ref={scrollViewRef}
-          style={{ backgroundColor: BG }}
+          style={{ backgroundColor: C.bg }}
           contentContainerStyle={{ paddingBottom: 0 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchLatestProfile} />}
           onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
@@ -464,7 +466,7 @@ export default function ProfileScreen() {
               height: 64,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: WHITE,
+              backgroundColor: C.card,
               borderBottomWidth: 1,
               borderBottomColor: BORDER,
             }}
@@ -480,7 +482,7 @@ export default function ProfileScreen() {
           </View>
 
           {/* Block A */}
-          <View style={{ backgroundColor: WHITE }}>
+          <View style={{ backgroundColor: C.card }}>
             <View style={{ paddingHorizontal: 18, paddingTop: 12, paddingBottom: 22 }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                 <Pressable onPress={openLiveShareSheet} hitSlop={10}>
@@ -553,7 +555,7 @@ export default function ProfileScreen() {
           <View style={{ height: 1, backgroundColor: BORDER }} />
 
           {/* Block B */}
-          <View style={{ backgroundColor: WHITE, paddingHorizontal: 24, paddingVertical: 16 }}>
+          <View style={{ backgroundColor: C.card, paddingHorizontal: 24, paddingVertical: 16 }}>
             {!!hookText ? <Text style={s.hook}>{hookText}</Text> : <Text style={[s.hook, { opacity: 1 }]}>—</Text>}
           </View>
 
@@ -561,7 +563,7 @@ export default function ProfileScreen() {
 
           {/* Block C — Company Info */}
           <View
-            style={{ backgroundColor: WHITE, paddingHorizontal: 22, paddingVertical: 12 }}
+            style={{ backgroundColor: C.card, paddingHorizontal: 22, paddingVertical: 12 }}
             onLayout={(event) => setQualSectionY(event.nativeEvent.layout.y)}
           >
             <Pressable
@@ -728,7 +730,7 @@ export default function ProfileScreen() {
                       onPress={() => openVideo(uri)}
                     style={{
                       width: CARD_W,
-                      backgroundColor: WHITE,
+                      backgroundColor: C.card,
                       borderRadius: 16,
                       borderWidth: 1,
                       borderColor: "#9db3c0",
@@ -866,7 +868,7 @@ export default function ProfileScreen() {
         <Modal visible={liveQrModalOpen} transparent animationType="fade" onRequestClose={() => setLiveQrModalOpen(false)}>
           <Pressable onPress={() => setLiveQrModalOpen(false)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "center", alignItems: "center", padding: 16 }}>
             <Pressable onPress={() => {}} style={{ width: "100%", maxWidth: 420, backgroundColor: "white", borderRadius: 14, padding: 16 }}>
-              <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, fontSize: 18, color: TEXT, textAlign: "center" }}>Live QR Code</Text>
+              <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, fontSize: 18, color: C.text, textAlign: "center" }}>Live QR Code</Text>
               <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: "#6A6A6A", textAlign: "center", marginTop: 6 }}>
                 Tap the QR code to copy.
               </Text>
@@ -880,13 +882,13 @@ export default function ProfileScreen() {
                   onPress={() => setLiveQrCopyToken((n) => (typeof n === "number" ? n + 1 : 1))}
                   style={({ pressed }) => [{ flex: 1, borderWidth: 1, borderColor: BORDER, borderRadius: 10, paddingVertical: 10, alignItems: "center", backgroundColor: pressed ? "#F2F2F2" : "white" }]}
                 >
-                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: TEXT }}>Copy QR code</Text>
+                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: C.text }}>Copy QR code</Text>
                 </Pressable>
                 <Pressable
                   onPress={() => setLiveQrModalOpen(false)}
                   style={({ pressed }) => [{ flex: 1, borderWidth: 1, borderColor: BORDER, borderRadius: 10, paddingVertical: 10, alignItems: "center", backgroundColor: pressed ? "#F2F2F2" : "white" }]}
                 >
-                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: TEXT }}>Close</Text>
+                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: C.text }}>Close</Text>
                 </Pressable>
               </View>
             </Pressable>
