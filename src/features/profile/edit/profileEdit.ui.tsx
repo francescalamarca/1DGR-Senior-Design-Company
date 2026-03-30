@@ -311,7 +311,7 @@ export function MissionSection(props: {
 
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Company Mission</LLightText>
+      <LLightText style={styles.sectionTitle}>Mission</LLightText>
       <LLightText style={styles.sectionHelper}>
         The mission of the company.
       </LLightText>
@@ -338,7 +338,7 @@ export function BenefitsSection(props: {
 
   return (
     <>
-      <LLightText style={styles.sectionTitle}> Company Benefits </LLightText>
+      <LLightText style={styles.sectionTitle}> Benefits </LLightText>
       <LLightText style={styles.sectionHelper}>
         The benefits of the company. 401k, work schedule, overtime, etc.
       </LLightText>
@@ -1305,12 +1305,7 @@ export function RolesSection(props: {
             )}
             {role.skills.length > 0 && (
               <LLightText style={styles.rowSub} numberOfLines={1}>
-                <Pressable>
-                  <SkillsPickerModal>
-                    
-                  </SkillsPickerModal>
                 {role.skills.join(", ")}
-                </Pressable>
               </LLightText>
             )}
             {!!role.workType.trim() && (
