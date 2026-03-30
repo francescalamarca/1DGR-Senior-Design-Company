@@ -23,7 +23,7 @@ export type OpenRole = {
   title: string;
   salary: string;
   postedAt: string; // ISO date string, e.g. "2024-03-22"
-  skills: string[];
+  skills: string[]; // this will be populated by a dropdown
   postUrl: string;
   workType: string;
   isRelocationCovered: boolean; //this basically asks, does the employee have to relocation - will be a button option check, yes/no

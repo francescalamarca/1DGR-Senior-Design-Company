@@ -1,7 +1,7 @@
 import { ProfileBrandWordmark } from "@/src/components/ProfileBrandWordmark";
+import { WebFooter } from "@/src/components/WebFooter";
 import { RequireUserType } from "@/src/components/RequireUserType";
 import {
-  HIGHER_ED_ITEM_GAP,
   softWrapLongTokens,
   useCompanyProfileScreenData,
   type QualRow,
@@ -39,7 +39,6 @@ const WHITE = "#ffffff";
 const TEXT = "#202020";
 const MUTED = "#718896";
 const BORDER = "#d6dde2";
-const DARK = "#1a1b1d";
 const ACCENT = "#9bb4c0";
 
 const TOP_NAV_ITEMS = [
@@ -50,6 +49,10 @@ const TOP_NAV_ITEMS = [
   { key: "profile", label: "Profile", route: "/(companyUser)/profile", icon: "user", iconSet: "feather" },
 ] as const;
 
+/*
+Array (string[]): renders each item as its own Text line with spacing between them (e.g. a list of skills or education entries)
+Single value (line 70): renders it as a single Text element
+*/
 function QualValue({ value, textStyle }: { value: QualRowValue; textStyle: any }) {
   if (Array.isArray(value)) {
     if (value.length === 0) return <Text style={textStyle}>—</Text>;
@@ -59,7 +62,7 @@ function QualValue({ value, textStyle }: { value: QualRowValue; textStyle: any }
         {value.map((item, idx) => (
           <Text
             key={`${idx}_${item}`}
-            style={[textStyle, idx === value.length - 1 ? null : { marginBottom: HIGHER_ED_ITEM_GAP }]}
+            style={[textStyle, idx === value.length - 1 ? null : { marginBottom: 1 }]}
           >
             {softWrapLongTokens(item)}
           </Text>
@@ -152,11 +155,11 @@ export default function ProfileWebScreen() {
   // Company-specific derived values (replacing individual-user fields)
   const canToggleName = false;
   const toggleDisplayName = () => {};
-  const workTypeDisplay = String((profile as any).workType ?? "").trim();
+  const openRolesDisplay = String((profile as any).openRoles ?? "").trim(); //display on the profile
 
   // Sidebar rows shown in the expanded ABOUT US panel
-  const [liveQrModalOpen, setLiveQrModalOpen] = useState(false);
-  const [liveQrCopyToken, setLiveQrCopyToken] = useState<number | undefined>(undefined);
+  // const [liveQrModalOpen, setLiveQrModalOpen] = useState(false);
+  // const [liveQrCopyToken, setLiveQrCopyToken] = useState<number | undefined>(undefined);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarColumnHeight, setSidebarColumnHeight] = useState(760);
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
@@ -173,11 +176,11 @@ export default function ProfileWebScreen() {
       { label: "Core Values", value: coreValues.length ? coreValues.join(", ") : "—" },
       { label: "Industry", value: industry || "—" },
       { label: "Benefits", value: benefitsSummary || "—" },
-      { label: "Work Type", value: workTypeDisplay || "—" },
+      { label: "Open Roles", value: openRolesDisplay || "—" },
       { label: "Locations", value: locations.length ? locations.join(", ") : "—" },
     ];
     return [...qualCol1, ...qualCol2];
-  }, [missionStatement, coreValues, industry, benefitsSummary, workTypeDisplay, locations]);
+  }, [missionStatement, coreValues, industry, benefitsSummary, openRolesDisplay, locations]);
   const sidebarPanelHeight = isCompact ? 540 : Math.max(sidebarColumnHeight, 760);
   const collapsedPanelHeight = 64; // just the header row (ABOUT US + chevron)
   const sidebarWidth = isCompact ? 0 : 450;
@@ -432,15 +435,6 @@ export default function ProfileWebScreen() {
                       <Feather name="refresh-cw" size={18} color={TEXT} />
                     </Pressable>
 
-                    <Pressable
-                      onPress={() => setLiveQrModalOpen(true)}
-                      style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
-                    >
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
-                        SHARE
-                      </Text>
-                      <Feather name="share" size={18} color={TEXT} />
-                    </Pressable>
                   </View>
                 </View>
               </View>
@@ -702,52 +696,14 @@ export default function ProfileWebScreen() {
               </View>
             </View>
           </View>
-
-          <View
-            style={{
-              backgroundColor: DARK,
-              paddingHorizontal: pagePad,
-              paddingVertical: 40,
-              flexDirection: isCompact ? "column" : "row",
-              justifyContent: "space-between",
-              gap: 28,
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: FONTS.LEXEND_LIGHT,
-                fontSize: isCompact ? 24 : 28,
-                lineHeight: isCompact ? 34 : 40,
-                color: WHITE,
-                maxWidth: 360,
-              }}
-            >
-              one degree,
-              {"\n"}one conversation,
-              {"\n"}one connection,
-              {"\n"}can change everything.
-            </Text>
-
-            <View style={{ alignItems: isCompact ? "flex-start" : "flex-end", gap: 18 }}>
-              <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 32, color: WHITE }}>1DGR°</Text>
-              <Pressable onPress={() => router.push("/(companyUser)/settings")}>
-                <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, letterSpacing: 1.6, color: "#aab6be" }}>
-                  SETTINGS
-                </Text>
-              </Pressable>
-              {/* <Pressable
-                onPress={() => {
-                  logout();
-                  router.replace("/(auth)/login");
-                }}
-              > */}
-                <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, letterSpacing: 1.6, color: "#aab6be" }}>
-                  LOGOUT
-                </Text>
-              {/*</Pressable>*/}
-            </View>
-          </View>
         </ScrollView>
+        {/* this had to be placed outside of the scrollview or else it will move with it, placed it in a reusable component for easy find and edit*/}
+        <WebFooter
+          onLogout={() => {
+            logout();
+            router.replace("/(auth)/login" as any);
+          }}
+        />
 
       </SafeAreaView>
     </>
