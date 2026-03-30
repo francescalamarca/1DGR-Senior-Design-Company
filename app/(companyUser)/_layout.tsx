@@ -2,7 +2,7 @@
  * HomeUserLayout (Brand Accurate)
  *
  * Bottom tabs:
- * Companies / Networks / Explore / Camera / Profile
+ * Candiates / Networks / Explore / Camera / Profile
  *
  * Hidden routes:
  * index, settings, profile-edit, video, recording-studio, camera-ui, video-library, video-recovery
@@ -95,7 +95,7 @@ export default function HomeUserLayout() {
             tabBarIcon: ({ color, size }) => {
               const iconSize = Math.max(18, size);
               switch (route.name) {
-                case "companies":
+                case "users":
                   return <Feather name="briefcase" size={iconSize} color={color} />;
                 case "networks":
                   return <Feather name="users" size={iconSize} color={color} />;
@@ -126,7 +126,7 @@ export default function HomeUserLayout() {
           <Tabs.Screen name="video-recovery" options={{ href: null, tabBarStyle: { display: "none" } }} />
 
           {/* ───────────── Visible bottom tabs ───────────── */}
-          <Tabs.Screen name="companies" options={{ title: "Companies" }} />
+          <Tabs.Screen name="candidates" options={{ title: "Candidates" }} />
           <Tabs.Screen name="networks" options={{ title: "Networks" }} />
           <Tabs.Screen name="explore" options={{ title: "Explore" }} />
           <Tabs.Screen name="record" options={{ title: "Record" }} />

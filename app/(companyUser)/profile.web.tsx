@@ -43,7 +43,7 @@ const DARK = "#1a1b1d";
 const ACCENT = "#9bb4c0";
 
 const TOP_NAV_ITEMS = [
-  { key: "companies", label: "Companies", route: "/(companyUser)/companies", icon: "briefcase", iconSet: "feather" },
+  { key: "candidates", label: "Candidates", route: "/(companyUser)/candidates", icon: "briefcase", iconSet: "feather" },
   { key: "networks", label: "Networks", route: "/(companyUser)/networks", icon: "users", iconSet: "feather" },
   { key: "explore", label: "Explore", route: "/(companyUser)/explore", icon: "earth", iconSet: "material" },
   { key: "record", label: "Record", route: "/(companyUser)/record", icon: "video", iconSet: "feather" },
