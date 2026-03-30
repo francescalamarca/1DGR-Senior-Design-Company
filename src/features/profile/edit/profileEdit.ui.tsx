@@ -1,23 +1,23 @@
 // src/features/profile/edit/profileEdit.ui.tsx
-import { Feather } from "@expo/vector-icons";
 import React from "react";
 import {
-  ActivityIndicator,
-  FlatList,
-  Image,
-  KeyboardAvoidingView,
-  Modal,
-  Platform,
-  Pressable,
-  ScrollView,
-  TextInput,
   View,
+  Pressable,
+  ActivityIndicator,
+  Image,
+  TextInput,
+  Modal,
+  FlatList,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Switch, //used in roles for relocation check box
 } from "react-native";
 
-import type { OpenRole } from "@/src/features/profile/profile.types";
-import { BtnText, LLightText } from "./profileEdit.components";
+import { styles, UI } from "./profileEdit.styles";
+import { LLightText, BtnText } from "./profileEdit.components";
 import { BACKGROUND_COLOR_OPTIONS, CORE_VALUES } from "./profileEdit.constants";
-import { UI, styles } from "./profileEdit.styles";
+import type { OpenRole } from "@/src/features/profile/profile.types";
 
 // ---------- Types the screen expects ----------
 export type IndustryRow =
@@ -96,97 +96,87 @@ export function AvatarSection(props: {
 
   return (
     <>
-      <LLightText style={[styles.sectionTitle, { marginTop: 9 }]}>Company Logo</LLightText>
-      <View style={{ marginTop: -5, alignItems: "center" }}>
-        <Pressable
-          onPress={onPickAvatarImage}
-          disabled={pickingAvatarImage || isSaving}
-          hitSlop={10}
+      <LLightText style={[styles.sectionTitle, { marginTop: 17 }]}>Logo</LLightText>
+      <LLightText style={styles.sectionHelper}>Add a company logo image here.</LLightText>
+
+      <View style={[styles.inlineCard, { marginTop: 14, flexDirection: "row", alignItems: "center", gap: 14 }]}>
+        <View
           style={{
-            width: 126,
-            height: 126,
-            borderRadius: 63,
-            backgroundColor: "#eceff1",
-            overflow: "visible",
+            width: 100,
+            height: 50,
+            borderWidth: 1,
+            borderColor: UI.border,
+            overflow: "hidden",
+            backgroundColor: "#f3f3f3",
             alignItems: "center",
             justifyContent: "center",
-            opacity: pickingAvatarImage || isSaving ? 0.7 : 1,
           }}
         >
           {avatarPreviewUri ? (
-            <Image source={{ uri: avatarPreviewUri }} style={{ width: "100%", height: "100%", borderRadius: 63 }} />
+            <Image source={{ uri: avatarPreviewUri }} style={{ width: "100%", height: "100%" }} />
           ) : (
-            <LLightText style={{ opacity: 0.45, fontSize: 28 }}>+</LLightText>
+            <LLightText style={{ opacity: 0.5 }}>—</LLightText>
           )}
+        </View>
 
-          <View
-            style={{
-              position: "absolute",
-              right: -15,
-              bottom: 0,
-              width: 42,
-              height: 42,
-              borderRadius: 21,
-              backgroundColor: UI.card,
-              borderWidth: 1,
-              borderColor: UI.border,
-              alignItems: "center",
-              justifyContent: "center",
-              shadowColor: "#000",
-              shadowOpacity: 0.08,
-              shadowRadius: 8,
-              shadowOffset: { width: 0, height: 2 },
-              elevation: 2,
-            }}
-          >
-            {pickingAvatarImage ? (
-              <ActivityIndicator size="small" color="black" />
-            ) : (
-              <Feather name="edit-2" size={20} color={UI.text} />
-            )}
+        <View style={{ flex: 1, gap: 10 }}>
+          <LLightText style={{ fontSize: 12, opacity: 0.6 }}>Displays over video thumbnail</LLightText>
+
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <Pressable
+              onPress={onPickAvatarImage}
+              disabled={pickingAvatarImage || isSaving}
+              style={[styles.pill, { flex: 1 }, pickingAvatarImage || isSaving ? { opacity: 0.5 } : null]}
+            >
+              {pickingAvatarImage ? <ActivityIndicator size="small" color="black" /> : null}
+              <BtnText>Choose</BtnText>
+            </Pressable>
+
+            <Pressable
+              onPress={onRemoveAvatarImage}
+              disabled={!hasAvatar || isSaving}
+              style={[
+                styles.pill,
+                { flex: 1, borderColor: hasAvatar && !isSaving ? UI.danger : UI.borderStrong },
+                !hasAvatar || isSaving ? { opacity: 0.4 } : null,
+              ]}
+            >
+              <BtnText style={{ color: hasAvatar && !isSaving ? UI.danger : undefined }}>Remove</BtnText>
+            </Pressable>
           </View>
-        </Pressable>
 
-        {hasAvatar ? (
-          <Pressable
-            onPress={onRemoveAvatarImage}
-            disabled={isSaving}
-            hitSlop={8}
-            style={{ marginTop: 10, opacity: isSaving ? 0.5 : 1 }}
-          >
-            <BtnText style={{ color: UI.subtext }}>Remove logo</BtnText>
-          </Pressable>
-        ) : null}
-
-        <View style={{ flexDirection: "row", gap: 10, marginTop: 14, paddingHorizontal: 16, width: "100%" }}>
-          <TextInput
-            style={[styles.input, { flex: 1, fontSize: 12 }]}
-            placeholder="Or paste image URL"
-            placeholderTextColor={UI.hint}
-            value={urlInput}
-            onChangeText={setUrlInput}
-            autoCapitalize="none"
-            autoCorrect={false}
-            keyboardType="url"
-            editable={!isSaving}
-          />
-          <Pressable
-            onPress={() => {
-              if (urlInput.trim()) {
-                onSetAvatarFromUrl(urlInput.trim());
-                setUrlInput("");
-              }
-            }}
-            disabled={!urlInput.trim() || isSaving}
-            style={[styles.pill, { paddingHorizontal: 14 }, !urlInput.trim() || isSaving ? { opacity: 0.4 } : null]}
-          >
-            <BtnText>Use URL</BtnText>
-          </Pressable>
+          {/* URL input row */}
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <TextInput
+              style={[styles.input, { flex: 1, fontSize: 12 }]}
+              placeholder="Paste image URL"
+              placeholderTextColor={UI.hint}
+              value={urlInput}
+              onChangeText={setUrlInput}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              editable={!isSaving}
+            />
+            <Pressable
+              onPress={() => {
+                if (urlInput.trim()) {
+                  onSetAvatarFromUrl(urlInput.trim());
+                  setUrlInput("");
+                }
+              }}
+              disabled={!urlInput.trim() || isSaving}
+              style={[styles.pill, { paddingHorizontal: 14 }, !urlInput.trim() || isSaving ? { opacity: 0.4 } : null]}
+            >
+              <BtnText>Use URL</BtnText>
+            </Pressable>
+          </View>
         </View>
       </View>
     </>
   );
 }
+
 //altered to fit the name we need here which is company only
 export function NameSection(props: {
   companyName: string;
@@ -199,10 +189,10 @@ export function NameSection(props: {
 
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Name</LLightText>
+      <LLightText style={styles.sectionTitle}>Company Name</LLightText>
 
       <View style={styles.fieldStack}>
-        <LLightText style={styles.label}></LLightText>
+        <LLightText style={styles.label}>Company Name</LLightText>
         <TextInput
           value={companyName}
           onChangeText={onChangeCompanyName}
@@ -260,7 +250,7 @@ export function MissionSection(props: { mission: string; onChangeMission: (v: st
 
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Mission</LLightText>
+      <LLightText style={styles.sectionTitle}>Company Mission</LLightText>
       <LLightText style={styles.sectionHelper}>The mission of the company.</LLightText>
 
       <View style={styles.fieldStack}>
@@ -282,7 +272,7 @@ export function BenefitsSection(props: {benefits: string; onChangeBenefits: (v: 
 
   return (
     <>
-    <LLightText style={styles.sectionTitle}>Benefits </LLightText>
+    <LLightText style={styles.sectionTitle}> Company Benefits </LLightText>
     <LLightText style={styles.sectionHelper}>The benefits of the company. 401k, work schedule, overtime, etc.</LLightText>
 
     <View style={styles.fieldStack}>
@@ -300,22 +290,18 @@ export function BenefitsSection(props: {benefits: string; onChangeBenefits: (v: 
 }
 
 export function IndustryTypeSection(props: {
-  workTypeSubtitle: string;
   companyAgeSubtitle: string;
   industrySubtitle: string;
   locations: string[];
-  onPressWorkType: () => void;
   onPressCompanyAge: () => void;
   onPressIndustry: () => void;
   onPressAddLocation: () => void;
   onRemoveLocation: (label: string) => void;
 }) {
   const {
-    workTypeSubtitle,
     companyAgeSubtitle,
     industrySubtitle,
     locations,
-    onPressWorkType,
     onPressCompanyAge,
     onPressIndustry,
     onPressAddLocation,
@@ -323,11 +309,10 @@ export function IndustryTypeSection(props: {
   } = props;
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Logistics</LLightText>
+      <LLightText style={styles.sectionTitle}>Company Logistics</LLightText>
       <LLightText style={styles.sectionHelper}>Residency requirements, company age, work, and location.</LLightText>
 
       <GroupCard>
-        <PickerRow title="Work Type" subtitle={workTypeSubtitle} onPress={onPressWorkType} showDivider />
         <PickerRow
           title="Company Age (years)"
           subtitle={companyAgeSubtitle}
@@ -819,9 +804,9 @@ export function RolesSection(props: {
   roles: OpenRole[];
   onPressAdd: () => void;
   onRemove: (id: string) => void;
-  onPressEdit: (role: OpenRole) => void; // ADD
+  onPressEdit: (role: OpenRole) => void;
 }) {
-  const { roles, onPressAdd, onRemove, onPressEdit } = props;
+  const { roles, onPressAdd, onRemove, onPressEdit} = props;
 
   return (
     <>
@@ -841,10 +826,10 @@ export function RolesSection(props: {
               <LLightText style={[styles.rowTitle, { flex: 1, paddingRight: 10 }]}>{role.title}</LLightText>
               <View style={{ flexDirection: "row", gap: 12 }}>
                 <Pressable onPress={() => onPressEdit(role)} hitSlop={8}>
-                  <LLightText style={{ fontSize: 13 }}>Edit</LLightText>
+                  <LLightText style={{ color: "#007AFF", fontSize: 13 }}>Edit</LLightText>
                 </Pressable>
                 <Pressable onPress={() => onRemove(role.id)} hitSlop={8}>
-                  <LLightText style={{ fontSize: 13, color: UI.danger }}>Remove</LLightText>
+                  <LLightText style={{ color: UI.danger, fontSize: 13 }}>Remove</LLightText>
                 </Pressable>
               </View>
             </View>
@@ -856,6 +841,12 @@ export function RolesSection(props: {
                 {role.skills.join(", ")}
               </LLightText>
             )}
+            {!!role.workType.trim() && (
+              <LLightText style={styles.rowSub}>{role.workType}</LLightText>
+            )}
+            {!!role.postUrl.trim() && (
+              <LLightText style={styles.rowSub}>{role.postUrl}</LLightText>
+            )}
           </View>
         ))}
       </GroupCard>
@@ -863,40 +854,32 @@ export function RolesSection(props: {
   );
 }
 
-const SALARY_OPTIONS = [
-  "Less than $25,000",
-  "$25,000 – $49,999",
-  "$50,000 – $74,999",
-  "$75,000 – $99,999",
-  "$100,000 – $124,999",
-  "$125,000 – $149,999",
-  "$150,000 – $174,999",
-  "$175,000 – $199,999",
-  "$200,000+",
-];
-
 export function RoleFormModal(props: {
   visible: boolean;
   onClose: () => void;
   onSave: (role: OpenRole) => void;
-  initialRole?: OpenRole; // ADD
+  initialRole?: OpenRole; //lets us take the existing values and populate for editing
 }) {
   const { visible, onClose, onSave, initialRole } = props;
 
   const [title, setTitle] = React.useState("");
   const [salary, setSalary] = React.useState("");
-  const [salaryPickerOpen, setSalaryPickerOpen] = React.useState(false);
   const [skillsText, setSkillsText] = React.useState("");
+  const [postUrl, setPostUrl] = React.useState("");
+  const [workType, setWorkType] = React.useState("");
+  const [isRelocationCovered, setRelocation] = React.useState(false);
 
-  // Reset fields each time the modal opens, pre-fill if editing
+  // Reset/pre-populate fields each time the modal opens
   React.useEffect(() => {
     if (visible) {
       setTitle(initialRole?.title ?? "");
       setSalary(initialRole?.salary ?? "");
       setSkillsText(initialRole?.skills.join(", ") ?? "");
-      setSalaryPickerOpen(false);
+      setPostUrl(initialRole?.postUrl ?? "");
+      setWorkType(initialRole?.workType ?? "");
+      setRelocation(initialRole?.isRelocationCovered ?? false); //if not true, auto false
     }
-  }, [visible, initialRole]);
+  }, [visible, initialRole?.title, initialRole?.salary, initialRole?.workType, initialRole?.skills, initialRole?.postUrl]);
 
   const canSave = title.trim().length > 0;
 
@@ -907,11 +890,14 @@ export function RoleFormModal(props: {
       .map((s) => s.trim())
       .filter(Boolean);
     onSave({
-      id: initialRole?.id ?? String(Date.now()), // preserve id if editing
+      id: initialRole?.id ?? String(Date.now()),
       title: title.trim(),
       salary: salary.trim(),
       postedAt: initialRole?.postedAt ?? new Date().toISOString().slice(0, 10),
       skills,
+      postUrl: postUrl.trim(),
+      workType: workType.trim(),
+      isRelocationCovered: false,
     });
     onClose();
   }
@@ -934,9 +920,7 @@ export function RoleFormModal(props: {
               paddingBottom: 32,
             }}
           >
-            <LLightText style={{ fontSize: 18, fontWeight: "800", marginBottom: 16 }}>
-              {initialRole ? "Edit Role" : "Add Role"}
-            </LLightText>
+            <LLightText style={{ fontSize: 18, fontWeight: "800", marginBottom: 16 }}>{initialRole ? "Edit Role" : "Add Role"}</LLightText>
 
             <LLightText style={styles.label}>Role Title *</LLightText>
             <TextInput
@@ -948,40 +932,49 @@ export function RoleFormModal(props: {
             />
 
             <LLightText style={styles.label}>Salary / Range</LLightText>
-            <Pressable
-              onPress={() => setSalaryPickerOpen((v) => !v)}
-              style={[styles.input, { marginBottom: salaryPickerOpen ? 0 : 14, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }]}
-            >
-              <LLightText style={{ color: salary ? UI.text : UI.hint }}>
-                {salary || "Select a range"}
-              </LLightText>
-              <Feather name={salaryPickerOpen ? "chevron-up" : "chevron-down"} size={16} color={UI.hint} />
-            </Pressable>
-            {salaryPickerOpen && (
-              <View style={{ borderWidth: 1, borderColor: UI.border, borderRadius: 10, marginBottom: 14, overflow: "hidden" }}>
-                {SALARY_OPTIONS.map((opt) => (
-                  <Pressable
-                    key={opt}
-                    onPress={() => { setSalary(opt); setSalaryPickerOpen(false); }}
-                    style={{
-                      paddingVertical: 11,
-                      paddingHorizontal: 14,
-                      borderBottomWidth: opt === SALARY_OPTIONS[SALARY_OPTIONS.length - 1] ? 0 : 1,
-                      borderBottomColor: UI.border,
-                      backgroundColor: salary === opt ? UI.bg : UI.card,
-                    }}
-                  >
-                    <LLightText style={{ color: salary === opt ? UI.text : UI.subtext }}>{opt}</LLightText>
-                  </Pressable>
-                ))}
-              </View>
-            )}
+            <TextInput
+              value={salary}
+              onChangeText={setSalary}
+              placeholder="e.g. $80k–$100k or Competitive"
+              placeholderTextColor={UI.hint}
+              style={[styles.input, { marginBottom: 14 }]}
+            />
 
             <LLightText style={styles.label}>Skills (comma-separated)</LLightText>
             <TextInput
               value={skillsText}
               onChangeText={setSkillsText}
               placeholder="e.g. React, Node.js, SQL"
+              placeholderTextColor={UI.hint}
+              style={[styles.input, { marginBottom: 20 }]}
+              autoCorrect={false}
+            />
+
+            <LLightText style={styles.label}>Work Type</LLightText>
+            <TextInput
+              value={workType}
+              onChangeText={setWorkType}
+              placeholder="e.g. Full-time, Remote, Hybrid"
+              placeholderTextColor={UI.hint}
+              style={[styles.input, { marginBottom: 14 }]}
+              autoCorrect={false}
+            />
+
+            <LLightText style={styles.label}>Relocation Covered</LLightText>
+            <View style={{ flexDirection: "row", alignItems: "center", marginBottom: 14, gap: 10 }}>
+              <Switch
+                value={isRelocationCovered}
+                onValueChange={(val) => setRelocation(val)}
+                trackColor={{ false: UI.hint, true: UI.text }}
+              />
+              <LLightText>{isRelocationCovered ? "Yes" : "No"}</LLightText>
+            </View>
+
+            <LLightText style={styles.label}>Job Posting URL </LLightText>
+            <TextInput
+              value={postUrl}
+              onChangeText={setPostUrl}
+              placeholder="site link"
               placeholderTextColor={UI.hint}
               style={[styles.input, { marginBottom: 20 }]}
               autoCorrect={false}

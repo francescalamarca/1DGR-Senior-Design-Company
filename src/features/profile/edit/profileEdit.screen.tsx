@@ -1,33 +1,55 @@
+/*
+Here's the full avatar flow now:
+
+File upload (onPickAvatarImage)
+
+Pick image → show as preview immediately
+Run through remove.bg (image_file)
+Update preview to bg-removed version
+Upload processed PNG to S3 → store key
+URL input (onSetAvatarFromUrl)
+
+Validate .png extension
+Run through remove.bg (image_url)
+Set as local preview
+Upload processed PNG to S3 → store key
+Both reuse pickingAvatarImage as the loading state so the UI already shows the spinner during processing. The BackgroundRemover.tsx web component is unchanged and can still be used independently.
+
+*/
+
+
 import React from "react";
-import { ActivityIndicator, Platform, Pressable, View } from "react-native";
+import { View, Pressable, ActivityIndicator, Modal, FlatList, TextInput, KeyboardAvoidingView, Platform, ScrollView } from "react-native";
 
 import { RequireUserType } from "@/src/components/RequireUserType";
 
-import { KeyboardScreen, LLightText } from "./profileEdit.components";
+import { styles, UI } from "./profileEdit.styles";
+import { LLightText, KeyboardScreen } from "./profileEdit.components";
 import {
   COMPANY_AGE_OPTIONS,
+  WORK_TYPE_OPTIONS,
   WORK_PREFERENCE_OPTIONS,
-  WORK_TYPE_OPTIONS
+  CORE_VALUES,
 } from "./profileEdit.constants";
-import { UI, styles } from "./profileEdit.styles";
+import { useProfileEditController } from "./useProfileEditController";
 import {
   AvatarSection,
-  BenefitsSection,
-  CityPickerModal,
-  CoreValuesPickerModal,
-  CoreValuesSection,
-  IndustryPickerModal,
-  IndustryTypeSection,
-  MissionSection,
   NameSection,
-  ProfileMediaResetSection,
-  RoleFormModal,
-  RolesSection,
-  SinglePickerModal,
+  CoreValuesSection,
+  MissionSection,
+  IndustryTypeSection,
   VideoLibrarySection,
-  WorkTypePickerModal
+  ProfileMediaResetSection,
+  IndustryPickerModal,
+  CityPickerModal,
+  SinglePickerModal,
+  WorkTypePickerModal,
+  CoreValuesPickerModal,
+  BackgroundColorSection,
+  BenefitsSection,
+  RolesSection,
+  RoleFormModal,
 } from "./profileEdit.ui";
-import { useProfileEditController } from "./useProfileEditController";
 
 const MODAL_KB_OFFSET_IOS = 12;
 const MODAL_LIST_BOTTOM_PADDING = Platform.OS === "ios" ? 280 : 320;
@@ -100,7 +122,7 @@ export default function ProfileEditScreen() {
     openCoreValuesPicker,
     coreValuesPickerVisible,
     setCoreValuesPickerVisible,
-    //selectBackgroundColor,
+    selectBackgroundColor,
     roleFormVisible,
     setRoleFormVisible,
     addRole,
@@ -108,12 +130,7 @@ export default function ProfileEditScreen() {
     updateRole,
   } = useProfileEditController();
 
-  const [editingRole, setEditingRole] = React.useState<import("@/src/features/profile/profile.types").OpenRole | undefined>(undefined);
-
-  const onPressEdit = React.useCallback((role: import("@/src/features/profile/profile.types").OpenRole) => {
-    setEditingRole(role);
-    setRoleFormVisible(true);
-  }, [setRoleFormVisible]);
+  const [editingRole, setEditingRole] = React.useState<import("@/src/features/profile/profile.types").OpenRole | null>(null);
 
   const workTypeSubtitle = React.useMemo(() => {
     const wt = String((draft as any).workType ?? "").trim();
@@ -171,6 +188,11 @@ export default function ProfileEditScreen() {
           onChangeCompanyName={(v: string) => setDraft((p) => ({ ...p, companyName: v }))}
         />
 
+        <BackgroundColorSection
+          selectedColor={draft.customBackgroundColor ?? ""}
+          onSelect={selectBackgroundColor}
+        />
+
         <CoreValuesSection
           coreValues={draft.coreValues ?? []}
           onPressAdd={openCoreValuesPicker}
@@ -192,13 +214,11 @@ export default function ProfileEditScreen() {
         <MissionSection mission={draft.missionStatement ?? ""} onChangeMission={(v: string) => setDraft((p) => ({ ...p, missionStatement: v }))} />
 
         <IndustryTypeSection
-          workTypeSubtitle={workTypeSubtitle}
           companyAgeSubtitle={draft.businessAge?.trim() ? draft.businessAge : "Select"}
           industrySubtitle={summarizeIndustries(draft.industry ?? "")}
           locations={draft.locations ?? []}
           onPressAddLocation={openCityPicker}
           onRemoveLocation={removeLocation}
-          onPressWorkType={openWorkTypePicker}
           onPressCompanyAge={() =>
             openSingleSelectPicker({
               title: "Business Age",
@@ -212,16 +232,16 @@ export default function ProfileEditScreen() {
 
         <RolesSection
           roles={draft.openRoles ?? []}
-          onPressAdd={() => { setEditingRole(undefined); setRoleFormVisible(true); }}
+          onPressAdd={() => { setEditingRole(null); setRoleFormVisible(true); }}
           onRemove={removeRole}
-          onPressEdit={onPressEdit}
+          onPressEdit={(role) => { setEditingRole(role); setRoleFormVisible(true); }}
         />
 
         <RoleFormModal
           visible={roleFormVisible}
-          initialRole={editingRole}
-          onClose={() => { setRoleFormVisible(false); setEditingRole(undefined); }}
-          onSave={(role) => { editingRole ? updateRole(role) : addRole(role); }}
+          onClose={() => { setRoleFormVisible(false); setEditingRole(null);}}
+          onSave={(role) => { if (editingRole) { updateRole(role); } else { addRole(role); } }}
+          initialRole={editingRole ?? undefined}
         />
 
         <VideoLibrarySection
