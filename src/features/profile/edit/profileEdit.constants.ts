@@ -52,9 +52,21 @@ export const BACKGROUND_COLOR_OPTIONS = [
 //answers the question of how old the company is and how long it has been running for
 export const COMPANY_AGE_OPTIONS = ["Up to 1", "1-3", "3-5", "5-10", "10+", "50+"];
 
-export const WORK_TYPE_OPTIONS = ["Part-Time", "Full Time", "Contract", "All", "Currently not looking"];
+export const WORK_TYPE_OPTIONS = ["Part-Time", "Full Time", "Contract", "Seasonal", "Internship"];
 
 export const WORK_PREFERENCE_OPTIONS = ["Remote", "Willing to relocate", "Both"];
+
+export const SALARY_OPTIONS = [
+    "Less than $25,000",
+    "$25,000 – $49,999",
+    "$50,000 – $74,999",
+    "$75,000 – $99,999",
+    "$100,000 – $124,999",
+    "$125,000 – $149,999",
+    "$150,000 – $174,999",
+    "$175,000 – $199,999",
+    "$200,000+",
+  ];
 
 //these will come down in the dropdown of the core values options that can be attached to company profile
 export const CORE_VALUES = [

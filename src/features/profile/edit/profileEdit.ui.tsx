@@ -16,7 +16,12 @@ import {
 
 import type { OpenRole } from "@/src/features/profile/profile.types";
 import { BtnText, LLightText } from "./profileEdit.components";
-import { BACKGROUND_COLOR_OPTIONS, CORE_VALUES, SKILLS } from "./profileEdit.constants";
+import { BACKGROUND_COLOR_OPTIONS, 
+  CORE_VALUES, 
+  SKILLS,
+  SALARY_OPTIONS,
+  WORK_TYPE_OPTIONS,
+ } from "./profileEdit.constants";
 import { styles, UI } from "./profileEdit.styles";
 
 // ---------- Types the screen expects ----------
@@ -1329,27 +1334,8 @@ export function RoleFormModal(props: {
 }) {
   const { visible, onClose, onSave, initialRole } = props;
 
-  const SALARY_OPTIONS = [
-    "Less than $25,000",
-    "$25,000 – $49,999",
-    "$50,000 – $74,999",
-    "$75,000 – $99,999",
-    "$100,000 – $124,999",
-    "$125,000 – $149,999",
-    "$150,000 – $174,999",
-    "$175,000 – $199,999",
-    "$200,000+",
-  ];
-
   const [title, setTitle] = React.useState("");
   const [salary, setSalary] = React.useState("");
-  const WORK_TYPE_OPTIONS = [
-    "Full Time",
-    "Part Time",
-    "Contract",
-    "Seasonal",
-    "Internship",
-  ];
 
   const [salaryPickerVisible, setSalaryPickerVisible] = React.useState(false);
   const [tempSalary, setTempSalary] = React.useState("");
