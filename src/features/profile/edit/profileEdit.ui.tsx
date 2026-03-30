@@ -16,7 +16,12 @@ import {
 
 import type { OpenRole } from "@/src/features/profile/profile.types";
 import { BtnText, LLightText } from "./profileEdit.components";
-import { BACKGROUND_COLOR_OPTIONS, CORE_VALUES } from "./profileEdit.constants";
+import { BACKGROUND_COLOR_OPTIONS, 
+  CORE_VALUES, 
+  SKILLS,
+  SALARY_OPTIONS,
+  WORK_TYPE_OPTIONS,
+ } from "./profileEdit.constants";
 import { styles, UI } from "./profileEdit.styles";
 
 // ---------- Types the screen expects ----------
@@ -311,7 +316,7 @@ export function MissionSection(props: {
 
   return (
     <>
-      <LLightText style={styles.sectionTitle}>Company Mission</LLightText>
+      <LLightText style={styles.sectionTitle}>Mission</LLightText>
       <LLightText style={styles.sectionHelper}>
         The mission of the company.
       </LLightText>
@@ -338,7 +343,7 @@ export function BenefitsSection(props: {
 
   return (
     <>
-      <LLightText style={styles.sectionTitle}> Company Benefits </LLightText>
+      <LLightText style={styles.sectionTitle}> Benefits </LLightText>
       <LLightText style={styles.sectionHelper}>
         The benefits of the company. 401k, work schedule, overtime, etc.
       </LLightText>
@@ -1016,6 +1021,234 @@ export function CityPickerModal(props: {
   );
 }
 
+/*
+Skills label now says "Skills" (not "comma-separated")
+Pressable row opens the SkillsPickerModal and shows selected skills as a preview (or "Select skills" hint)
+Modal state is all self-contained inside RoleFormModal: search, temp selection, custom options/input
+On Apply: commits the temp selection to selectedSkills, which is passed to onSave
+On open: pre-populates temp selection from any existing role skills (for the edit case)
+*/
+//for relevant skill picking in Roles
+export function SkillsPickerModal(props: {
+  visible: boolean;
+  skillSearch: string;
+  setSkillSearch: (v: string) => void;
+  skillRows: IndustryRow[];
+  skillCustomOptions: string[];
+  skillCustomInput: string;
+  setSkillCustomInput: (v: string) => void;
+  onAddCustomSkill: () => void;
+
+  skillTempSelected: Set<string>;
+  toggleSkill: (label: string) => void;
+
+  predefinedSkillSet: Set<string>;
+
+  onClose: () => void;
+  onApply: () => void;
+}) {
+  const {
+    visible,
+    skillSearch,
+    setSkillSearch,
+    skillRows,
+    skillCustomOptions,
+    skillCustomInput,
+    setSkillCustomInput,
+    onAddCustomSkill,
+    skillTempSelected,
+    toggleSkill,
+    predefinedSkillSet,
+    onClose,
+    onApply,
+  } = props;
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1, justifyContent: "flex-end" }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={MODAL_KB_OFFSET_IOS}
+        >
+          <View
+            style={{
+              backgroundColor: UI.card,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              paddingHorizontal: 16,
+              paddingTop: 16,
+              paddingBottom: 24,
+              maxHeight: "85%",
+            }}
+          >
+            <LLightText style={{ fontSize: 18, fontWeight: "800" }}>
+              Anticipated Skills - Known/Taught
+            </LLightText>
+
+            <TextInput
+              value={skillSearch}
+              onChangeText={setSkillSearch}
+              placeholder='Search skills (e.g. in "software", "health")'
+              placeholderTextColor={UI.hint}
+              style={[styles.input, { borderRadius: 12, marginTop: 12 }]}
+              autoCorrect={false}
+              autoCapitalize="none"
+              clearButtonMode="while-editing"
+            />
+
+            <FlatList
+              data={[
+                ...skillRows,
+                ...(skillCustomOptions.length
+                  ? (
+                      [{ type: "header", title: "Custom" }] as IndustryRow[]
+                    ).concat(
+                      skillCustomOptions
+                        .filter(
+                          (c) =>
+                            !skillSearch.trim() ||
+                            c
+                              .toLowerCase()
+                              .includes(skillSearch.trim().toLowerCase()),
+                        )
+                        .map(
+                          (label) =>
+                            ({
+                              type: "option",
+                              category: "Custom",
+                              label,
+                              key: `Custom__${label}`,
+                            }) as IndustryRow,
+                        ),
+                    )
+                  : []),
+              ]}
+              keyExtractor={(item: any) =>
+                item.type === "header" ? `h_${item.title}` : item.key
+              }
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode={
+                Platform.OS === "ios" ? "interactive" : "on-drag"
+              }
+              contentContainerStyle={{
+                paddingBottom: MODAL_LIST_BOTTOM_PADDING,
+              }}
+              style={{ marginTop: 12, marginBottom: 12 }}
+              renderItem={({ item }: { item: IndustryRow }) => {
+                if (item.type === "header") {
+                  return (
+                    <LLightText
+                      style={{
+                        marginTop: 14,
+                        marginBottom: 8,
+                        opacity: 0.65,
+                        fontSize: 12,
+                      }}
+                    >
+                      {item.title}
+                    </LLightText>
+                  );
+                }
+
+                const checked = skillTempSelected.has(item.label);
+                const isPredefined = predefinedSkillSet.has(item.label);
+
+                return (
+                  <Pressable
+                    onPress={() => toggleSkill(item.label)}
+                    style={{
+                      paddingVertical: 12,
+                      paddingHorizontal: 12,
+                      borderWidth: 1,
+                      borderColor: checked ? UI.text : UI.border,
+                      borderRadius: 12,
+                      marginBottom: 8,
+                      backgroundColor: UI.card,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <View style={{ flex: 1, paddingRight: 10 }}>
+                      <LLightText
+                        style={{
+                          fontSize: 14,
+                          fontWeight: checked ? "800" : "500",
+                        }}
+                      >
+                        {item.label}
+                      </LLightText>
+                      {!isPredefined ? (
+                        <LLightText
+                          style={{ marginTop: 4, fontSize: 12, opacity: 0.55 }}
+                        >
+                          Custom
+                        </LLightText>
+                      ) : null}
+                    </View>
+                    <LLightText style={{ opacity: 0.6 }}>
+                      {checked ? "✓" : ""}
+                    </LLightText>
+                  </Pressable>
+                );
+              }}
+            />
+
+            <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
+              <TextInput
+                value={skillCustomInput}
+                onChangeText={setSkillCustomInput}
+                placeholder="Add custom industry…"
+                placeholderTextColor={UI.hint}
+                style={[styles.input, { flex: 1, borderRadius: 12 }]}
+              />
+              <Pressable onPress={onAddCustomSkill} style={[styles.pill]}>
+                <BtnText>Add</BtnText>
+              </Pressable>
+            </View>
+
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Pressable
+                onPress={onClose}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: UI.borderStrong,
+                  borderRadius: 12,
+                  alignItems: "center",
+                }}
+              >
+                <LLightText style={{ fontWeight: "800" }}>Close</LLightText>
+              </Pressable>
+
+              <Pressable
+                onPress={onApply}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: UI.text,
+                  borderRadius: 12,
+                  alignItems: "center",
+                }}
+              >
+                <LLightText style={{ fontWeight: "800" }}>Apply</LLightText>
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </View>
+    </Modal>
+  );
+}
+
 export function RolesSection(props: {
   roles: OpenRole[];
   onPressAdd: () => void;
@@ -1101,43 +1334,55 @@ export function RoleFormModal(props: {
 }) {
   const { visible, onClose, onSave, initialRole } = props;
 
-  const SALARY_OPTIONS = [
-    "Less than $25,000",
-    "$25,000 – $49,999",
-    "$50,000 – $74,999",
-    "$75,000 – $99,999",
-    "$100,000 – $124,999",
-    "$125,000 – $149,999",
-    "$150,000 – $174,999",
-    "$175,000 – $199,999",
-    "$200,000+",
-  ];
-
   const [title, setTitle] = React.useState("");
   const [salary, setSalary] = React.useState("");
-  const WORK_TYPE_OPTIONS = [
-    "Full Time",
-    "Part Time",
-    "Contract",
-    "Seasonal",
-    "Internship",
-  ];
 
   const [salaryPickerVisible, setSalaryPickerVisible] = React.useState(false);
   const [tempSalary, setTempSalary] = React.useState("");
-  const [skillsText, setSkillsText] = React.useState("");
+  const [selectedSkills, setSelectedSkills] = React.useState<string[]>([]);
+  const [skillsPickerVisible, setSkillsPickerVisible] = React.useState(false);
+  const [skillSearch, setSkillSearch] = React.useState("");
+  const [skillTempSelected, setSkillTempSelected] = React.useState<Set<string>>(new Set());
+  const [skillCustomOptions, setSkillCustomOptions] = React.useState<string[]>([]);
+  const [skillCustomInput, setSkillCustomInput] = React.useState("");
   const [postUrl, setPostUrl] = React.useState("");
   const [workType, setWorkType] = React.useState("");
   const [workTypePickerVisible, setWorkTypePickerVisible] = React.useState(false);
   const [tempWorkType, setTempWorkType] = React.useState("");
   const [isRelocationCovered, setRelocation] = React.useState(false);
 
+  const predefinedSkillSet = React.useMemo(() => {
+    const s = new Set<string>();
+    for (const cat of SKILLS) for (const opt of cat.options) s.add(opt);
+    return s;
+  }, []);
+
+  const skillRows: IndustryRow[] = React.useMemo(() => {
+    const q = skillSearch.trim().toLowerCase();
+    const rows: IndustryRow[] = [];
+    for (const cat of SKILLS) {
+      const opts = q
+        ? cat.options.filter((o) => o.toLowerCase().includes(q) || cat.title.toLowerCase().includes(q))
+        : cat.options;
+      if (!opts.length) continue;
+      if (!q) rows.push({ type: "header", title: cat.title });
+      opts.forEach((label) =>
+        rows.push({ type: "option", category: cat.title, label, key: `${cat.title}::${label}` })
+      );
+    }
+    return rows;
+  }, [skillSearch]);
+
   // Reset/pre-populate fields each time the modal opens
   React.useEffect(() => {
     if (visible) {
       setTitle(initialRole?.title ?? "");
       setSalary(initialRole?.salary ?? "");
-      setSkillsText(initialRole?.skills.join(", ") ?? "");
+      setSelectedSkills(initialRole?.skills ?? []);
+      setSkillTempSelected(new Set(initialRole?.skills ?? []));
+      setSkillCustomOptions([]);
+      setSkillSearch("");
+      setSkillCustomInput("");
       setPostUrl(initialRole?.postUrl ?? "");
       setWorkType(initialRole?.workType ?? "");
       setRelocation(initialRole?.isRelocationCovered ?? false); //if not true, auto false
@@ -1155,16 +1400,12 @@ export function RoleFormModal(props: {
 
   function handleSave() {
     if (!canSave) return;
-    const skills = skillsText
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean);
     onSave({
       id: initialRole?.id ?? String(Date.now()),
       title: title.trim(),
       salary: salary.trim(),
       postedAt: initialRole?.postedAt ?? new Date().toISOString().slice(0, 10),
-      skills,
+      skills: selectedSkills,
       postUrl: postUrl.trim(),
       workType: workType.trim(),
       isRelocationCovered: false,
@@ -1246,16 +1487,63 @@ export function RoleFormModal(props: {
               }}
             />
 
-            <LLightText style={styles.label}>
-              Skills (comma-separated)
-            </LLightText>
-            <TextInput
-              value={skillsText}
-              onChangeText={setSkillsText}
-              placeholder="e.g. React, Node.js, SQL"
-              placeholderTextColor={UI.hint}
-              style={[styles.input, { marginBottom: 20 }]}
-              autoCorrect={false}
+            <LLightText style={styles.label}>Skills</LLightText>
+            <Pressable
+              onPress={() => {
+                setSkillTempSelected(new Set(selectedSkills));
+                setSkillsPickerVisible(true);
+              }}
+              style={[
+                styles.input,
+                {
+                  marginBottom: 14,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                },
+              ]}
+            >
+              <LLightText
+                style={{ color: selectedSkills.length ? UI.text : UI.hint, flex: 1, paddingRight: 8 }}
+                numberOfLines={1}
+              >
+                {selectedSkills.length
+                  ? selectedSkills.join(", ")
+                  : "Select skills"}
+              </LLightText>
+              <LLightText style={styles.chevron}>›</LLightText>
+            </Pressable>
+
+            <SkillsPickerModal
+              visible={skillsPickerVisible}
+              skillSearch={skillSearch}
+              setSkillSearch={setSkillSearch}
+              skillRows={skillRows}
+              skillCustomOptions={skillCustomOptions}
+              skillCustomInput={skillCustomInput}
+              setSkillCustomInput={setSkillCustomInput}
+              onAddCustomSkill={() => {
+                const trimmed = skillCustomInput.trim();
+                if (!trimmed || skillCustomOptions.includes(trimmed)) return;
+                setSkillCustomOptions((prev) => [...prev, trimmed]);
+                setSkillTempSelected((prev) => new Set([...prev, trimmed]));
+                setSkillCustomInput("");
+              }}
+              skillTempSelected={skillTempSelected}
+              toggleSkill={(label) =>
+                setSkillTempSelected((prev) => {
+                  const next = new Set(prev);
+                  if (next.has(label)) next.delete(label);
+                  else next.add(label);
+                  return next;
+                })
+              }
+              predefinedSkillSet={predefinedSkillSet}
+              onClose={() => setSkillsPickerVisible(false)}
+              onApply={() => {
+                setSelectedSkills(Array.from(skillTempSelected));
+                setSkillsPickerVisible(false);
+              }}
             />
 
             <LLightText style={styles.label}>Work Type</LLightText>

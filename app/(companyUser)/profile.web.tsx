@@ -1,14 +1,13 @@
 import { ProfileBrandWordmark } from "@/src/components/ProfileBrandWordmark";
+import { WebFooter } from "@/src/components/WebFooter";
 import { RequireUserType } from "@/src/components/RequireUserType";
 import {
-  HIGHER_ED_ITEM_GAP,
   softWrapLongTokens,
   useCompanyProfileScreenData,
   type QualRow,
   type QualRowValue,
 } from "@/src/features/profile/edit/profileScreen.shared";
 import { useSession } from "@/src/state/session";
-import { useDynColors } from "@/src/state/theme-colors";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -40,17 +39,20 @@ const WHITE = "#ffffff";
 const TEXT = "#202020";
 const MUTED = "#718896";
 const BORDER = "#d6dde2";
-const DARK = "#1a1b1d";
 const ACCENT = "#9bb4c0";
 
 const TOP_NAV_ITEMS = [
-  { key: "companies", label: "Companies", route: "/(companyUser)/companies", icon: "briefcase", iconSet: "feather" },
+  { key: "candidates", label: "Candidates", route: "/(companyUser)/candidates", icon: "briefcase", iconSet: "feather" },
   { key: "networks", label: "Networks", route: "/(companyUser)/networks", icon: "users", iconSet: "feather" },
   { key: "explore", label: "Explore", route: "/(companyUser)/explore", icon: "earth", iconSet: "material" },
   { key: "record", label: "Record", route: "/(companyUser)/record", icon: "video", iconSet: "feather" },
   { key: "profile", label: "Profile", route: "/(companyUser)/profile", icon: "user", iconSet: "feather" },
 ] as const;
 
+/*
+Array (string[]): renders each item as its own Text line with spacing between them (e.g. a list of skills or education entries)
+Single value (line 70): renders it as a single Text element
+*/
 function QualValue({ value, textStyle }: { value: QualRowValue; textStyle: any }) {
   if (Array.isArray(value)) {
     if (value.length === 0) return <Text style={textStyle}>—</Text>;
@@ -60,7 +62,7 @@ function QualValue({ value, textStyle }: { value: QualRowValue; textStyle: any }
         {value.map((item, idx) => (
           <Text
             key={`${idx}_${item}`}
-            style={[textStyle, idx === value.length - 1 ? null : { marginBottom: HIGHER_ED_ITEM_GAP }]}
+            style={[textStyle, idx === value.length - 1 ? null : { marginBottom: 1 }]}
           >
             {softWrapLongTokens(item)}
           </Text>
@@ -72,15 +74,26 @@ function QualValue({ value, textStyle }: { value: QualRowValue; textStyle: any }
   return <Text style={textStyle}>{softWrapLongTokens(value)}</Text>;
 }
 
-function DetailRow({ row, textColor = TEXT, mutedColor = MUTED }: { row: QualRow; textColor?: string; mutedColor?: string }) {
+function DetailRow({ row }: { row: QualRow }) {
   return (
     <View style={{ gap: 8 }}>
-      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: mutedColor }}>
+      <Text
+        style={{
+          fontFamily: FONTS.LEXEND_LIGHT,
+          fontSize: 13,
+          color: MUTED,
+        }}
+      >
         {row.label}
       </Text>
       <QualValue
         value={row.value}
-        textStyle={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, lineHeight: 21, color: textColor }}
+        textStyle={{
+          fontFamily: FONTS.LEXEND_LIGHT,
+          fontSize: 14,
+          lineHeight: 21,
+          color: TEXT,
+        }}
       />
     </View>
   );
@@ -91,21 +104,17 @@ function SidebarLink({
   value,
   onPress,
   disabled,
-  textColor = TEXT,
-  mutedColor = MUTED,
 }: {
   label: string;
   value: string;
   onPress: () => void;
   disabled?: boolean;
-  textColor?: string;
-  mutedColor?: string;
 }) {
   return (
     <View style={{ gap: 8 }}>
-      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: mutedColor }}>{label}</Text>
+      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED }}>{label}</Text>
       <Pressable onPress={onPress} disabled={disabled} style={{ opacity: disabled ? 0.5 : 1 }}>
-        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, lineHeight: 21, color: textColor }}>
+        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, lineHeight: 21, color: TEXT }}>
           {value || "—"}
         </Text>
       </Pressable>
@@ -114,15 +123,12 @@ function SidebarLink({
 }
 
 export default function ProfileWebScreen() {
-  const C = useDynColors();
   const { logout } = useSession();
   const { width } = useWindowDimensions();
   const railRef = useRef<FlatList<any> | null>(null);
   const railScrollOffsetRef = useRef(0);
   const {
     profile,
-    liveProfileUrl,
-    copyLiveAsUrl,
     copyEmail,
     copyPhone,
     copyUrl,
@@ -149,21 +155,11 @@ export default function ProfileWebScreen() {
   // Company-specific derived values (replacing individual-user fields)
   const canToggleName = false;
   const toggleDisplayName = () => {};
-  const workTypeDisplay = String((profile as any).workType ?? "").trim();
+  const openRolesDisplay = String((profile as any).openRoles ?? "").trim(); //display on the profile
 
   // Sidebar rows shown in the expanded ABOUT US panel
-  const qualCol1: any[] = [];
-  const qualCol2: any[] = [
-    { label: "Mission Statement", value: missionStatement || "—" },
-    { label: "Core Values", value: coreValues.length ? coreValues.join(", ") : "—" },
-    { label: "Industry", value: industry || "—" },
-    { label: "Benefits", value: benefitsSummary || "—" },
-    { label: "Work Type", value: workTypeDisplay || "—" },
-    { label: "Locations", value: locations.length ? locations.join(", ") : "—" },
-  ];
-
-  const [liveQrModalOpen, setLiveQrModalOpen] = useState(false);
-  const [liveQrCopyToken, setLiveQrCopyToken] = useState<number | undefined>(undefined);
+  // const [liveQrModalOpen, setLiveQrModalOpen] = useState(false);
+  // const [liveQrCopyToken, setLiveQrCopyToken] = useState<number | undefined>(undefined);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarColumnHeight, setSidebarColumnHeight] = useState(760);
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
@@ -173,7 +169,18 @@ export default function ProfileWebScreen() {
   const heroAvatarSize = width < 1180 ? 128 : 164;
   const railCardWidth = Math.min(360, Math.max(268, Math.round(width * 0.2)));
   const railStep = railCardWidth + 20;
-  const sidebarRows = useMemo(() => [...qualCol1, ...qualCol2], [qualCol1, qualCol2]);
+  const sidebarRows = useMemo(() => { //changed this so that they only change when a dep is changed, not every render
+    const qualCol1: any[] = [];
+    const qualCol2: any[] = [
+      { label: "Mission Statement", value: missionStatement || "—" },
+      { label: "Core Values", value: coreValues.length ? coreValues.join(", ") : "—" },
+      { label: "Industry", value: industry || "—" },
+      { label: "Benefits", value: benefitsSummary || "—" },
+      { label: "Open Roles", value: openRolesDisplay || "—" },
+      { label: "Locations", value: locations.length ? locations.join(", ") : "—" },
+    ];
+    return [...qualCol1, ...qualCol2];
+  }, [missionStatement, coreValues, industry, benefitsSummary, openRolesDisplay, locations]);
   const sidebarPanelHeight = isCompact ? 540 : Math.max(sidebarColumnHeight, 760);
   const collapsedPanelHeight = 64; // just the header row (ABOUT US + chevron)
   const sidebarWidth = isCompact ? 0 : 450;
@@ -211,19 +218,19 @@ export default function ProfileWebScreen() {
     <>
       <RequireUserType type="home" />
 
-      <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: C.bg }}>
+      <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: PAPER }}>
         <ScrollView
-          style={{ flex: 1, backgroundColor: C.bg }}
+          style={{ flex: 1, backgroundColor: PAPER }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchLatestProfile} />}
         >
           <View
             style={{
               height: 64,
               borderBottomWidth: 1,
-              borderBottomColor: C.border,
+              borderBottomColor: BORDER,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: C.card,
+              backgroundColor: WHITE,
               position: "relative",
             }}
           >
@@ -240,7 +247,7 @@ export default function ProfileWebScreen() {
             >
               {TOP_NAV_ITEMS.map((item) => {
                 const active = item.key === "profile";
-                const color = active ? C.accent : C.subtle;
+                const color = active ? ACCENT : MUTED;
 
                 return (
                   <Pressable
@@ -284,7 +291,7 @@ export default function ProfileWebScreen() {
 
           <View
             style={{
-              backgroundColor: C.bg,
+              backgroundColor: PAPER,
               paddingHorizontal: 0,
               paddingTop: 0,
               paddingBottom: 0,
@@ -295,9 +302,9 @@ export default function ProfileWebScreen() {
                 flexDirection: "column",
                 alignItems: "stretch",
                 gap: 0,
-                backgroundColor: C.card,
+                backgroundColor: WHITE,
                 borderTopWidth: 1,
-                borderTopColor: C.border,
+                borderTopColor: BORDER,
                 position: "relative",
               }}
             >
@@ -348,7 +355,7 @@ export default function ProfileWebScreen() {
                           fontFamily: FONTS.LEXEND_LIGHT,
                           fontSize: isCompact ? 38 : 50,
                           lineHeight: isCompact ? 44 : 56,
-                          color: C.text,
+                          color: TEXT,
                         }}
                       >
                         {displayName}
@@ -361,7 +368,7 @@ export default function ProfileWebScreen() {
                           fontFamily: FONTS.LEXEND_LIGHT,
                           fontSize: 15,
                           lineHeight: 22,
-                          color: C.subtle,
+                          color: MUTED,
                           marginTop: 6,
                         }}
                       >
@@ -384,7 +391,7 @@ export default function ProfileWebScreen() {
                       onPress={() => router.push({ pathname: "/(companyUser)/video-library", params: { returnTo: navReturnTo } })}
                       style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
                     >
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
                         LIBRARY
                       </Text>
                       <Feather name="layers" size={18} color={TEXT} />
@@ -394,7 +401,7 @@ export default function ProfileWebScreen() {
                       onPress={() => router.push("/(companyUser)/profile-edit")}
                       style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
                     >
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
                         EDIT
                       </Text>
                       <Feather name="edit-2" size={18} color={TEXT} />
@@ -404,13 +411,13 @@ export default function ProfileWebScreen() {
                       onPress={() => router.push("/(companyUser)/settings")}
                       style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
                     >
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
                         SETTINGS
                       </Text>
                       <Feather name="settings" size={18} color={TEXT} />
                     </Pressable>
 
-                    <View style={{ height: 1, backgroundColor: C.border, marginVertical: 2 }} />
+                    <View style={{ height: 1, backgroundColor: BORDER, marginVertical: 2 }} />
 
                     <Pressable
                       onPress={fetchLatestProfile}
@@ -422,21 +429,12 @@ export default function ProfileWebScreen() {
                         opacity: refreshing ? 0.45 : 1,
                       }}
                     >
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
                         REFRESH
                       </Text>
                       <Feather name="refresh-cw" size={18} color={TEXT} />
                     </Pressable>
 
-                    <Pressable
-                      onPress={() => setLiveQrModalOpen(true)}
-                      style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
-                    >
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>
-                        SHARE
-                      </Text>
-                      <Feather name="share" size={18} color={TEXT} />
-                    </Pressable>
                   </View>
                 </View>
               </View>
@@ -447,7 +445,7 @@ export default function ProfileWebScreen() {
                     fontFamily: FONTS.LEXEND_LIGHT,
                     fontSize: 13,
                     letterSpacing: 2,
-                    color: C.text,
+                    color: TEXT,
                     marginBottom: 14,
                   }}
                 >
@@ -486,7 +484,7 @@ export default function ProfileWebScreen() {
                             borderWidth: 1,
                             borderColor: "#9eb2bf",
                             borderRadius: 18,
-                            backgroundColor: C.card,
+                            backgroundColor: WHITE,
                             overflow: "hidden",
                           }}
                         >
@@ -496,7 +494,7 @@ export default function ProfileWebScreen() {
                                 fontFamily: FONTS.CRIMSON_REGULAR,
                                 fontSize: 18,
                                 lineHeight: 25,
-                                color: C.text,
+                                color: TEXT,
                               }}
                             >
                               {caption}
@@ -515,9 +513,9 @@ export default function ProfileWebScreen() {
                           width: 320,
                           minHeight: 260,
                           borderWidth: 1,
-                          borderColor: C.border,
+                          borderColor: BORDER,
                           borderRadius: 18,
-                          backgroundColor: C.bg,
+                          backgroundColor: PAPER,
                           alignItems: "center",
                           justifyContent: "center",
                           padding: 24,
@@ -528,7 +526,7 @@ export default function ProfileWebScreen() {
                             fontFamily: FONTS.LEXEND_LIGHT,
                             fontSize: 14,
                             lineHeight: 21,
-                            color: C.subtle,
+                            color: MUTED,
                             textAlign: "center",
                           }}
                         >
@@ -556,7 +554,7 @@ export default function ProfileWebScreen() {
                           borderRadius: 999,
                           borderWidth: 1,
                           borderColor: "#9eb2bf",
-                          backgroundColor: C.card,
+                          backgroundColor: WHITE,
                           alignItems: "center",
                           justifyContent: "center",
                         }}
@@ -572,7 +570,7 @@ export default function ProfileWebScreen() {
                           borderRadius: 999,
                           borderWidth: 1,
                           borderColor: "#9eb2bf",
-                          backgroundColor: C.card,
+                          backgroundColor: WHITE,
                           alignItems: "center",
                           justifyContent: "center",
                         }}
@@ -598,7 +596,7 @@ export default function ProfileWebScreen() {
                   width: isCompact ? "100%" : sidebarWidth,
                   borderLeftWidth: isCompact || !sidebarOpen ? 0 : 1,
                   borderTopWidth: isCompact ? 1 : 0,
-                  borderColor: C.border,
+                  borderColor: BORDER,
                   backgroundColor: "transparent",
                   overflow: "visible",
                 }}
@@ -634,7 +632,7 @@ export default function ProfileWebScreen() {
                           fontFamily: FONTS.LEXEND_LIGHT,
                           fontSize: 13,
                           letterSpacing: 2,
-                          color: C.text,
+                          color: TEXT,
                         }}
                       >
                         ABOUT US
@@ -662,7 +660,7 @@ export default function ProfileWebScreen() {
                       showsVerticalScrollIndicator
                     >
                       {sidebarRows.map((row) => (
-                        <DetailRow key={row.label} row={row} textColor={C.text} mutedColor={C.subtle} />
+                        <DetailRow key={row.label} row={row} />
                       ))}
                     </ScrollView>
                   </Animated.View>
@@ -670,20 +668,17 @@ export default function ProfileWebScreen() {
 
                 {/* Contact links and action buttons — always visible regardless of collapse state */}
                 <View style={{ paddingLeft: 35, paddingRight: 22, paddingTop: 20, paddingBottom: 28, gap: 20 }}>
-                  <View style={{ height: 1, backgroundColor: C.border }} />
+                  <View style={{ height: 1, backgroundColor: BORDER }} />
 
                   <View style={{ gap: 20 }}>
-                    <SidebarLink label="Live profile" value={liveProfileUrl} onPress={copyLiveAsUrl} textColor={C.text} mutedColor={C.subtle} />
-                    <SidebarLink label="Email" value={contactEmail} onPress={copyEmail} disabled={!contactEmail} textColor={C.text} mutedColor={C.subtle} />
-                    <SidebarLink label="Phone" value={contactPhone} onPress={copyPhone} disabled={!contactPhone} textColor={C.text} mutedColor={C.subtle} />
+                    <SidebarLink label="Email" value={contactEmail} onPress={copyEmail} disabled={!contactEmail} />
+                    <SidebarLink label="Phone" value={contactPhone} onPress={copyPhone} disabled={!contactPhone} />
                     {showUrl1 ? (
                       <SidebarLink
                         label={contactUrl1Label}
                         value={contactUrl1}
                         onPress={() => copyUrl(contactUrl1)}
                         disabled={!contactUrl1}
-                        textColor={C.text}
-                        mutedColor={C.subtle}
                       />
                     ) : null}
                     {showUrl2 ? (
@@ -692,8 +687,6 @@ export default function ProfileWebScreen() {
                         value={contactUrl2}
                         onPress={() => copyUrl(contactUrl2)}
                         disabled={!contactUrl2}
-                        textColor={C.text}
-                        mutedColor={C.subtle}
                       />
                     ) : null}
                   </View>
@@ -703,135 +696,15 @@ export default function ProfileWebScreen() {
               </View>
             </View>
           </View>
-
-          <View
-            style={{
-              backgroundColor: DARK,
-              paddingHorizontal: pagePad,
-              paddingVertical: 40,
-              flexDirection: isCompact ? "column" : "row",
-              justifyContent: "space-between",
-              gap: 28,
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: FONTS.LEXEND_LIGHT,
-                fontSize: isCompact ? 24 : 28,
-                lineHeight: isCompact ? 34 : 40,
-                color: WHITE,
-                maxWidth: 360,
-              }}
-            >
-              one degree,
-              {"\n"}one conversation,
-              {"\n"}one connection,
-              {"\n"}can change everything.
-            </Text>
-
-            <View style={{ alignItems: isCompact ? "flex-start" : "flex-end", gap: 18 }}>
-              <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 32, color: WHITE }}>1DGR°</Text>
-              <Pressable onPress={() => router.push("/(companyUser)/settings")}>
-                <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, letterSpacing: 1.6, color: "#aab6be" }}>
-                  SETTINGS
-                </Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  logout();
-                  router.replace("/(auth)/login");
-                }}
-              >
-                <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, letterSpacing: 1.6, color: "#aab6be" }}>
-                  LOGOUT
-                </Text>
-              </Pressable>
-            </View>
-          </View>
         </ScrollView>
+        {/* this had to be placed outside of the scrollview or else it will move with it, placed it in a reusable component for easy find and edit*/}
+        <WebFooter
+          onLogout={() => {
+            logout();
+            router.replace("/(auth)/login" as any);
+          }}
+        />
 
-        <Modal visible={liveQrModalOpen} transparent animationType="fade" onRequestClose={() => setLiveQrModalOpen(false)}>
-          <Pressable
-            onPress={() => setLiveQrModalOpen(false)}
-            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.38)", justifyContent: "center", alignItems: "center", padding: 24 }}
-          >
-            <Pressable
-              onPress={() => {}}
-              style={{ width: "100%", maxWidth: 460, borderRadius: 20, backgroundColor: C.card, padding: 24 }}
-            >
-              <Text
-                style={{
-                  fontFamily: FONTS.LEXEND_REGULAR,
-                  fontSize: 20,
-                  color: C.text,
-                  textAlign: "center",
-                }}
-              >
-                Live QR Code
-              </Text>
-              <Text
-                style={{
-                  fontFamily: FONTS.LEXEND_LIGHT,
-                  fontSize: 13,
-                  color: C.subtle,
-                  textAlign: "center",
-                  marginTop: 8,
-                }}
-              >
-                Tap the QR code to copy.
-              </Text>
-
-              <View style={{ marginTop: 18, alignItems: "center", justifyContent: "center" }}>
-                <shareLinkQR url={liveProfileUrl} size={280} copyOnToken={liveQrCopyToken} />
-              </View>
-
-              <View style={{ marginTop: 22, flexDirection: "row", gap: 12 }}>
-                <Pressable
-                  onPress={() => setLiveQrCopyToken((n) => (typeof n === "number" ? n + 1 : 1))}
-                  style={{
-                    flex: 1,
-                    borderWidth: 1,
-                    borderColor: C.border,
-                    borderRadius: 12,
-                    paddingVertical: 12,
-                    alignItems: "center",
-                    backgroundColor: C.bg,
-                  }}
-                >
-                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: C.text }}>Copy QR code</Text>
-                </Pressable>
-                <Pressable
-                  onPress={copyLiveAsUrl}
-                  style={{
-                    flex: 1,
-                    borderWidth: 1,
-                    borderColor: C.border,
-                    borderRadius: 12,
-                    paddingVertical: 12,
-                    alignItems: "center",
-                    backgroundColor: C.bg,
-                  }}
-                >
-                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: C.text }}>Copy URL</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => setLiveQrModalOpen(false)}
-                  style={{
-                    flex: 1,
-                    borderWidth: 1,
-                    borderColor: C.border,
-                    borderRadius: 12,
-                    paddingVertical: 12,
-                    alignItems: "center",
-                    backgroundColor: C.card,
-                  }}
-                >
-                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: C.text }}>Close</Text>
-                </Pressable>
-              </View>
-            </Pressable>
-          </Pressable>
-        </Modal>
       </SafeAreaView>
     </>
   );
