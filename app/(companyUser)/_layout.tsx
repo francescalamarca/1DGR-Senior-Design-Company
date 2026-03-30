@@ -106,7 +106,7 @@ export default function HomeUserLayout() {
               switch (route.name) {
                 case "users":
                   return <Feather name="briefcase" size={iconSize} color={color} />;
-                case "networks":
+                case "message-inbox":
                   return <Feather name="users" size={iconSize} color={color} />;
                 case "explore":
                   return <MaterialCommunityIcons name="earth" size={iconSize} color={color} />;
@@ -136,7 +136,7 @@ export default function HomeUserLayout() {
 
           {/* ───────────── Visible bottom tabs ───────────── */}
           <Tabs.Screen name="candidates" options={{ title: "Candidates" }} />
-          <Tabs.Screen name="networks" options={{ title: "Networks" }} />
+          <Tabs.Screen name="message-inbox" options={{ title: "Networks" }} />
           <Tabs.Screen name="explore" options={{ title: "Explore" }} />
           <Tabs.Screen name="record" options={{ title: "Record" }} />
           <Tabs.Screen
