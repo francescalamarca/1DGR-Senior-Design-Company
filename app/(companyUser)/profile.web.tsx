@@ -126,8 +126,6 @@ export default function ProfileWebScreen() {
   const railScrollOffsetRef = useRef(0);
   const {
     profile,
-    liveProfileUrl,
-    copyLiveAsUrl,
     copyEmail,
     copyPhone,
     copyUrl,
@@ -157,16 +155,6 @@ export default function ProfileWebScreen() {
   const workTypeDisplay = String((profile as any).workType ?? "").trim();
 
   // Sidebar rows shown in the expanded ABOUT US panel
-  const qualCol1: any[] = [];
-  const qualCol2: any[] = [
-    { label: "Mission Statement", value: missionStatement || "—" },
-    { label: "Core Values", value: coreValues.length ? coreValues.join(", ") : "—" },
-    { label: "Industry", value: industry || "—" },
-    { label: "Benefits", value: benefitsSummary || "—" },
-    { label: "Work Type", value: workTypeDisplay || "—" },
-    { label: "Locations", value: locations.length ? locations.join(", ") : "—" },
-  ];
-
   const [liveQrModalOpen, setLiveQrModalOpen] = useState(false);
   const [liveQrCopyToken, setLiveQrCopyToken] = useState<number | undefined>(undefined);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -178,7 +166,18 @@ export default function ProfileWebScreen() {
   const heroAvatarSize = width < 1180 ? 128 : 164;
   const railCardWidth = Math.min(360, Math.max(268, Math.round(width * 0.2)));
   const railStep = railCardWidth + 20;
-  const sidebarRows = useMemo(() => [...qualCol1, ...qualCol2], [qualCol1, qualCol2]);
+  const sidebarRows = useMemo(() => { //changed this so that they only change when a dep is changed, not every render
+    const qualCol1: any[] = [];
+    const qualCol2: any[] = [
+      { label: "Mission Statement", value: missionStatement || "—" },
+      { label: "Core Values", value: coreValues.length ? coreValues.join(", ") : "—" },
+      { label: "Industry", value: industry || "—" },
+      { label: "Benefits", value: benefitsSummary || "—" },
+      { label: "Work Type", value: workTypeDisplay || "—" },
+      { label: "Locations", value: locations.length ? locations.join(", ") : "—" },
+    ];
+    return [...qualCol1, ...qualCol2];
+  }, [missionStatement, coreValues, industry, benefitsSummary, workTypeDisplay, locations]);
   const sidebarPanelHeight = isCompact ? 540 : Math.max(sidebarColumnHeight, 760);
   const collapsedPanelHeight = 64; // just the header row (ABOUT US + chevron)
   const sidebarWidth = isCompact ? 0 : 450;
@@ -678,7 +677,6 @@ export default function ProfileWebScreen() {
                   <View style={{ height: 1, backgroundColor: BORDER }} />
 
                   <View style={{ gap: 20 }}>
-                    <SidebarLink label="Live profile" value={liveProfileUrl} onPress={copyLiveAsUrl} />
                     <SidebarLink label="Email" value={contactEmail} onPress={copyEmail} disabled={!contactEmail} />
                     <SidebarLink label="Phone" value={contactPhone} onPress={copyPhone} disabled={!contactPhone} />
                     {showUrl1 ? (
@@ -737,102 +735,20 @@ export default function ProfileWebScreen() {
                   SETTINGS
                 </Text>
               </Pressable>
-              <Pressable
+              {/* <Pressable
                 onPress={() => {
                   logout();
                   router.replace("/(auth)/login");
                 }}
-              >
+              > */}
                 <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, letterSpacing: 1.6, color: "#aab6be" }}>
                   LOGOUT
                 </Text>
-              </Pressable>
+              {/*</Pressable>*/}
             </View>
           </View>
         </ScrollView>
 
-        <Modal visible={liveQrModalOpen} transparent animationType="fade" onRequestClose={() => setLiveQrModalOpen(false)}>
-          <Pressable
-            onPress={() => setLiveQrModalOpen(false)}
-            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.38)", justifyContent: "center", alignItems: "center", padding: 24 }}
-          >
-            <Pressable
-              onPress={() => {}}
-              style={{ width: "100%", maxWidth: 460, borderRadius: 20, backgroundColor: WHITE, padding: 24 }}
-            >
-              <Text
-                style={{
-                  fontFamily: FONTS.LEXEND_REGULAR,
-                  fontSize: 20,
-                  color: TEXT,
-                  textAlign: "center",
-                }}
-              >
-                Live QR Code
-              </Text>
-              <Text
-                style={{
-                  fontFamily: FONTS.LEXEND_LIGHT,
-                  fontSize: 13,
-                  color: MUTED,
-                  textAlign: "center",
-                  marginTop: 8,
-                }}
-              >
-                Tap the QR code to copy.
-              </Text>
-
-              <View style={{ marginTop: 18, alignItems: "center", justifyContent: "center" }}>
-                <shareLinkQR url={liveProfileUrl} size={280} copyOnToken={liveQrCopyToken} />
-              </View>
-
-              <View style={{ marginTop: 22, flexDirection: "row", gap: 12 }}>
-                <Pressable
-                  onPress={() => setLiveQrCopyToken((n) => (typeof n === "number" ? n + 1 : 1))}
-                  style={{
-                    flex: 1,
-                    borderWidth: 1,
-                    borderColor: BORDER,
-                    borderRadius: 12,
-                    paddingVertical: 12,
-                    alignItems: "center",
-                    backgroundColor: PAPER,
-                  }}
-                >
-                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: TEXT }}>Copy QR code</Text>
-                </Pressable>
-                <Pressable
-                  onPress={copyLiveAsUrl}
-                  style={{
-                    flex: 1,
-                    borderWidth: 1,
-                    borderColor: BORDER,
-                    borderRadius: 12,
-                    paddingVertical: 12,
-                    alignItems: "center",
-                    backgroundColor: PAPER,
-                  }}
-                >
-                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: TEXT }}>Copy URL</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => setLiveQrModalOpen(false)}
-                  style={{
-                    flex: 1,
-                    borderWidth: 1,
-                    borderColor: BORDER,
-                    borderRadius: 12,
-                    paddingVertical: 12,
-                    alignItems: "center",
-                    backgroundColor: WHITE,
-                  }}
-                >
-                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: TEXT }}>Close</Text>
-                </Pressable>
-              </View>
-            </Pressable>
-          </Pressable>
-        </Modal>
       </SafeAreaView>
     </>
   );

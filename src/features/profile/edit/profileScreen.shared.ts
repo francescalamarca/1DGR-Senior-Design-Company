@@ -7,7 +7,6 @@ import * as VideoThumbnails from "expo-video-thumbnails";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert } from "react-native";
 
-export const HIGHER_ED_ITEM_GAP = 10;
 
 export type QualRowValue = string | string[];
 export type QualRow = { label: string; value: QualRowValue };
@@ -62,43 +61,6 @@ export function toCloudFrontUrl(urlOrKey: string): string {
   return urlOrKey;
 }
 
-export function normalizeFieldOfStudy(e: any): string {
-  return String(e?.fieldOfStudy ?? e?.field_of_study ?? e?.field_of_study_name ?? "")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-export function degreesAsLines(e: any): string[] {
-  const degrees: string[] = Array.isArray(e?.degrees) ? e.degrees : [];
-  if (!degrees.length) return [];
-
-  const fallbackField = normalizeFieldOfStudy(e);
-
-  const details = Array.isArray(e?.degreeDetails)
-    ? e.degreeDetails
-    : Array.isArray(e?.degree_details)
-      ? e.degree_details
-      : [];
-
-  const detailMap = new Map<string, string>();
-  for (const d of details) {
-    const degree = String(d?.degree ?? "").trim();
-    const field = String(d?.fieldOfStudy ?? d?.field_of_study ?? "")
-      .replace(/\s+/g, " ")
-      .trim();
-    if (degree && field) detailMap.set(degree, field);
-  }
-
-  return degrees
-    .map((d) => {
-      const dd = String(d ?? "").trim();
-      if (!dd) return "";
-      const field = detailMap.get(dd) ?? fallbackField;
-      return field ? `${dd} in ${field}` : dd;
-    })
-    .filter(Boolean);
-}
-
 export function dashIfEmpty(v: any) {
   const s = String(v ?? "").trim();
   return s.length ? s : "—";
@@ -115,64 +77,6 @@ export function softWrapLongTokens(s: string) {
     .replace(/([a-z])([A-Z])/g, "$1\u200B$2");
 }
 
-export function formatHigherEdLocationLine(e: any): string {
-  const city = String(e?.city ?? e?.schoolCity ?? e?.school_city ?? "").trim();
-  const state = String(e?.state ?? e?.region ?? e?.schoolState ?? e?.school_state ?? "").trim();
-  const country = String(e?.country ?? e?.nation ?? e?.schoolCountry ?? e?.school_country ?? "").trim();
-
-  const directLocation = String(e?.location ?? e?.schoolLocation ?? e?.school_location ?? "").trim();
-
-  const parts = [city, state, country].filter(Boolean);
-  if (parts.length) return parts.join(", ");
-
-  if (directLocation) return directLocation;
-
-  return "";
-}
-
-export function splitSchoolAndLocationFromLabel(label: string): { school: string; location: string } {
-  const raw = String(label ?? "").trim();
-  if (!raw) return { school: "", location: "" };
-  const idx = raw.indexOf(",");
-  if (idx === -1) return { school: raw, location: "" };
-  return {
-    school: raw.slice(0, idx).trim(),
-    location: raw.slice(idx + 1).trim(),
-  };
-}
-
-export function formatHigherEdMultiline(e: any): string {
-  const rawLabel = String(e?.label ?? e?.schoolName ?? e?.school_name ?? "").trim();
-  const { school: schoolFromLabel, location: locationFromLabel } = splitSchoolAndLocationFromLabel(rawLabel);
-
-  const structuredLocation = formatHigherEdLocationLine(e);
-
-  const finalSchool = String(schoolFromLabel || rawLabel).trim();
-  const finalLocation = String(structuredLocation || locationFromLabel).trim();
-
-  const estimated = String(
-    e?.estimatedGraduation ?? e?.estimated_graduation ?? e?.gradYear ?? e?.graduation ?? ""
-  ).trim();
-
-  const lines: string[] = [];
-
-  if (finalSchool) lines.push(finalSchool);
-  if (finalLocation) lines.push(finalLocation);
-
-  const degreeLines = degreesAsLines(e);
-  if (degreeLines.length) {
-    lines.push(...degreeLines);
-  } else {
-    const degreesFallback = Array.isArray(e?.degrees)
-      ? e.degrees.map((d: any) => String(d ?? "").trim()).filter(Boolean)
-      : [];
-    if (degreesFallback.length) lines.push(...degreesFallback);
-  }
-
-  if (estimated) lines.push(`Estimated grad: ${estimated}`);
-
-  return lines.length ? lines.join("\n") : "—";
-}
 
 export function useProfileScreenData() {
   const { accessToken } = useSession();
@@ -180,66 +84,8 @@ export function useProfileScreenData() {
   const pathname = usePathname();
 
   const [refreshing, setRefreshing] = useState(false);
-  const [showLegalNow, setShowLegalNow] = useState(false);
   const fetchingRef = useRef(false);
   const didFetchOnceRef = useRef(false);
-
-  const showPreferred = profile.nameDisplaySettings.showPreferredName;
-  const showLegal = profile.nameDisplaySettings.showLegalName;
-  const bothEnabled = showPreferred && showLegal;
-
-  const legalFullName = useMemo(() => {
-    const first = profile.legalFirstName?.trim() ?? "";
-    const last = profile.legalLastName?.trim() ?? "";
-    const middle = profile.legalMiddleName?.trim() ?? "";
-    return `${first}${middle ? ` ${middle}` : ""}${last ? ` ${last}` : ""}`.trim();
-  }, [profile.legalFirstName, profile.legalMiddleName, profile.legalLastName]);
-
-  const preferredName = (profile.preferredName ?? "").trim();
-  const preferredOk = preferredName.length > 0;
-  const legalOk = legalFullName.length > 0;
-  const canToggleName = bothEnabled && preferredOk && legalOk;
-
-  const displayName = useMemo(() => {
-    if (bothEnabled) {
-      if (showLegalNow) return legalFullName || preferredName || profile.name;
-      return preferredName || legalFullName || profile.name;
-    }
-    return profile.name;
-  }, [bothEnabled, showLegalNow, legalFullName, preferredName, profile.name]);
-
-  useFocusEffect(
-    useCallback(() => {
-      if (bothEnabled) {
-        const first = profile.nameDisplaySettings.firstWhenBothOn;
-
-        if (first === "legal" && legalOk) setShowLegalNow(true);
-        else if (first === "preferred" && preferredOk) setShowLegalNow(false);
-        else if (preferredOk) setShowLegalNow(false);
-        else if (legalOk) setShowLegalNow(true);
-        else setShowLegalNow(false);
-      } else {
-        setShowLegalNow(false);
-      }
-    }, [bothEnabled, preferredOk, legalOk, profile.nameDisplaySettings.firstWhenBothOn])
-  );
-
-  const liveProfileUrl = useMemo(() => {
-    const base =
-      (aws_config as any).liveProfileBaseUrl ||
-      (aws_config as any).webBaseUrl ||
-      (aws_config as any).publicBaseUrl ||
-      (aws_config as any).apiBaseUrl;
-
-    const handle = (profile as any).liveHandle || (profile as any).handle || (profile as any).username || "me";
-
-    return `${String(base).replace(/\/$/, "")}/u/${encodeURIComponent(String(handle))}`;
-  }, [profile]);
-
-  const copyLiveAsUrl = useCallback(async () => {
-    await Clipboard.setStringAsync(liveProfileUrl);
-    Alert.alert("Copied", "Live profile URL copied to clipboard.");
-  }, [liveProfileUrl]);
 
   const contactEmail = String(profile.email ?? "").trim();
   const contactPhone = String(profile.phoneNumber ?? "").trim();
@@ -324,39 +170,6 @@ export function useProfileScreenData() {
       const user = data?.user ?? data?.users?.[0] ?? null;
       const videoLibrary = data?.videoLibrary ?? data?.videos ?? [];
 
-      const higherEducation = Array.isArray(data?.higher_education)
-        ? data.higher_education.map((e: any) => ({
-            ...e,
-            degreeDetails: Array.isArray(e?.degreeDetails)
-              ? e.degreeDetails
-              : Array.isArray(e?.degree_details)
-                ? e.degree_details
-                : [],
-            estimatedGraduation: String(e?.estimatedGraduation ?? e?.estimated_graduation ?? "").trim(),
-          }))
-        : [];
-
-      setProfile((prev: any) => {
-        const prevByUnit = new Map<string, any>(
-          (Array.isArray(prev?.higherEducation) ? prev.higherEducation : []).map((e: any) => [String(e?.unitid ?? ""), e])
-        );
-
-        const mergedHigherEducation = higherEducation.map((e: any) => {
-          const prevE = prevByUnit.get(String(e?.unitid ?? ""));
-          return {
-            ...(prevE ?? {}),
-            ...e,
-            degreeDetails:
-              Array.isArray(e?.degreeDetails) && e.degreeDetails.length > 0
-                ? e.degreeDetails
-                : Array.isArray(prevE?.degreeDetails)
-                  ? prevE.degreeDetails
-                  : [],
-            estimatedGraduation:
-              String(e?.estimatedGraduation ?? "").trim() || String(prevE?.estimatedGraduation ?? "").trim(),
-          };
-        });
-
         return {
           ...prev,
 
@@ -379,7 +192,6 @@ export function useProfileScreenData() {
           industryExperience: user?.experience ?? "",
           highestEducationCompleted: user?.highest_education ?? "",
           industryInterests: user?.industry_interests ?? [],
-          higherEducation: mergedHigherEducation,
 
           valuesSummary: Array.isArray((user as any)?.values_summary)
             ? (user as any).values_summary
@@ -432,7 +244,7 @@ export function useProfileScreenData() {
     }, [fetchLatestProfile])
   );
 
-  const hookText = (profile.bio ?? "").trim();
+  const missionText = (profile.missionStatement ?? "").trim();
   const headlineText =
     String((profile as any).headline ?? (profile as any).title ?? (profile as any).tagline ?? "").trim() || "";
 
@@ -518,19 +330,11 @@ export function useProfileScreenData() {
     profile,
     refreshing,
     fetchLatestProfile,
-    liveProfileUrl,
-    copyLiveAsUrl,
     copyEmail,
     copyPhone,
     copyUrl,
-    displayName,
-    canToggleName,
-    toggleDisplayName: () => {
-      if (!canToggleName) return;
-      setShowLegalNow((v) => !v);
-    },
     headlineText,
-    hookText,
+    missionText,
     valuesItems,
     qualCol1,
     qualCol2,
@@ -557,21 +361,6 @@ export function useCompanyProfileScreenData() {
     const didFetchOnceRef = useRef(false);
   
     const displayName = String(profile.companyName ?? "").trim() || "Company";
-  
-    const liveProfileUrl = useMemo(() => {
-      const base =
-        (aws_config as any).liveProfileBaseUrl ||
-        (aws_config as any).webBaseUrl ||
-        (aws_config as any).publicBaseUrl ||
-        (aws_config as any).apiBaseUrl;
-      const handle = (profile as any).liveHandle || (profile as any).handle || (profile as any).username || "me";
-      return `${String(base).replace(/\/$/, "")}/u/${encodeURIComponent(String(handle))}`;
-    }, [profile]);
-  
-    const copyLiveAsUrl = useCallback(async () => {
-      await Clipboard.setStringAsync(liveProfileUrl);
-      Alert.alert("Copied", "Live profile URL copied to clipboard.");
-    }, [liveProfileUrl]);
   
     const contactEmail = String(profile.email ?? "").trim();
     const contactPhone = String(profile.phoneNumber ?? "").trim();
@@ -689,8 +478,6 @@ export function useCompanyProfileScreenData() {
       profile,
       refreshing,
       fetchLatestProfile,
-      liveProfileUrl,
-      copyLiveAsUrl,
       copyEmail,
       copyPhone,
       copyUrl,
