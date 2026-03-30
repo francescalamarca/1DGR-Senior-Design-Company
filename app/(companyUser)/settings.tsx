@@ -840,10 +840,10 @@ export default function SettingsScreen() {
         accessibilityRole="button"
         accessibilityLabel="Cancel settings"
       >
-        <LText style={styles.headerActionText}>Cancel</LText>
+        <LText style={[styles.headerActionText, { color: dynColors.text }]}>Cancel</LText>
       </Pressable>
 
-      <LLText pointerEvents="none" style={styles.headerTitle}>
+      <LLText pointerEvents="none" style={[styles.headerTitle, { color: dynColors.text }]}>
         Settings & Privacy
       </LLText>
 
@@ -900,7 +900,7 @@ export default function SettingsScreen() {
         accessibilityLabel="Save settings"
         accessibilityHint={canSaveTop ? "Saves your changes" : "No changes to save"}
       >
-        <LText style={styles.headerActionText}>Save</LText>
+        <LText style={[styles.headerActionText, { color: dynColors.text }]}>Save</LText>
       </Pressable>
     </View>
   );
