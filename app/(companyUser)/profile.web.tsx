@@ -1,0 +1,809 @@
+import { ProfileBrandWordmark } from "@/src/components/ProfileBrandWordmark";
+import { WebFooter } from "@/src/components/WebFooter";
+import { RequireUserType } from "@/src/components/RequireUserType";
+import {
+  softWrapLongTokens,
+  useCompanyProfileScreenData,
+  type QualRow,
+  type QualRowValue,
+} from "@/src/features/profile/edit/profileScreen.shared";
+import { useSession } from "@/src/state/session";
+import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { router } from "expo-router";
+import { useMemo, useRef, useState } from "react";
+import {
+  Animated,
+  FlatList,
+  Image,
+  Modal,
+  Pressable,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+  useWindowDimensions,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+
+const FONTS = {
+  LEXEND_LIGHT: "Lexend-Light",
+  LEXEND_REGULAR: "Lexend-Regular",
+  LEXEND_BOLD: "Lexend-Bold",
+  CRIMSON_REGULAR: "CrimsonText-Regular",
+} as const;
+
+const BG = "#eef2f4";
+const PAPER = "#fbfbfb";
+const WHITE = "#ffffff";
+const TEXT = "#202020";
+const MUTED = "#718896";
+const BORDER = "#d6dde2";
+const ACCENT = "#9bb4c0";
+
+const TOP_NAV_ITEMS = [
+  { key: "candidates", label: "Candidates", route: "/(companyUser)/candidates", icon: "briefcase", iconSet: "feather" },
+  { key: "networks", label: "Networks", route: "/(companyUser)/networks", icon: "users", iconSet: "feather" },
+  { key: "explore", label: "Explore", route: "/(companyUser)/explore", icon: "earth", iconSet: "material" },
+  { key: "record", label: "Record", route: "/(companyUser)/record", icon: "video", iconSet: "feather" },
+  { key: "profile", label: "Profile", route: "/(companyUser)/profile", icon: "user", iconSet: "feather" },
+] as const;
+
+/*
+Array (string[]): renders each item as its own Text line with spacing between them (e.g. a list of skills or education entries)
+Single value (line 70): renders it as a single Text element
+*/
+function QualValue({ value, textStyle }: { value: QualRowValue; textStyle: any }) {
+  if (Array.isArray(value)) {
+    if (value.length === 0) return <Text style={textStyle}>—</Text>;
+
+    return (
+      <View>
+        {value.map((item, idx) => (
+          <Text
+            key={`${idx}_${item}`}
+            style={[textStyle, idx === value.length - 1 ? null : { marginBottom: 1 }]}
+          >
+            {softWrapLongTokens(item)}
+          </Text>
+        ))}
+      </View>
+    );
+  }
+
+  return <Text style={textStyle}>{softWrapLongTokens(value)}</Text>;
+}
+
+function DetailRow({ row }: { row: QualRow }) {
+  return (
+    <View style={{ gap: 8 }}>
+      <Text
+        style={{
+          fontFamily: FONTS.LEXEND_LIGHT,
+          fontSize: 13,
+          color: MUTED,
+        }}
+      >
+        {row.label}
+      </Text>
+      <QualValue
+        value={row.value}
+        textStyle={{
+          fontFamily: FONTS.LEXEND_LIGHT,
+          fontSize: 14,
+          lineHeight: 21,
+          color: TEXT,
+        }}
+      />
+    </View>
+  );
+}
+
+function SidebarLink({
+  label,
+  value,
+  onPress,
+  disabled,
+}: {
+  label: string;
+  value: string;
+  onPress: () => void;
+  disabled?: boolean;
+}) {
+  return (
+    <View style={{ gap: 8 }}>
+      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED }}>{label}</Text>
+      <Pressable onPress={onPress} disabled={disabled} style={{ opacity: disabled ? 0.5 : 1 }}>
+        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, lineHeight: 21, color: TEXT }}>
+          {value || "—"}
+        </Text>
+      </Pressable>
+    </View>
+  );
+}
+
+export default function ProfileWebScreen() {
+  const { logout } = useSession();
+  const { width } = useWindowDimensions();
+  const railRef = useRef<FlatList<any> | null>(null);
+  const railScrollOffsetRef = useRef(0);
+  const {
+    profile,
+    copyEmail,
+    copyPhone,
+    copyUrl,
+    refreshing,
+    fetchLatestProfile,
+    displayName,
+    missionStatement,
+    benefitsSummary,
+    coreValues,
+    industry,
+    locations,
+    videos,
+    contactEmail,
+    contactPhone,
+    contactUrl1,
+    contactUrl2,
+    contactUrl1Label,
+    contactUrl2Label,
+    showUrl1,
+    showUrl2,
+    openVideo,
+    openRoles,
+  } = useCompanyProfileScreenData();
+
+  // Company-specific derived values (replacing individual-user fields)
+  const canToggleName = false;
+  const toggleDisplayName = () => {};
+
+  // Sidebar rows shown in the expanded ABOUT US panel
+  // const [liveQrModalOpen, setLiveQrModalOpen] = useState(false);
+  // const [liveQrCopyToken, setLiveQrCopyToken] = useState<number | undefined>(undefined);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [rolesModalOpen, setRolesModalOpen] = useState(false);
+  const [sidebarColumnHeight, setSidebarColumnHeight] = useState(760);
+  const sidebarAnimation = useRef(new Animated.Value(0)).current;
+
+  const isCompact = width < 1180;
+  const pagePad = width < 1440 ? 32 : 48;
+  const heroAvatarSize = width < 1180 ? 128 : 164;
+  const railCardWidth = Math.min(360, Math.max(268, Math.round(width * 0.2)));
+  const railStep = railCardWidth + 20;
+  const sidebarRows = useMemo(() => { //changed this so that they only change when a dep is changed, not every render
+    const qualCol1: any[] = [];
+    const qualCol2: any[] = [
+      { label: "Mission Statement", value: missionStatement || "—" },
+      { label: "Core Values", value: coreValues.length ? coreValues.join(", ") : "—" },
+      { label: "Industry", value: industry || "—" },
+      { label: "Benefits", value: benefitsSummary || "—" },
+      { label: "Locations", value: locations.length ? locations.join(", ") : "—" },
+    ];
+    return [...qualCol1, ...qualCol2];
+  }, [missionStatement, coreValues, industry, benefitsSummary, locations]);
+  const sidebarPanelHeight = isCompact ? 540 : Math.max(sidebarColumnHeight, 760);
+  const collapsedPanelHeight = 64; // just the header row (ABOUT US + chevron)
+  const sidebarWidth = isCompact ? 0 : 450;
+  const navReturnTo = "/(companyUser)/profile";
+
+  function scrollRail(direction: -1 | 1) {
+    const nextOffset = Math.max(0, railScrollOffsetRef.current + direction * railStep);
+    railRef.current?.scrollToOffset({ offset: nextOffset, animated: true });
+    railScrollOffsetRef.current = nextOffset;
+  }
+
+  function toggleSidebar() {
+    const nextOpen = !sidebarOpen;
+    setSidebarOpen(nextOpen);
+    Animated.timing(sidebarAnimation, {
+      toValue: nextOpen ? 1 : 0,
+      duration: 240,
+      useNativeDriver: false,
+    }).start();
+  }
+
+  const animatedPanelHeight = sidebarAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [collapsedPanelHeight, sidebarPanelHeight],
+  });
+  const animatedExpandedOpacity = sidebarAnimation.interpolate({
+    inputRange: [0, 0.7, 1],
+    outputRange: [0, 0.15, 1],
+  });
+  const animatedExpandedHeight = sidebarAnimation.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, Math.max(0, sidebarPanelHeight - collapsedPanelHeight)],
+  });
+  return (
+    <>
+      <RequireUserType type="company" />
+
+      <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: PAPER }}>
+        <ScrollView
+          style={{ flex: 1, backgroundColor: PAPER }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchLatestProfile} />}
+        >
+          <View
+            style={{
+              height: 64,
+              borderBottomWidth: 1,
+              borderBottomColor: BORDER,
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: WHITE,
+              position: "relative",
+            }}
+          >
+            <View
+              style={{
+                position: "absolute",
+                left: Math.max(18, pagePad - 6),
+                top: 0,
+                bottom: 0,
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 16,
+              }}
+            >
+              {TOP_NAV_ITEMS.map((item) => {
+                const active = item.key === "profile";
+                const color = active ? ACCENT : MUTED;
+
+                return (
+                  <Pressable
+                    key={item.key}
+                    onPress={() => {
+                      if (active) return;
+                      router.replace(item.route as any);
+                    }}
+                    style={{
+                      flexDirection: "row",
+                      alignItems: "center",
+                      gap: 6,
+                      opacity: active ? 1 : 0.92,
+                    }}
+                  >
+                    {item.iconSet === "material" ? (
+                      <MaterialCommunityIcons name={item.icon as any} size={16} color={color} />
+                    ) : (
+                      <Feather name={item.icon as any} size={16} color={color} />
+                    )}
+                    <Text
+                      style={{
+                        fontFamily: FONTS.LEXEND_REGULAR,
+                        fontSize: 12,
+                        color,
+                      }}
+                    >
+                      {item.label}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+            <ProfileBrandWordmark
+              fontFamily={FONTS.LEXEND_LIGHT}
+              size={28}
+              markSize={18}
+              markOffsetTop={1}
+            />
+          </View>
+
+          <View
+            style={{
+              backgroundColor: PAPER,
+              paddingHorizontal: 0,
+              paddingTop: 0,
+              paddingBottom: 0,
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "column",
+                alignItems: "stretch",
+                gap: 0,
+                backgroundColor: WHITE,
+                borderTopWidth: 1,
+                borderTopColor: BORDER,
+                position: "relative",
+              }}
+            >
+              <View
+                style={{
+                  flex: 1,
+                  paddingHorizontal: pagePad,
+                  paddingTop: 22,
+                  paddingBottom: 22,
+                  minWidth: 0,
+                }}
+              >
+                <View
+                  style={{
+                    flexDirection: isCompact ? "column" : "row",
+                    alignItems: isCompact ? "flex-start" : "center",
+                    gap: 28,
+                    paddingRight: isCompact ? 0 : sidebarWidth + -5,
+                  }}
+                >
+                  <Pressable onPress={() => openVideo(profile.avatarVideoUri)} hitSlop={10}>
+                    {profile.avatarImageUri?.trim() ? (
+                      <Image
+                        source={{ uri: profile.avatarImageUri }}
+                        style={{
+                          width: heroAvatarSize,
+                          height: heroAvatarSize,
+                          borderRadius: heroAvatarSize / 2,
+                          backgroundColor: "#e8ecef",
+                        }}
+                      />
+                    ) : (
+                      <View
+                        style={{
+                          width: heroAvatarSize,
+                          height: heroAvatarSize,
+                          borderRadius: heroAvatarSize / 2,
+                          backgroundColor: "#e8ecef",
+                        }}
+                      />
+                    )}
+                  </Pressable>
+
+                  <View style={{ flex: 1, minWidth: 0, gap: 12 }}>
+                    <Pressable disabled={!canToggleName} onPress={toggleDisplayName} hitSlop={10}>
+                      <Text
+                        style={{
+                          fontFamily: FONTS.LEXEND_LIGHT,
+                          fontSize: isCompact ? 38 : 50,
+                          lineHeight: isCompact ? 44 : 56,
+                          color: TEXT,
+                        }}
+                      >
+                        {displayName}
+                      </Text>
+                    </Pressable>
+
+                    {!!missionStatement && (
+                      <Text
+                        style={{
+                          fontFamily: FONTS.LEXEND_LIGHT,
+                          fontSize: 15,
+                          lineHeight: 22,
+                          color: MUTED,
+                          marginTop: 6,
+                        }}
+                      >
+                        {missionStatement}
+                      </Text>
+                    )}
+
+                  </View>
+
+                  <View
+                    style={{
+                      width: isCompact ? "100%" : 132,
+                      gap: 13,
+                      alignSelf: isCompact ? "stretch" : "flex-start",
+                      paddingTop: 0,
+                      marginLeft: isCompact ? 0 : 10,
+                    }}
+                  >
+                    <Pressable
+                      onPress={() => router.push({ pathname: "/(companyUser)/video-library", params: { returnTo: navReturnTo } })}
+                      style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+                    >
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
+                        LIBRARY
+                      </Text>
+                      <Feather name="layers" size={18} color={TEXT} />
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => router.push("/(companyUser)/profile-edit")}
+                      style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+                    >
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
+                        EDIT
+                      </Text>
+                      <Feather name="edit-2" size={18} color={TEXT} />
+                    </Pressable>
+
+                    <Pressable
+                      onPress={() => router.push("/(companyUser)/settings")}
+                      style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+                    >
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
+                        SETTINGS
+                      </Text>
+                      <Feather name="settings" size={18} color={TEXT} />
+                    </Pressable>
+
+                    <View style={{ height: 1, backgroundColor: BORDER, marginVertical: 2 }} />
+
+                    <Pressable
+                      onPress={fetchLatestProfile}
+                      disabled={refreshing}
+                      style={{
+                        flexDirection: "row",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        opacity: refreshing ? 0.45 : 1,
+                      }}
+                    >
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
+                        REFRESH
+                      </Text>
+                      <Feather name="refresh-cw" size={18} color={TEXT} />
+                    </Pressable>
+
+                  </View>
+                </View>
+              </View>
+
+              <View style={{ marginTop: 40, paddingHorizontal: pagePad }}>
+                <Text
+                  style={{
+                    fontFamily: FONTS.LEXEND_LIGHT,
+                    fontSize: 13,
+                    letterSpacing: 2,
+                    color: TEXT,
+                    marginBottom: 14,
+                  }}
+                >
+                  FIRST CONNECT
+                </Text>
+
+                <LinearGradient
+                  colors={["#ffffff", "#eef4f7", "#dfe9ee"]}
+                  locations={[0, 0.08, 1]}
+                  start={{ x: 0.5, y: 0 }}
+                  end={{ x: 0.5, y: 1 }}
+                  style={{ marginTop: -12, marginHorizontal: -pagePad, paddingTop: 20, paddingBottom: 18, paddingHorizontal: pagePad }}
+                >
+                  <FlatList
+                    ref={railRef}
+                    data={videos}
+                    horizontal
+                    keyExtractor={(item: any) => String(item.id ?? `${item.slot ?? "x"}_${item.videoUri ?? ""}`)}
+                    showsHorizontalScrollIndicator={false}
+                    contentContainerStyle={{ paddingRight: 4 }}
+                    ItemSeparatorComponent={() => <View style={{ width: 20 }} />}
+                    onScroll={(event) => {
+                      railScrollOffsetRef.current = event.nativeEvent.contentOffset.x;
+                    }}
+                    scrollEventThrottle={16}
+                    renderItem={({ item }: { item: any }) => {
+                      const uri = String(item.videoUri ?? "").trim();
+                      const thumb = String(item.imageUri ?? "").trim();
+                      const caption = String(item.caption ?? "Untitled");
+
+                      return (
+                        <Pressable
+                          onPress={() => openVideo(uri)}
+                          style={{
+                            width: railCardWidth,
+                            borderWidth: 1,
+                            borderColor: "#9eb2bf",
+                            borderRadius: 18,
+                            backgroundColor: WHITE,
+                            overflow: "hidden",
+                          }}
+                        >
+                          <View style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 16 }}>
+                            <Text
+                              style={{
+                                fontFamily: FONTS.CRIMSON_REGULAR,
+                                fontSize: 18,
+                                lineHeight: 25,
+                                color: TEXT,
+                              }}
+                            >
+                              {caption}
+                            </Text>
+                          </View>
+
+                          <View style={{ aspectRatio: 0.98, backgroundColor: "#e8ecef" }}>
+                            {!!thumb ? <Image source={{ uri: thumb }} style={{ width: "100%", height: "100%" }} /> : null}
+                          </View>
+                        </Pressable>
+                      );
+                    }}
+                    ListEmptyComponent={
+                      <View
+                        style={{
+                          width: 320,
+                          minHeight: 260,
+                          borderWidth: 1,
+                          borderColor: BORDER,
+                          borderRadius: 18,
+                          backgroundColor: PAPER,
+                          alignItems: "center",
+                          justifyContent: "center",
+                          padding: 24,
+                        }}
+                      >
+                        <Text
+                          style={{
+                            fontFamily: FONTS.LEXEND_LIGHT,
+                            fontSize: 14,
+                            lineHeight: 21,
+                            color: MUTED,
+                            textAlign: "center",
+                          }}
+                        >
+                          No response videos yet.
+                        </Text>
+                      </View>
+                    }
+                  />
+
+                  {videos.length > 0 ? (
+                    <View
+                      style={{
+                        marginTop: 9,
+                        flexDirection: "row",
+                        justifyContent: "center",
+                        gap: 12,
+                        marginLeft: isCompact ? 0 : 340,
+                      }}
+                    >
+                      <Pressable
+                        onPress={() => scrollRail(-1)}
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 999,
+                          borderWidth: 1,
+                          borderColor: "#9eb2bf",
+                          backgroundColor: WHITE,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Feather name="arrow-left" size={14} color={MUTED} />
+                      </Pressable>
+
+                      <Pressable
+                        onPress={() => scrollRail(1)}
+                        style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 999,
+                          borderWidth: 1,
+                          borderColor: "#9eb2bf",
+                          backgroundColor: WHITE,
+                          alignItems: "center",
+                          justifyContent: "center",
+                        }}
+                      >
+                        <Feather name="arrow-right" size={14} color={MUTED} />
+                      </Pressable>
+                    </View>
+                  ) : null}
+                </LinearGradient>
+              </View>
+
+              <View
+                onLayout={(event) => {
+                  if (!isCompact) {
+                    setSidebarColumnHeight(event.nativeEvent.layout.height);
+                  }
+                }}
+                style={{
+                  position: isCompact ? "relative" : "absolute",
+                  right: isCompact ? undefined : 0,
+                  top: isCompact ? undefined : 0,
+                  bottom: isCompact ? undefined : 0,
+                  width: isCompact ? "100%" : sidebarWidth,
+                  borderLeftWidth: isCompact || !sidebarOpen ? 0 : 1,
+                  borderTopWidth: isCompact ? 1 : 0,
+                  borderColor: BORDER,
+                  backgroundColor: "transparent",
+                  overflow: "visible",
+                }}
+              >
+                <Animated.View
+                  style={{
+                    height: animatedPanelHeight,
+                    backgroundColor: "rgba(251,251,251,0.95)",
+                    borderLeftWidth: !sidebarOpen && !isCompact ? 1 : 0,
+                    borderRightWidth: !sidebarOpen && !isCompact ? 1 : 0,
+                    borderBottomWidth: 0,
+                    borderColor: !sidebarOpen && !isCompact ? "rgba(214, 221, 226, 0.95)" : "transparent",
+                    overflow: "hidden",
+                  }}
+                >
+                  <Pressable
+                    onPress={toggleSidebar}
+                    style={{
+                      paddingLeft: 35,
+                      paddingRight: 22,
+                      paddingVertical: 20,
+                      borderBottomWidth: sidebarOpen ? 1 : 0,
+                      borderBottomColor: "rgba(214, 221, 226, 0.9)",
+                      backgroundColor: "rgba(255,255,255,0.72)",
+                      flexDirection: "row",
+                      alignItems: "flex-start",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <View style={{ flex: 1, gap: 12, paddingRight: 18, paddingTop: 4 }}>
+                      <Text
+                        style={{
+                          fontFamily: FONTS.LEXEND_LIGHT,
+                          fontSize: 13,
+                          letterSpacing: 2,
+                          color: TEXT,
+                        }}
+                      >
+                        ABOUT US
+                      </Text>
+
+                    </View>
+
+                    <Feather
+                      name={sidebarOpen ? "chevron-up" : "chevron-down"}
+                      size={20}
+                      color={TEXT}
+                    />
+                  </Pressable>
+
+                  <Animated.View
+                    style={{
+                      height: animatedExpandedHeight,
+                      opacity: animatedExpandedOpacity,
+                    }}
+                    pointerEvents={sidebarOpen ? "auto" : "none"}
+                  >
+                    <ScrollView
+                      style={{ flex: 1 }}
+                      contentContainerStyle={{ paddingLeft: 35, paddingRight: 22, paddingTop: 22, paddingBottom: 36, gap: 28 }}
+                      showsVerticalScrollIndicator
+                    >
+                      {sidebarRows.map((row) => (
+                        <DetailRow key={row.label} row={row} />
+                      ))}
+                      <View style={{ gap: 8 }}>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED }}>Open Roles</Text>
+                        <Pressable onPress={() => setRolesModalOpen(true)}>
+                          <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, lineHeight: 21, color: TEXT }}>
+                            {openRoles.length > 0
+                              ? `${openRoles.length} open ${openRoles.length === 1 ? "role" : "roles"}`
+                              : "—"}
+                          </Text>
+                        </Pressable>
+                      </View>
+                    </ScrollView>
+                  </Animated.View>
+                </Animated.View>
+
+                {/* Contact links and action buttons — always visible regardless of collapse state */}
+                <View style={{ paddingLeft: 35, paddingRight: 22, paddingTop: 20, paddingBottom: 28, gap: 20 }}>
+                  <View style={{ height: 1, backgroundColor: BORDER }} />
+
+                  <View style={{ gap: 20 }}>
+                    <SidebarLink label="Email" value={contactEmail} onPress={copyEmail} disabled={!contactEmail} />
+                    <SidebarLink label="Phone" value={contactPhone} onPress={copyPhone} disabled={!contactPhone} />
+                    {showUrl1 ? (
+                      <SidebarLink
+                        label={contactUrl1Label}
+                        value={contactUrl1}
+                        onPress={() => copyUrl(contactUrl1)}
+                        disabled={!contactUrl1}
+                      />
+                    ) : null}
+                    {showUrl2 ? (
+                      <SidebarLink
+                        label={contactUrl2Label}
+                        value={contactUrl2}
+                        onPress={() => copyUrl(contactUrl2)}
+                        disabled={!contactUrl2}
+                      />
+                    ) : null}
+                  </View>
+
+                </View>
+
+              </View>
+            </View>
+          </View>
+        </ScrollView>
+        {/* this had to be placed outside of the scrollview or else it will move with it, placed it in a reusable component for easy find and edit*/}
+        <WebFooter
+          onLogout={() => {
+            logout();
+            router.replace("/(auth)/login" as any);
+          }}
+        />
+
+      </SafeAreaView>
+      {/*Now the "Open Roles" row in the About Us panel will show e.g. "X open roles" as a tappable link. Tapping it opens a modal with a card per role showing title, work type, salary, skills, relocation, and post URL. 
+      Tapping the backdrop or the X closes it.*/}
+      <Modal visible={rolesModalOpen} transparent animationType="fade" onRequestClose={() => setRolesModalOpen(false)}>
+        <Pressable
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" }}
+          onPress={() => setRolesModalOpen(false)}
+        >
+          <Pressable
+            style={{
+              backgroundColor: WHITE,
+              borderRadius: 18,
+              width: Math.min(560, width - 48),
+              maxHeight: "80%",
+              overflow: "hidden",
+            }}
+            onPress={() => {}}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 28,
+                paddingTop: 24,
+                paddingBottom: 16,
+                borderBottomWidth: 1,
+                borderBottomColor: BORDER,
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 16, color: TEXT }}>Open Roles</Text>
+              <Pressable onPress={() => setRolesModalOpen(false)} hitSlop={12}>
+                <Feather name="x" size={20} color={MUTED} />
+              </Pressable>
+            </View>
+
+            <ScrollView contentContainerStyle={{ padding: 28, gap: 20 }}>
+              {openRoles.map((role: any) => (
+                <View
+                  key={role.id}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: BORDER,
+                    borderRadius: 14,
+                    padding: 20,
+                    gap: 12,
+                    backgroundColor: BG,
+                  }}
+                >
+                  <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, fontSize: 15, color: TEXT }}>{role.title || "—"}</Text>
+
+                  <View style={{ gap: 8 }}>
+                    {!!role.workType && (
+                      <View style={{ flexDirection: "row", gap: 8 }}>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Work Type</Text>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: TEXT, flex: 1 }}>{role.workType}</Text>
+                      </View>
+                    )}
+                    {!!role.salary && (
+                      <View style={{ flexDirection: "row", gap: 8 }}>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Salary</Text>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: TEXT, flex: 1 }}>{role.salary}</Text>
+                      </View>
+                    )}
+                    {role.skills?.length > 0 && (
+                      <View style={{ flexDirection: "row", gap: 8 }}>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Skills</Text>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: TEXT, flex: 1 }}>{role.skills.join(", ")}</Text>
+                      </View>
+                    )}
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Relocation</Text>
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: TEXT, flex: 1 }}>
+                        {role.isRelocationCovered ? "Covered" : "Not covered"}
+                      </Text>
+                    </View>
+                    {!!role.postUrl && (
+                      <View style={{ flexDirection: "row", gap: 8 }}>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Post URL</Text>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: ACCENT, flex: 1 }}>{role.postUrl}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </>
+  );
+}

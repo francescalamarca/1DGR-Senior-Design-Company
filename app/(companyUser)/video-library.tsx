@@ -752,7 +752,7 @@ useFocusEffect(
         }}
       >
         <Text
-          pointerEvents="none"
+          onPress={() => router.replace("/(companyUser)/profile")} //just made this an onpress not pointerEvent
           style={{
             fontFamily: FONT_LEXEND_LIGHT,
             fontSize: 16,
