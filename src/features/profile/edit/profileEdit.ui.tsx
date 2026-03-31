@@ -22,7 +22,7 @@ import { BACKGROUND_COLOR_OPTIONS,
   SALARY_OPTIONS,
   WORK_TYPE_OPTIONS,
  } from "./profileEdit.constants";
-import { styles, UI } from "./profileEdit.styles";
+import { useUI, useEditStyles } from "./profileEdit.styles";
 
 // ---------- Types the screen expects ----------
 export type IndustryRow =
@@ -51,6 +51,8 @@ function GroupCard({
   children: React.ReactNode;
   style?: any;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
@@ -67,6 +69,8 @@ function PickerRow({
   disabled?: boolean;
   showDivider?: boolean;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   return (
     <Pressable
       onPress={onPress}
@@ -101,6 +105,8 @@ export function AvatarSection(props: {
   onRemoveAvatarImage: () => void;
   onSetAvatarFromUrl: (url: string) => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const {
     avatarPreviewUri,
     pickingAvatarImage,
@@ -138,7 +144,7 @@ export function AvatarSection(props: {
             height: 80,
             borderRadius: 999,
             borderWidth: 1,
-            borderColor: UI.border,
+            borderColor: ui.border,
             overflow: "hidden",
             backgroundColor: "#f3f3f3",
             alignItems: "center",
@@ -184,14 +190,14 @@ export function AvatarSection(props: {
                 {
                   flex: 1,
                   borderColor:
-                    hasAvatar && !isSaving ? UI.danger : UI.borderStrong,
+                    hasAvatar && !isSaving ? ui.danger : ui.borderStrong,
                 },
                 !hasAvatar || isSaving ? { opacity: 0.4 } : null,
               ]}
             >
               <BtnText
                 style={{
-                  color: hasAvatar && !isSaving ? UI.danger : undefined,
+                  color: hasAvatar && !isSaving ? ui.danger : undefined,
                 }}
               >
                 Remove
@@ -204,7 +210,7 @@ export function AvatarSection(props: {
             <TextInput
               style={[styles.input, { flex: 1, fontSize: 12 }]}
               placeholder="Paste image URL"
-              placeholderTextColor={UI.hint}
+              placeholderTextColor={ui.hint}
               value={urlInput}
               onChangeText={setUrlInput}
               autoCapitalize="none"
@@ -240,6 +246,8 @@ export function NameSection(props: {
   companyName: string;
   onChangeCompanyName: (v: string) => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const { companyName, onChangeCompanyName } = props;
 
   return (
@@ -252,7 +260,7 @@ export function NameSection(props: {
           value={companyName}
           onChangeText={onChangeCompanyName}
           placeholder="Company Name"
-          placeholderTextColor={UI.hint}
+          placeholderTextColor={ui.hint}
           style={styles.input}
         />
       </View>
@@ -264,6 +272,8 @@ export function BackgroundColorSection(props: {
   selectedColor: string;
   onSelect: (color: string) => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const { selectedColor, onSelect } = props;
 
   return (
@@ -293,7 +303,7 @@ export function BackgroundColorSection(props: {
                 alignItems: "center",
                 justifyContent: "center",
                 borderWidth: selected ? 3 : 1,
-                borderColor: selected ? UI.text : "transparent",
+                borderColor: selected ? ui.text : "transparent",
               }}
             >
               {selected ? (
@@ -313,6 +323,8 @@ export function MissionSection(props: {
   mission: string;
   onChangeMission: (v: string) => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const { mission, onChangeMission } = props;
 
   return (
@@ -327,7 +339,7 @@ export function MissionSection(props: {
           value={mission?.trim().length ? mission : ""}
           onChangeText={onChangeMission}
           placeholder="Write something about the mission…"
-          placeholderTextColor={UI.hint}
+          placeholderTextColor={ui.hint}
           style={styles.inputMultiline}
           multiline
         />
@@ -340,6 +352,8 @@ export function BenefitsSection(props: {
   benefits: string;
   onChangeBenefits: (v: string) => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const { benefits, onChangeBenefits } = props;
 
   return (
@@ -354,7 +368,7 @@ export function BenefitsSection(props: {
           value={benefits?.trim().length ? benefits : ""}
           onChangeText={onChangeBenefits}
           placeholder="Write something about the benefits..."
-          placeholderTextColor={UI.hint}
+          placeholderTextColor={ui.hint}
           style={styles.inputMultiline}
           multiline
         />
@@ -372,6 +386,8 @@ export function IndustryTypeSection(props: {
   onPressAddLocation: () => void;
   onRemoveLocation: (label: string) => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const {
     companyAgeSubtitle,
     industrySubtitle,
@@ -416,7 +432,7 @@ export function IndustryTypeSection(props: {
             style={[styles.rowPressable, { paddingVertical: 14 }]}
           >
             <LLightText style={styles.rowTitle}>{loc}</LLightText>
-            <LLightText style={[styles.rowTitle, { color: UI.danger }]}>
+            <LLightText style={[styles.rowTitle, { color: ui.danger }]}>
               Remove
             </LLightText>
           </Pressable>
@@ -447,6 +463,8 @@ export function VideoLibrarySection(props: {
   onChangeCaption: (v: string) => void;
   onUpload: () => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const {
     mediaVideoUri,
     mediaThumbUri,
@@ -552,7 +570,7 @@ export function VideoLibrarySection(props: {
                       borderRadius: 14,
                       overflow: "hidden",
                       borderWidth: 2,
-                      borderColor: selected ? UI.text : UI.border,
+                      borderColor: selected ? ui.text : ui.border,
                       position: "relative",
                     }}
                   >
@@ -610,7 +628,7 @@ export function VideoLibrarySection(props: {
           value={mediaCaption}
           onChangeText={onChangeCaption}
           placeholder="Add a caption/title…"
-          placeholderTextColor={UI.hint}
+          placeholderTextColor={ui.hint}
           style={[styles.input, { marginTop: 10 }]}
         />
 
@@ -639,6 +657,8 @@ export function ProfileMediaResetSection(props: {
   isSaving: boolean;
   onReset: () => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const { isSaving, onReset } = props;
 
   return (
@@ -653,11 +673,11 @@ export function ProfileMediaResetSection(props: {
         disabled={isSaving}
         style={[
           styles.pill,
-          { marginTop: 14, borderColor: UI.danger },
+          { marginTop: 14, borderColor: ui.danger },
           isSaving ? { opacity: 0.5 } : null,
         ]}
       >
-        <BtnText style={{ color: UI.danger }}>Reset profile videos</BtnText>
+        <BtnText style={{ color: ui.danger }}>Reset profile videos</BtnText>
       </Pressable>
     </>
   );
@@ -682,6 +702,8 @@ export function IndustryPickerModal(props: {
   onClose: () => void;
   onApply: () => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const {
     visible,
     industrySearch,
@@ -713,7 +735,7 @@ export function IndustryPickerModal(props: {
         >
           <View
             style={{
-              backgroundColor: UI.card,
+              backgroundColor: ui.card,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               paddingHorizontal: 16,
@@ -730,7 +752,7 @@ export function IndustryPickerModal(props: {
               value={industrySearch}
               onChangeText={setIndustrySearch}
               placeholder='Search industries (e.g. "software", "health")'
-              placeholderTextColor={UI.hint}
+              placeholderTextColor={ui.hint}
               style={[styles.input, { borderRadius: 12, marginTop: 12 }]}
               autoCorrect={false}
               autoCapitalize="none"
@@ -801,10 +823,10 @@ export function IndustryPickerModal(props: {
                       paddingVertical: 12,
                       paddingHorizontal: 12,
                       borderWidth: 1,
-                      borderColor: checked ? UI.text : UI.border,
+                      borderColor: checked ? ui.text : ui.border,
                       borderRadius: 12,
                       marginBottom: 8,
-                      backgroundColor: UI.card,
+                      backgroundColor: ui.card,
                       flexDirection: "row",
                       alignItems: "center",
                       justifyContent: "space-between",
@@ -840,7 +862,7 @@ export function IndustryPickerModal(props: {
                 value={industryCustomInput}
                 onChangeText={setIndustryCustomInput}
                 placeholder="Add custom industry…"
-                placeholderTextColor={UI.hint}
+                placeholderTextColor={ui.hint}
                 style={[styles.input, { flex: 1, borderRadius: 12 }]}
               />
               <Pressable onPress={onAddCustomIndustry} style={[styles.pill]}>
@@ -855,7 +877,7 @@ export function IndustryPickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.borderStrong,
+                  borderColor: ui.borderStrong,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -869,7 +891,7 @@ export function IndustryPickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.text,
+                  borderColor: ui.text,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -897,6 +919,8 @@ export function CityPickerModal(props: {
   onClose: () => void;
   onApply: () => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const {
     visible,
     title = "Select City",
@@ -926,7 +950,7 @@ export function CityPickerModal(props: {
         >
           <View
             style={{
-              backgroundColor: UI.card,
+              backgroundColor: ui.card,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               paddingHorizontal: 16,
@@ -943,7 +967,7 @@ export function CityPickerModal(props: {
               value={citySearch}
               onChangeText={setCitySearch}
               placeholder='Search (e.g. "san", "austin")'
-              placeholderTextColor={UI.hint}
+              placeholderTextColor={ui.hint}
               style={[styles.input, { borderRadius: 12, marginTop: 12 }]}
               autoCorrect={false}
               autoCapitalize="none"
@@ -976,10 +1000,10 @@ export function CityPickerModal(props: {
                       paddingVertical: 12,
                       paddingHorizontal: 12,
                       borderWidth: 1,
-                      borderColor: selected ? UI.text : UI.border,
+                      borderColor: selected ? ui.text : ui.border,
                       borderRadius: 12,
                       marginBottom: 8,
-                      backgroundColor: UI.card,
+                      backgroundColor: ui.card,
                     }}
                   >
                     <LLightText
@@ -1007,7 +1031,7 @@ export function CityPickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.borderStrong,
+                  borderColor: ui.borderStrong,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -1048,6 +1072,8 @@ export function SkillsPickerModal(props: {
   onClose: () => void;
   onApply: () => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const {
     visible,
     skillSearch,
@@ -1079,7 +1105,7 @@ export function SkillsPickerModal(props: {
         >
           <View
             style={{
-              backgroundColor: UI.card,
+              backgroundColor: ui.card,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               paddingHorizontal: 16,
@@ -1096,7 +1122,7 @@ export function SkillsPickerModal(props: {
               value={skillSearch}
               onChangeText={setSkillSearch}
               placeholder='Search skills (e.g. in "software", "health")'
-              placeholderTextColor={UI.hint}
+              placeholderTextColor={ui.hint}
               style={[styles.input, { borderRadius: 12, marginTop: 12 }]}
               autoCorrect={false}
               autoCapitalize="none"
@@ -1167,10 +1193,10 @@ export function SkillsPickerModal(props: {
                       paddingVertical: 12,
                       paddingHorizontal: 12,
                       borderWidth: 1,
-                      borderColor: checked ? UI.text : UI.border,
+                      borderColor: checked ? ui.text : ui.border,
                       borderRadius: 12,
                       marginBottom: 8,
-                      backgroundColor: UI.card,
+                      backgroundColor: ui.card,
                       flexDirection: "row",
                       alignItems: "center",
                       justifyContent: "space-between",
@@ -1206,7 +1232,7 @@ export function SkillsPickerModal(props: {
                 value={skillCustomInput}
                 onChangeText={setSkillCustomInput}
                 placeholder="Add custom industry…"
-                placeholderTextColor={UI.hint}
+                placeholderTextColor={ui.hint}
                 style={[styles.input, { flex: 1, borderRadius: 12 }]}
               />
               <Pressable onPress={onAddCustomSkill} style={[styles.pill]}>
@@ -1221,7 +1247,7 @@ export function SkillsPickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.borderStrong,
+                  borderColor: ui.borderStrong,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -1235,7 +1261,7 @@ export function SkillsPickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.text,
+                  borderColor: ui.text,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -1256,6 +1282,8 @@ export function RolesSection(props: {
   onRemove: (id: string) => void;
   onPressEdit: (role: OpenRole) => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const { roles, onPressAdd, onRemove, onPressEdit } = props;
 
   return (
@@ -1300,7 +1328,7 @@ export function RolesSection(props: {
                   </LLightText>
                 </Pressable>
                 <Pressable onPress={() => onRemove(role.id)} hitSlop={8}>
-                  <LLightText style={{ color: UI.danger, fontSize: 13 }}>
+                  <LLightText style={{ color: ui.danger, fontSize: 13 }}>
                     Remove
                   </LLightText>
                 </Pressable>
@@ -1333,6 +1361,8 @@ export function RoleFormModal(props: {
   onSave: (role: OpenRole) => void;
   initialRole?: OpenRole; //lets us take the existing values and populate for editing
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const { visible, onClose, onSave, initialRole } = props;
 
   const [title, setTitle] = React.useState("");
@@ -1429,7 +1459,7 @@ export function RoleFormModal(props: {
         >
           <View
             style={{
-              backgroundColor: UI.card,
+              backgroundColor: ui.card,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               paddingHorizontal: 16,
@@ -1448,7 +1478,7 @@ export function RoleFormModal(props: {
               value={title}
               onChangeText={setTitle}
               placeholder="e.g. Software Engineer"
-              placeholderTextColor={UI.hint}
+              placeholderTextColor={ui.hint}
               style={[styles.input, { marginBottom: 14 }]}
             />
 
@@ -1468,7 +1498,7 @@ export function RoleFormModal(props: {
                 },
               ]}
             >
-              <LLightText style={{ color: salary ? UI.text : UI.hint }}>
+              <LLightText style={{ color: salary ? ui.text : ui.hint }}>
                 {salary || "Select salary range"}
               </LLightText>
               <LLightText style={styles.chevron}>›</LLightText>
@@ -1505,7 +1535,7 @@ export function RoleFormModal(props: {
               ]}
             >
               <LLightText
-                style={{ color: selectedSkills.length ? UI.text : UI.hint, flex: 1, paddingRight: 8 }}
+                style={{ color: selectedSkills.length ? ui.text : ui.hint, flex: 1, paddingRight: 8 }}
                 numberOfLines={1}
               >
                 {selectedSkills.length
@@ -1563,7 +1593,7 @@ export function RoleFormModal(props: {
                 },
               ]}
             >
-              <LLightText style={{ color: workType ? UI.text : UI.hint }}>
+              <LLightText style={{ color: workType ? ui.text : ui.hint }}>
                 {workType || "Select work type"}
               </LLightText>
               <LLightText style={styles.chevron}>›</LLightText>
@@ -1595,7 +1625,7 @@ export function RoleFormModal(props: {
               <Switch
                 value={isRelocationCovered}
                 onValueChange={(val) => setRelocation(val)}
-                trackColor={{ false: UI.hint, true: UI.text }}
+                trackColor={{ false: ui.hint, true: ui.text }}
               />
               <LLightText>{isRelocationCovered ? "Yes" : "No"}</LLightText>
             </View>
@@ -1605,7 +1635,7 @@ export function RoleFormModal(props: {
               value={postUrl}
               onChangeText={setPostUrl}
               placeholder="site link"
-              placeholderTextColor={UI.hint}
+              placeholderTextColor={ui.hint}
               style={[styles.input, { marginBottom: 20 }]}
               autoCorrect={false}
             />
@@ -1617,7 +1647,7 @@ export function RoleFormModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.borderStrong,
+                  borderColor: ui.borderStrong,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -1632,7 +1662,7 @@ export function RoleFormModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.text,
+                  borderColor: ui.text,
                   borderRadius: 12,
                   alignItems: "center",
                   opacity: canSave ? 1 : 0.4,
@@ -1654,6 +1684,8 @@ export function CoreValuesPickerModal(props: {
   onToggle: (value: string) => void;
   onClose: () => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const { visible, selected, onToggle, onClose } = props;
 
   return (
@@ -1666,7 +1698,7 @@ export function CoreValuesPickerModal(props: {
       <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
         <View
           style={{
-            backgroundColor: UI.card,
+            backgroundColor: ui.card,
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
             paddingHorizontal: 16,
@@ -1698,7 +1730,7 @@ export function CoreValuesPickerModal(props: {
                     paddingVertical: 12,
                     paddingHorizontal: 12,
                     borderWidth: 1,
-                    borderColor: checked ? UI.text : UI.border,
+                    borderColor: checked ? ui.text : ui.border,
                     borderRadius: 12,
                     marginBottom: 8,
                     flexDirection: "row",
@@ -1728,7 +1760,7 @@ export function CoreValuesPickerModal(props: {
             style={{
               paddingVertical: 12,
               borderWidth: 1,
-              borderColor: UI.borderStrong,
+              borderColor: ui.borderStrong,
               borderRadius: 12,
               alignItems: "center",
             }}
@@ -1746,6 +1778,8 @@ export function CoreValuesSection(props: {
   onPressAdd: () => void;
   onRemove: (value: string) => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const { coreValues, onPressAdd, onRemove } = props;
 
   return (
@@ -1772,7 +1806,7 @@ export function CoreValuesSection(props: {
             style={[styles.rowPressable, { paddingVertical: 14 }]}
           >
             <LLightText style={styles.rowTitle}>{value}</LLightText>
-            <LLightText style={[styles.rowTitle, { color: UI.danger }]}>
+            <LLightText style={[styles.rowTitle, { color: ui.danger }]}>
               Remove
             </LLightText>
           </Pressable>
@@ -1792,6 +1826,8 @@ export function SinglePickerModal(props: {
   onClose: () => void;
   onApply: () => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const {
     visible,
     title,
@@ -1814,7 +1850,7 @@ export function SinglePickerModal(props: {
         <View style={{ flex: 1, justifyContent: "flex-end" }}>
           <View
             style={{
-              backgroundColor: UI.card,
+              backgroundColor: ui.card,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               paddingHorizontal: 16,
@@ -1841,10 +1877,10 @@ export function SinglePickerModal(props: {
                       paddingVertical: 12,
                       paddingHorizontal: 12,
                       borderWidth: 1,
-                      borderColor: selected ? UI.text : UI.border,
+                      borderColor: selected ? ui.text : ui.border,
                       borderRadius: 12,
                       marginBottom: 8,
-                      backgroundColor: UI.card,
+                      backgroundColor: ui.card,
                       flexDirection: "row",
                       justifyContent: "space-between",
                       alignItems: "center",
@@ -1867,7 +1903,7 @@ export function SinglePickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.borderStrong,
+                  borderColor: ui.borderStrong,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -1882,7 +1918,7 @@ export function SinglePickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.text,
+                  borderColor: ui.text,
                   borderRadius: 12,
                   alignItems: "center",
                   opacity: canApply ? 1 : 0.4,
@@ -1909,6 +1945,8 @@ export function WorkTypePickerModal(props: {
   onClose: () => void;
   onApply: () => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const {
     visible,
     typeOptions,
@@ -1934,7 +1972,7 @@ export function WorkTypePickerModal(props: {
         <View style={{ flex: 1, justifyContent: "flex-end" }}>
           <View
             style={{
-              backgroundColor: UI.card,
+              backgroundColor: ui.card,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               paddingHorizontal: 16,
@@ -1966,10 +2004,10 @@ export function WorkTypePickerModal(props: {
                       paddingVertical: 12,
                       paddingHorizontal: 12,
                       borderWidth: 1,
-                      borderColor: selected ? UI.text : UI.border,
+                      borderColor: selected ? ui.text : ui.border,
                       borderRadius: 12,
                       marginBottom: 8,
-                      backgroundColor: UI.card,
+                      backgroundColor: ui.card,
                     }}
                   >
                     <LLightText
@@ -1997,10 +2035,10 @@ export function WorkTypePickerModal(props: {
                       paddingVertical: 12,
                       paddingHorizontal: 12,
                       borderWidth: 1,
-                      borderColor: selected ? UI.text : UI.border,
+                      borderColor: selected ? ui.text : ui.border,
                       borderRadius: 12,
                       marginBottom: 8,
-                      backgroundColor: UI.card,
+                      backgroundColor: ui.card,
                     }}
                   >
                     <LLightText
@@ -2020,7 +2058,7 @@ export function WorkTypePickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.borderStrong,
+                  borderColor: ui.borderStrong,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -2035,7 +2073,7 @@ export function WorkTypePickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.text,
+                  borderColor: ui.text,
                   borderRadius: 12,
                   alignItems: "center",
                   opacity: canApply ? 1 : 0.4,

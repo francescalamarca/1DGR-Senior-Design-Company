@@ -23,7 +23,7 @@ import { View, Pressable, ActivityIndicator, Modal, FlatList, TextInput, Keyboar
 
 import { RequireUserType } from "@/src/components/RequireUserType";
 
-import { styles, UI } from "./profileEdit.styles";
+import { useUI, useEditStyles } from "./profileEdit.styles";
 import { LLightText, KeyboardScreen } from "./profileEdit.components";
 import {
   COMPANY_AGE_OPTIONS,
@@ -143,6 +143,10 @@ export default function ProfileEditScreen() {
     setWorkPreferenceTemp(String((draft as any).workPreference ?? ""));
     setWorkTypePickerVisible(true);
   }, [draft]);
+
+  const ui = useUI();
+  const styles = useEditStyles();
+
   //this header enables us to edit the profile and SAVE changes
   const Header = (
     <View style={styles.header}>
@@ -172,7 +176,7 @@ export default function ProfileEditScreen() {
     <>
       <RequireUserType type="company" />
 
-      <KeyboardScreen scroll scrollRef={scrollRef} header={Header} backgroundColor={UI.bg} contentContainerStyle={styles.content}>
+      <KeyboardScreen scroll scrollRef={scrollRef} header={Header} backgroundColor={ui.bg} contentContainerStyle={styles.content}>
         <AvatarSection
           avatarPreviewUri={avatarPreviewUri}
           pickingAvatarImage={pickingAvatarImage}
