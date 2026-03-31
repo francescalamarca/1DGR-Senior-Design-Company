@@ -1555,7 +1555,6 @@ export function RoleFormModal(props: {
 }) {
   const { visible, onClose, onSave, initialRole } = props;
 
-  const [title, setTitle] = React.useState("");
   const [salary, setSalary] = React.useState("");
 
   const [salaryPickerVisible, setSalaryPickerVisible] = React.useState(false);
@@ -1663,10 +1662,11 @@ Added missing roleCustomOptions and setRoleCustomInput props
     initialRole?.salary,
     initialRole?.workType,
     initialRole?.skills,
+    initialRole?.isRelocationCovered,
     initialRole?.postUrl,
   ]);
 
-  const canSave = title.trim().length > 0;
+  const canSave = selectedRole.trim().length > 0;
 
   function handleSave() {
     if (!canSave) return;
