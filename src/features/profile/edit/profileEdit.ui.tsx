@@ -211,7 +211,7 @@ export function AvatarSection(props: {
 
           {/* URL input row */}
           <View style={{ flexDirection: "row", gap: 10 }}>
-            <TextInput
+            <TextInput className = "input"
               style={[styles.input, { flex: 1, fontSize: 12 }]}
               placeholder="Paste image URL"
               placeholderTextColor={ui.hint}
@@ -260,7 +260,7 @@ export function NameSection(props: {
 
       <View style={styles.fieldStack}>
         <LLightText style={styles.label}>Company Name</LLightText>
-        <TextInput
+        <TextInput className = "input"
           value={companyName}
           onChangeText={onChangeCompanyName}
           placeholder="Company Name"
@@ -339,7 +339,7 @@ export function MissionSection(props: {
       </LLightText>
 
       <View style={styles.fieldStack}>
-        <TextInput
+        <TextInput className = "input"
           value={mission?.trim().length ? mission : ""}
           onChangeText={onChangeMission}
           placeholder="Write something about the mission…"
@@ -365,7 +365,7 @@ export function CompanyCultureSection(props: {
     <LLightText style = {styles.sectionTitle}> Culture </LLightText>
     <LLightText style = {styles.sectionHelper}>Company culture, ideals we value, how we treat employees, etc...</LLightText>
     <View style = {styles.fieldStack}>
-      <TextInput
+      <TextInput className = "input"
       value = {culture?.trim().length ? culture : ""}
       onChangeText = {onChangeCulture}
       placeholder="Write something about the company culture..."
@@ -394,7 +394,7 @@ export function BenefitsSection(props: {
       </LLightText>
 
       <View style={styles.fieldStack}>
-        <TextInput
+        <TextInput className = "input"
           value={benefits?.trim().length ? benefits : ""}
           onChangeText={onChangeBenefits}
           placeholder="Write something about the benefits..."
@@ -533,7 +533,7 @@ export function VideoLibrarySection(props: {
         </LLightText>
 
         <Pressable
-          onPress={() => router.replace("/(companyUser)/video-library")}
+          onPress={() => router.replace("/(companyUser)/video-library")} //made this so that the back will return to the last found URL
           style={styles.sectionHelper}
         >
             See Current Video Library
@@ -661,7 +661,7 @@ export function VideoLibrarySection(props: {
         <LLightText style={{ fontSize: 13, opacity: 0.7 }}>
           Step 3 — Caption
         </LLightText>
-        <TextInput
+        <TextInput className = "input"
           value={mediaCaption}
           onChangeText={onChangeCaption}
           placeholder="Add a caption/title…"
@@ -785,7 +785,7 @@ export function IndustryPickerModal(props: {
               Industry Type
             </LLightText>
 
-            <TextInput
+            <TextInput className = "input"
               value={industrySearch}
               onChangeText={setIndustrySearch}
               placeholder='Search industries (e.g. "software", "health")'
@@ -895,7 +895,7 @@ export function IndustryPickerModal(props: {
             />
 
             <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
-              <TextInput
+              <TextInput className = "input"
                 value={industryCustomInput}
                 onChangeText={setIndustryCustomInput}
                 placeholder="Add custom industry…"
@@ -1000,7 +1000,7 @@ export function CityPickerModal(props: {
               {title}
             </LLightText>
 
-            <TextInput
+            <TextInput className = "input"
               value={citySearch}
               onChangeText={setCitySearch}
               placeholder='Search (e.g. "san", "austin")'
@@ -1155,7 +1155,7 @@ export function SkillsPickerModal(props: {
               Anticipated Skills - Known/Taught
             </LLightText>
 
-            <TextInput
+            <TextInput className = "input"
               value={skillSearch}
               onChangeText={setSkillSearch}
               placeholder='Search skills (e.g. in "software", "health")'
@@ -1265,7 +1265,7 @@ export function SkillsPickerModal(props: {
             />
 
             <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
-              <TextInput
+              <TextInput className = "input"
                 value={skillCustomInput}
                 onChangeText={setSkillCustomInput}
                 placeholder="Add custom industry…"
@@ -1377,12 +1377,12 @@ export function RolePickerModal(props: {
               Role Types
             </LLightText>
 
-            <TextInput
+            <TextInput className = "input"
               value={roleSearch}
               onChangeText={setRoleSearch}
               placeholder='Search roles (e.g. in "software", "health")'
               placeholderTextColor={ui.hint}
-              style={[styles.input, { borderRadius: 12, marginTop: 12 }]}
+              style={{borderRadius: 12, marginTop: 12 }}
               autoCorrect={false}
               autoCapitalize="none"
               clearButtonMode="while-editing"
@@ -1486,7 +1486,7 @@ export function RolePickerModal(props: {
             />
 
             <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
-              <TextInput
+              <TextInput className = "input"
                 value={roleCustomInput}
                 onChangeText={setRoleCustomInput}
                 placeholder="Add custom role…"
@@ -1986,7 +1986,7 @@ Added missing roleCustomOptions and setRoleCustomInput props
             </View>
 
             <LLightText style={styles.label}>Job Posting URL </LLightText>
-            <TextInput
+            <TextInput className = "input"
               value={postUrl}
               onChangeText={setPostUrl}
               placeholder="site link"
