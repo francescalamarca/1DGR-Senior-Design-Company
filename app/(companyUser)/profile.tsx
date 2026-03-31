@@ -122,7 +122,7 @@ export default function ProfileScreen() {
         marginTop: 10,
       } as const,
 
-      hook: {
+      mission: {
         ...crimson,
         textAlign: "center" as const,
         opacity: 1,
@@ -166,12 +166,9 @@ export default function ProfileScreen() {
 
       videoCaption: { ...lexReg, fontSize: 16.5, lineHeight: 22, color: C.text } as const,
       logout: { ...lexLight, color: C.text } as const,
-    };
-  }, [C.text]);
-
       blockABg: (profile.customBackgroundColor ?? "").trim() || BG, //if custom available, use that, else default, where applied
     };
-  }, [profile.customBackgroundColor]);
+  }, [C.text, profile.customBackgroundColor]);
 
   // ===== Layout constants =====
   const screenW = Dimensions.get("window").width;
@@ -527,8 +524,8 @@ export default function ProfileScreen() {
           <View style={{ height: 1, backgroundColor: BORDER }} />
 
           {/* Block B */}
-          <View style={{ backgroundColor: BG, paddingHorizontal: 24, paddingVertical: 16 }}>
-            {!!missionStatement ? <Text style={s.hook}>{missionStatement}</Text> : <Text style={[s.hook, { opacity: 1 }]}>—</Text>}
+          <View style={{ backgroundColor: C.bg, paddingHorizontal: 24, paddingVertical: 16 }}>
+            {!!missionStatement ? <Text style={s.mission}>{missionStatement}</Text> : <Text style={[s.mission, { opacity: 1 }]}>—</Text>}
           </View>
 
           <View style={{ height: 1, backgroundColor: BORDER }} />
@@ -683,10 +680,16 @@ export default function ProfileScreen() {
             locations={[0, 0.06, 1]}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}
-            style={{ flex: 1 }}
           >
-            <View style={{ backgroundColor: "transparent", paddingTop: 22, paddingBottom: 0 }}>
-              <View style={{ paddingHorizontal: 22, paddingBottom: 22 }}>
+            <View style={{ 
+                backgroundColor: "transparent", 
+                paddingTop: 22, 
+                paddingBottom: 0, 
+                paddingHorizontal: 16, 
+                alignSelf: "center",
+                width: "100%"  // 👈 add this
+              }}>
+              <View style={{ paddingHorizontal: 22, paddingBottom: 22, paddingTop: 6 }}>
                 <Text style={s.sectionHeader}>FIRST CONNECT</Text>
               </View>
 
@@ -694,18 +697,18 @@ export default function ProfileScreen() {
                 data={videos}
                 keyExtractor={(item: any) => String(item.id ?? `${item.slot ?? "x"}_${item.videoUri ?? ""}`)}
                 horizontal
-              showsHorizontalScrollIndicator={false}
-              pagingEnabled
-              snapToInterval={SNAP}
-              decelerationRate="fast"
-              disableIntervalMomentum
-              contentContainerStyle={{ paddingHorizontal: CARD_SIDE_PAD }}
-              onMomentumScrollEnd={(event) => {
-                const nextIndex = Math.round(event.nativeEvent.contentOffset.x / SNAP);
-                setActiveVideoIndex(Math.max(0, Math.min(videos.length - 1, nextIndex)));
-              }}
-              ItemSeparatorComponent={() => <View style={{ width: CARD_GAP }} />}
-              renderItem={({ item }: { item: any }) => {
+                showsHorizontalScrollIndicator={false}
+                pagingEnabled
+                snapToInterval={SNAP}
+                decelerationRate="fast"
+                disableIntervalMomentum
+                contentContainerStyle={{ paddingHorizontal: CARD_SIDE_PAD }}
+                onMomentumScrollEnd={(event) => {
+                  const nextIndex = Math.round(event.nativeEvent.contentOffset.x / SNAP);
+                  setActiveVideoIndex(Math.max(0, Math.min(videos.length - 1, nextIndex)));
+                }}
+                ItemSeparatorComponent={() => <View style={{ width: CARD_GAP }} />}
+                renderItem={({ item }: { item: any }) => {
                 const uri = String(item.videoUri ?? "").trim();
                 const thumb = String(item.imageUri ?? "").trim();
                 const caption = String(item.caption ?? "Untitled");

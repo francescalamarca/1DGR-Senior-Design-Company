@@ -23,7 +23,7 @@ import { View, Pressable, ActivityIndicator, Modal, FlatList, TextInput, Keyboar
 
 import { RequireUserType } from "@/src/components/RequireUserType";
 
-import { useUI, useEditStyles } from "./profileEdit.styles";
+import { useUI, useEditStyles, UI} from "./profileEdit.styles";
 import { LLightText, KeyboardScreen } from "./profileEdit.components";
 import {
   COMPANY_AGE_OPTIONS,
@@ -131,23 +131,25 @@ export default function ProfileEditScreen() {
     updateRole,
   } = useProfileEditController();
 
+  const editStyles = useEditStyles(); //you have to make an instance of something if you want to use it
+
   const [editingRole, setEditingRole] = React.useState<import("@/src/features/profile/profile.types").OpenRole | null>(null);
 
   
   //this header enables us to edit the profile and SAVE changes
   const Header = (
-    <View style={styles.header}>
-      <Pressable onPress={handleCancel} style={[styles.headerAction, styles.headerLeft]} hitSlop={10} disabled={isSaving}>
+    <View style={editStyles.header}>
+      <Pressable onPress={handleCancel} style={[editStyles.headerAction, editStyles.headerLeft]} hitSlop={10} disabled={isSaving}>
         <LLightText style={{ opacity: isSaving ? 0.5 : 1 }}>Cancel</LLightText>
       </Pressable>
 
-      <LLightText pointerEvents="none" style={styles.headerTitle}>
+      <LLightText pointerEvents="none" style={editStyles.headerTitle}>
         Edit Profile
       </LLightText>
 
       <Pressable
         disabled={!canSave || isSaving}
-        style={[styles.headerAction, styles.headerRight, { opacity: canSave && !isSaving ? 1 : 0.4 }]}
+        style={[editStyles.headerAction, editStyles.headerRight, { opacity: canSave && !isSaving ? 1 : 0.4 }]}
         hitSlop={10}
         onPress={handleSave}
       >
@@ -163,7 +165,7 @@ export default function ProfileEditScreen() {
     <>
       <RequireUserType type="company" />
 
-      <KeyboardScreen scroll scrollRef={scrollRef} header={Header} backgroundColor={ui.bg} contentContainerStyle={styles.content}>
+      <KeyboardScreen scroll scrollRef={scrollRef} header={Header} backgroundColor={UI.bg} contentContainerStyle={editStyles.content}>
         <AvatarSection
           avatarPreviewUri={avatarPreviewUri}
           pickingAvatarImage={pickingAvatarImage}

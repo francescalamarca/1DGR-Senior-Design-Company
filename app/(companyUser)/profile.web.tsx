@@ -215,6 +215,7 @@ export default function ProfileWebScreen() {
       <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: C.bg }}>
         <ScrollView
           style={{ flex: 1, backgroundColor: C.bg }}
+          contentContainerStyle={{ flexGrow: 1 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchLatestProfile} />}
         >
           <View
@@ -285,6 +286,7 @@ export default function ProfileWebScreen() {
 
           <View
             style={{
+              flex: 1,
               backgroundColor: C.bg,
               paddingHorizontal: 0,
               paddingTop: 0,
@@ -293,6 +295,7 @@ export default function ProfileWebScreen() {
           >
             <View
               style={{
+                flex: 1,
                 flexDirection: "column",
                 alignItems: "stretch",
                 gap: 0,
@@ -433,7 +436,7 @@ export default function ProfileWebScreen() {
                 </View>
               </View>
 
-              <View style={{ flexDirection: "column", position: "relative" }}>
+              <View style={{ flex: 1, flexDirection: "column", position: "relative" }}>
                 <Text
                   style={{
                     fontFamily: FONTS.LEXEND_LIGHT,
@@ -447,7 +450,7 @@ export default function ProfileWebScreen() {
                 </Text>
 
                 <View
-                  style={{ marginTop: -12, marginHorizontal: -pagePad, paddingTop: 20, paddingBottom: 18, paddingHorizontal: pagePad, backgroundColor: "rgba(255,255,255,0.72)" }}
+                  style={{ flex: 1, marginTop: -12, marginHorizontal: -pagePad, paddingTop: 20, paddingBottom: 18, paddingHorizontal: pagePad, backgroundColor: profile.customBackgroundColor || "rgba(255,255,255,0.72)" }}
                 >
                   <FlatList
                     ref={railRef}

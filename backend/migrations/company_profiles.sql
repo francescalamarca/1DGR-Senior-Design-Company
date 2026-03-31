@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS public.company_profiles
     mission_statement text,
     core_values jsonb DEFAULT '[]',
     benefits_summary text,
+    company_culture text,
     custom_background_color character varying(50),
     logo_image_key character varying(500),
     created_at timestamp without time zone DEFAULT now(),

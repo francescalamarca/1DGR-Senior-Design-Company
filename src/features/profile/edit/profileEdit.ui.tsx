@@ -24,6 +24,9 @@ import { BACKGROUND_COLOR_OPTIONS,
   ROLE_TYPES,
  } from "./profileEdit.constants";
 import { useUI, useEditStyles } from "./profileEdit.styles";
+import { Route } from "expo-router/build/Route";
+import { router } from "expo-router";
+import { styleText } from "node:util";
 
 // ---------- Types the screen expects ----------
 export type IndustryRow =
@@ -353,6 +356,8 @@ export function CompanyCultureSection(props: {
   culture: string;
   onChangeCulture: (v: string) => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const {culture, onChangeCulture} = props;
 
   return (
@@ -364,13 +369,13 @@ export function CompanyCultureSection(props: {
       value = {culture?.trim().length ? culture : ""}
       onChangeText = {onChangeCulture}
       placeholder="Write something about the company culture..."
-      placeholderTextColor={UI.hint}
+      placeholderTextColor={ui.hint}
       style={styles.inputMultiline}
       multiline
       />
     </View>
     </>
-  )
+  );
 }
 
 export function BenefitsSection(props: {
@@ -526,6 +531,13 @@ export function VideoLibrarySection(props: {
         <LLightText style={{ fontSize: 13, opacity: 0.7 }}>
           Step 1 — Pick a video
         </LLightText>
+
+        <Pressable
+          onPress={() => router.replace("/(companyUser)/video-library")}
+          style={styles.sectionHelper}
+        >
+            See Current Video Library
+        </Pressable>
         <Pressable
           onPress={onPickVideo}
           style={[styles.pill, { marginTop: 10 }]}
@@ -561,7 +573,7 @@ export function VideoLibrarySection(props: {
           </View>
         ) : null}
 
-        {/* ✅ Manual pick always available (before or after choosing a video) */}
+        {/* Manual pick always available (before or after choosing a video) */}
         <Pressable
           onPress={onPickThumb}
           style={[styles.pill, { marginTop: 10 }]}
@@ -1334,6 +1346,8 @@ export function RolePickerModal(props: {
     onClose,
     onApply,
   } = props;
+  const ui = useUI();
+  const styles = useEditStyles();
 
   return (
     <Modal
@@ -1350,7 +1364,7 @@ export function RolePickerModal(props: {
         >
           <View
             style={{
-              backgroundColor: UI.card,
+              backgroundColor: ui.card,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               paddingHorizontal: 16,
@@ -1367,7 +1381,7 @@ export function RolePickerModal(props: {
               value={roleSearch}
               onChangeText={setRoleSearch}
               placeholder='Search roles (e.g. in "software", "health")'
-              placeholderTextColor={UI.hint}
+              placeholderTextColor={ui.hint}
               style={[styles.input, { borderRadius: 12, marginTop: 12 }]}
               autoCorrect={false}
               autoCapitalize="none"
@@ -1427,7 +1441,6 @@ export function RolePickerModal(props: {
                     </LLightText>
                   );
                 }
-
                 const checked = roleTempSelected.has(item.label);
                 const isPredefined = predefinedRoleSet.has(item.label);
 
@@ -1438,10 +1451,10 @@ export function RolePickerModal(props: {
                       paddingVertical: 12,
                       paddingHorizontal: 12,
                       borderWidth: 1,
-                      borderColor: checked ? UI.text : UI.border,
+                      borderColor: checked ? ui.text : ui.border,
                       borderRadius: 12,
                       marginBottom: 8,
-                      backgroundColor: UI.card,
+                      backgroundColor: ui.card,
                       flexDirection: "row",
                       alignItems: "center",
                       justifyContent: "space-between",
@@ -1477,7 +1490,7 @@ export function RolePickerModal(props: {
                 value={roleCustomInput}
                 onChangeText={setRoleCustomInput}
                 placeholder="Add custom role…"
-                placeholderTextColor={UI.hint}
+                placeholderTextColor={ui.hint}
                 style={[styles.input, { flex: 1, borderRadius: 12 }]}
               />
               <Pressable onPress={onAddCustomRole} style={[styles.pill]}>
@@ -1492,7 +1505,7 @@ export function RolePickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.borderStrong,
+                  borderColor: ui.borderStrong,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -1506,7 +1519,7 @@ export function RolePickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.text,
+                  borderColor: ui.text,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -1784,7 +1797,7 @@ Added missing roleCustomOptions and setRoleCustomInput props
               ]}
             >
               <LLightText
-                style={{color: selectedRole ? UI.text : UI.hint, flex: 1, paddingRight: 8}}
+                style={{color: selectedRole ? ui.text : ui.hint, flex: 1, paddingRight: 8}}
                 numberOfLines={1}
               >
                 {selectedRole ? selectedRole : "Select Role Type"}
