@@ -10,15 +10,17 @@ import { View, Text, Pressable } from "react-native"; //will use this on login f
 import { router } from "expo-router";
 import { useSession } from "@/src/state/session";
 import { RequireUserType } from "@/src/components/RequireUserType";
+import { useDynColors } from "@/src/theme/theme-colors";
 
 export default function ExploreScreen() {
+  const C = useDynColors();
   // const { logout } = useSession(); //no requirement for type will need this back
 
   return (
     <>
-      <RequireUserType type="home" /> 
-      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 16 }}>
-        <Text style={{ fontSize: 22, marginBottom: 12 }}>Explore</Text>
+      <RequireUserType type="company" />
+      <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 16, backgroundColor: C.bg }}>
+        <Text style={{ fontSize: 24, marginBottom: 12, color: C.text, fontFamily: "Lexend-Regular" }}>Explore</Text>
 
         {/* <Pressable
           onPress={() => {

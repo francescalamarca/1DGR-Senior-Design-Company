@@ -135,8 +135,9 @@ export function AvatarSection(props: {
       >
         <View
           style={{
-            width: 100,
-            height: 50,
+            width: 80,
+            height: 80,
+            borderRadius: 999,
             borderWidth: 1,
             borderColor: UI.border,
             overflow: "hidden",
