@@ -102,6 +102,25 @@ export const CORE_VALUES = [
   "Work-Life Balance",
 ];
 
+export const ROLE_TYPES: { title: string; options: string[] }[] = [
+  { title: "Technology", options: ["Software Engineer", "Product Manager", "Data Scientist", "DevOps Engineer", "UX Designer", "Cybersecurity Analyst"] },
+  { title: "Healthcare & Life Sciences", options: ["Registered Nurse", "Clinical Research Associate", "Physician", "Medical Device Engineer", "Pharmacist", "Health Informatics Specialist"] },
+  { title: "Financial Services", options: ["Financial Analyst", "Investment Banker", "Risk Manager", "Compliance Officer", "Actuary", "Wealth Advisor"] },
+  { title: "Professional & Business Services", options: ["Management Consultant", "Human Resources Manager", "Business Analyst", "Project Manager", "Marketing Manager", "Operations Manager"] },
+  { title: "Manufacturing & Industrial", options: ["Process Engineer", "Quality Assurance Manager", "Supply Chain Analyst", "Plant Manager", "Mechanical Engineer", "Industrial Designer"] },
+  { title: "Energy & Utilities", options: ["Petroleum Engineer", "Renewable Energy Analyst", "Electrical Engineer", "Environmental Compliance Specialist", "Grid Operations Manager", "Energy Trader"] },
+  { title: "Construction & Real Estate", options: ["Civil Engineer", "Project Manager", "Real Estate Agent", "Architect", "Quantity Surveyor", "Site Safety Officer"] },
+  { title: "Transportation & Logistics", options: ["Logistics Coordinator", "Supply Chain Manager", "Fleet Manager", "Operations Analyst", "Freight Broker", "Transportation Planner"] },
+  { title: "Retail & Consumer Goods", options: ["Retail Manager", "Merchandiser", "Category Manager", "E-Commerce Specialist", "Buyer", "Brand Manager"] },
+  { title: "Food, Beverage & Hospitality", options: ["Executive Chef", "Hotel Manager", "Food Scientist", "Restaurant General Manager", "Event Coordinator", "Sommelier"] },
+  { title: "Media, Entertainment & Sports", options: ["Content Producer", "Sports Agent", "Journalist", "Marketing Director", "Talent Manager", "Game Designer"] },
+  { title: "Education & Research", options: ["Professor", "Curriculum Developer", "Research Scientist", "Academic Advisor", "Instructional Designer", "Policy Analyst"] },
+  { title: "Government & Nonprofit", options: ["Policy Advisor", "Program Manager", "Grant Writer", "Public Affairs Specialist", "Urban Planner", "Community Outreach Coordinator"] },
+  { title: "Agriculture & Environmental", options: ["Agronomist", "Environmental Scientist", "Farm Manager", "Conservation Specialist", "Food Safety Inspector", "Sustainability Consultant"] },
+  { title: "Consumer & Personal Services", options: ["Financial Planner", "Personal Trainer", "Interior Designer", "Life Coach", "Insurance Agent", "Social Worker"] },
+  { title: "Other / Emerging Industries", options: ["Blockchain Developer", "AI/ML Engineer", "Space Systems Engineer", "Drone Operations Specialist", "Climate Tech Analyst", "Biotech Researcher"] },
+];
+
 //this will be called when creating a role and should store as an array of skills like tags that will be later able to be filtered by a company to find relevant candidates in search
 export const SKILLS: { title: string; options: string[] }[] = [
   {

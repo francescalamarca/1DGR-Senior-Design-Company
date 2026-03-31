@@ -95,6 +95,7 @@ function extractS3KeyFromUrl(urlOrKey: string) {
 const initialProfileBase = {
   companyName: "",
   missionStatement: "",
+  companyCulture: "",
   coreValues: [],
   locations: [],
   currentEmployees: [],
@@ -541,6 +542,7 @@ const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
         workType: userData.work_type || "",
         locations: Array.isArray(userData.locations) ? userData.locations : [],
         missionStatement: userData.mission_statement || "",
+        companyCulture: userData.companyCulture || "",
         coreValues: Array.isArray(userData.core_values) ? userData.core_values : [],
         openRoles: Array.isArray(userData.open_roles) ? userData.open_roles: [],
         currentEmployees: Array.isArray(userData.current_employees) ? userData.current_employees: [],

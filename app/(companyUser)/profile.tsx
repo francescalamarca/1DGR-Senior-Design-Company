@@ -13,7 +13,6 @@
 import { ProfileBrandWordmark } from "@/src/components/ProfileBrandWordmark";
 import { RequireUserType } from "@/src/components/RequireUserType";
 import {
-  HIGHER_ED_ITEM_GAP,
   softWrapLongTokens,
   useCompanyProfileScreenData,
   type QualRowValue,
@@ -79,7 +78,7 @@ function QualValue({ value, textStyle }: { value: QualRowValue; textStyle: any }
         {value.map((item, idx) => (
           <Text
             key={`${idx}_${item}`}
-            style={[textStyle, idx === value.length - 1 ? null : { marginBottom: HIGHER_ED_ITEM_GAP }]}
+            style={[textStyle, idx === value.length - 1 ? null : { marginBottom: 10 }]}
           >
             {softWrapLongTokens(item)}
           </Text>
@@ -95,11 +94,9 @@ export default function ProfileScreen() {
   const C = useDynColors();
   const { showActionSheetWithOptions } = useActionSheet();
   const { logout } = useSession();
-  const { profile, liveProfileUrl, copyLiveAsUrl, copyEmail, copyPhone, copyUrl, refreshing, fetchLatestProfile, displayName, canToggleName, toggleDisplayName, headlineText, hookText, qualCol1, qualCol2, workTypeDisplay, videos, contactEmail, contactPhone, contactUrl1, contactUrl2, contactUrl1Label, contactUrl2Label, showUrl1, showUrl2, openVideo } =
+  const { profile, copyEmail, copyPhone, copyUrl, refreshing, fetchLatestProfile, displayName, missionStatement, companyCulture, benefitsSummary, coreValues, openRoles, industry, locations, videos, contactEmail, contactPhone, contactUrl1, contactUrl2, contactUrl1Label, contactUrl2Label, showUrl1, showUrl2, openVideo } =
     useCompanyProfileScreenData();
 
-  const [liveQrModalOpen, setLiveQrModalOpen] = useState(false);
-  const [liveQrCopyToken, setLiveQrCopyToken] = useState<number | undefined>(undefined);
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);
   const scrollViewRef = useRef<any>(null);
 
@@ -172,14 +169,9 @@ export default function ProfileScreen() {
     };
   }, [C.text]);
 
-  function openLiveShareSheet() {
-    const options = ["Copy URL", "Show QR code", "Cancel"];
-    const cancelButtonIndex = 2;
-    showActionSheetWithOptions({ options, cancelButtonIndex }, async (buttonIndex) => {
-      if (buttonIndex === 0) copyLiveAsUrl();
-      if (buttonIndex === 1) setLiveQrModalOpen(true);
-    });
-  }
+      blockABg: (profile.customBackgroundColor ?? "").trim() || BG, //if custom available, use that, else default, where applied
+    };
+  }, [profile.customBackgroundColor]);
 
   // ===== Layout constants =====
   const screenW = Dimensions.get("window").width;
@@ -429,7 +421,7 @@ export default function ProfileScreen() {
   const CARD_GAP = 22;
   const SNAP = CARD_W + CARD_GAP;
   const compactLocation = useMemo(() => {
-    const raw = String(profile.geographicLocation ?? "").trim();
+    const raw = String(profile.locations ?? "").trim();
     if (!raw) return "";
 
     const parts = raw
@@ -439,18 +431,18 @@ export default function ProfileScreen() {
 
     if (parts.length >= 2) return `${parts[0]}, ${parts[1]}`;
     return raw;
-  }, [profile.geographicLocation]);
+  }, [profile.locations]);
 
-  const heroMeta = useMemo(() => {
-    const items: string[] = [];
-    if (compactLocation) items.push(`📍${compactLocation}`);
-    if (workTypeDisplay && workTypeDisplay !== "—") items.push(workTypeDisplay);
-    return items.join("  |  ");
-  }, [compactLocation, workTypeDisplay]);
+  // const heroMeta = useMemo(() => {
+  //   const items: string[] = [];
+  //   if (compactLocation) items.push(`📍${compactLocation}`);
+  //   if (workTypeDisplay && workTypeDisplay !== "—") items.push(workTypeDisplay);
+  //   return items.join("  |  ");
+  // }, [compactLocation, workTypeDisplay]);
 
   return (
     <>
-      <RequireUserType type="home" />
+      <RequireUserType type="company" />
 
       <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: C.bg }}>
         <Animated.ScrollView
@@ -485,11 +477,6 @@ export default function ProfileScreen() {
           <View style={{ backgroundColor: C.card }}>
             <View style={{ paddingHorizontal: 18, paddingTop: 12, paddingBottom: 22 }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
-                <Pressable onPress={openLiveShareSheet} hitSlop={10}>
-                  <Feather name="share" size={18} color={TEXT} />
-                </Pressable>
-
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 18 }}>
                 <Pressable
                   onPress={() =>
                     router.push({
@@ -535,28 +522,13 @@ export default function ProfileScreen() {
                 )}
               </Pressable>
 
-              <Pressable
-                disabled={!canToggleName}
-                onPress={toggleDisplayName}
-                style={{ alignSelf: "center", marginTop: 12 }}
-                hitSlop={10}
-              >
-                <Text style={s.displayName}>{displayName}</Text>
-              </Pressable>
-
-              {!!heroMeta ? (
-                <Text style={[s.headline, { marginTop: 8, paddingHorizontal: 18 }]}>{heroMeta}</Text>
-              ) : !!headlineText ? (
-                <Text style={s.headline}>{headlineText}</Text>
-              ) : null}
             </View>
-          </View>
 
           <View style={{ height: 1, backgroundColor: BORDER }} />
 
           {/* Block B */}
-          <View style={{ backgroundColor: C.card, paddingHorizontal: 24, paddingVertical: 16 }}>
-            {!!hookText ? <Text style={s.hook}>{hookText}</Text> : <Text style={[s.hook, { opacity: 1 }]}>—</Text>}
+          <View style={{ backgroundColor: BG, paddingHorizontal: 24, paddingVertical: 16 }}>
+            {!!missionStatement ? <Text style={s.hook}>{missionStatement}</Text> : <Text style={[s.hook, { opacity: 1 }]}>—</Text>}
           </View>
 
           <View style={{ height: 1, backgroundColor: BORDER }} />
@@ -611,6 +583,12 @@ export default function ProfileScreen() {
                       <Text style={s.qualValue}>{benefitsSummary}</Text>
                     </View>
                   )}
+                  {!!companyCulture && (
+                    <View style={{gap: 4}}>
+                      <Text style={s.qualLabel}> Company Culture:</Text>
+                      <Text style={s.qualValue}>{companyCulture}</Text>
+                    </View>
+                  )}
                   {!!industry && (
                     <View style={{ gap: 4 }}>
                       <Text style={s.qualLabel}>Industry:</Text>
@@ -661,6 +639,12 @@ export default function ProfileScreen() {
                         <Text style={s.qualValue}>{benefitsSummary}</Text>
                       </View>
                     )}
+                    {!!companyCulture && (
+                      <View style={{ gap: 4 }}>
+                        <Text style={s.qualLabel}>Company Culture:</Text>
+                        <Text style={s.qualValue}>{companyCulture}</Text>
+                      </View>
+                    )}
                     {!!industry && (
                       <View style={{ gap: 4 }}>
                         <Text style={s.qualLabel}>Industry:</Text>
@@ -699,6 +683,7 @@ export default function ProfileScreen() {
             locations={[0, 0.06, 1]}
             start={{ x: 0.5, y: 0 }}
             end={{ x: 0.5, y: 1 }}
+            style={{ flex: 1 }}
           >
             <View style={{ backgroundColor: "transparent", paddingTop: 22, paddingBottom: 0 }}>
               <View style={{ paddingHorizontal: 22, paddingBottom: 22 }}>
@@ -854,7 +839,7 @@ export default function ProfileScreen() {
             <Pressable
               onPress={() => {
                 logout();
-                router.replace("/(auth)/login");
+                router.replace("/(companyUser)/explore"); //should be "/(auth)/login", to avoid error change to explore for now
               }}
               style={{ marginTop: 10, paddingVertical: 18, alignItems: "center" }}
             >
@@ -864,36 +849,6 @@ export default function ProfileScreen() {
             <View style={{ height: 28 }} />
           </LinearGradient>
         </Animated.ScrollView>
-
-        <Modal visible={liveQrModalOpen} transparent animationType="fade" onRequestClose={() => setLiveQrModalOpen(false)}>
-          <Pressable onPress={() => setLiveQrModalOpen(false)} style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.35)", justifyContent: "center", alignItems: "center", padding: 16 }}>
-            <Pressable onPress={() => {}} style={{ width: "100%", maxWidth: 420, backgroundColor: "white", borderRadius: 14, padding: 16 }}>
-              <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, fontSize: 18, color: C.text, textAlign: "center" }}>Live QR Code</Text>
-              <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: "#6A6A6A", textAlign: "center", marginTop: 6 }}>
-                Tap the QR code to copy.
-              </Text>
-
-              <View style={{ marginTop: 14, alignItems: "center", justifyContent: "center" }}>
-                <shareLinkQR url={liveProfileUrl} size={260} copyOnToken={liveQrCopyToken} />
-              </View>
-
-              <View style={{ marginTop: 16, flexDirection: "row", gap: 10 }}>
-                <Pressable
-                  onPress={() => setLiveQrCopyToken((n) => (typeof n === "number" ? n + 1 : 1))}
-                  style={({ pressed }) => [{ flex: 1, borderWidth: 1, borderColor: BORDER, borderRadius: 10, paddingVertical: 10, alignItems: "center", backgroundColor: pressed ? "#F2F2F2" : "white" }]}
-                >
-                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: C.text }}>Copy QR code</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => setLiveQrModalOpen(false)}
-                  style={({ pressed }) => [{ flex: 1, borderWidth: 1, borderColor: BORDER, borderRadius: 10, paddingVertical: 10, alignItems: "center", backgroundColor: pressed ? "#F2F2F2" : "white" }]}
-                >
-                  <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, color: C.text }}>Close</Text>
-                </Pressable>
-              </View>
-            </Pressable>
-          </Pressable>
-        </Modal>
       </SafeAreaView>
     </>
   );

@@ -21,6 +21,7 @@ import { BACKGROUND_COLOR_OPTIONS,
   SKILLS,
   SALARY_OPTIONS,
   WORK_TYPE_OPTIONS,
+  ROLE_TYPES,
  } from "./profileEdit.constants";
 import { useUI, useEditStyles } from "./profileEdit.styles";
 
@@ -346,6 +347,30 @@ export function MissionSection(props: {
       </View>
     </>
   );
+}
+
+export function CompanyCultureSection(props: {
+  culture: string;
+  onChangeCulture: (v: string) => void;
+}) {
+  const {culture, onChangeCulture} = props;
+
+  return (
+    <>
+    <LLightText style = {styles.sectionTitle}> Culture </LLightText>
+    <LLightText style = {styles.sectionHelper}>Company culture, ideals we value, how we treat employees, etc...</LLightText>
+    <View style = {styles.fieldStack}>
+      <TextInput
+      value = {culture?.trim().length ? culture : ""}
+      onChangeText = {onChangeCulture}
+      placeholder="Write something about the company culture..."
+      placeholderTextColor={UI.hint}
+      style={styles.inputMultiline}
+      multiline
+      />
+    </View>
+    </>
+  )
 }
 
 export function BenefitsSection(props: {
@@ -1276,6 +1301,226 @@ export function SkillsPickerModal(props: {
   );
 }
 
+export function RolePickerModal(props: {
+  visible: boolean;
+  roleSearch: string;
+  setRoleSearch: (v: string) => void;
+  roleRows: IndustryRow[];
+  roleCustomOptions: string[];
+  roleCustomInput: string;
+  setRoleCustomInput: (v: string) => void;
+  onAddCustomRole: () => void;
+
+  roleTempSelected: Set<string>;
+  toggleRole: (label: string) => void;
+
+  predefinedRoleSet: Set<string>;
+
+  onClose: () => void;
+  onApply: () => void;
+}) {
+  const {
+    visible,
+    roleSearch,
+    setRoleSearch,
+    roleRows,
+    roleCustomOptions,
+    roleCustomInput,
+    setRoleCustomInput,
+    onAddCustomRole,
+    roleTempSelected,
+    toggleRole,
+    predefinedRoleSet,
+    onClose,
+    onApply,
+  } = props;
+
+  return (
+    <Modal
+      visible={visible}
+      transparent
+      animationType="slide"
+      onRequestClose={onClose}
+    >
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+        <KeyboardAvoidingView
+          style={{ flex: 1, justifyContent: "flex-end" }}
+          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          keyboardVerticalOffset={MODAL_KB_OFFSET_IOS}
+        >
+          <View
+            style={{
+              backgroundColor: UI.card,
+              borderTopLeftRadius: 20,
+              borderTopRightRadius: 20,
+              paddingHorizontal: 16,
+              paddingTop: 16,
+              paddingBottom: 24,
+              maxHeight: "85%",
+            }}
+          >
+            <LLightText style={{ fontSize: 18, fontWeight: "800" }}>
+              Role Types
+            </LLightText>
+
+            <TextInput
+              value={roleSearch}
+              onChangeText={setRoleSearch}
+              placeholder='Search roles (e.g. in "software", "health")'
+              placeholderTextColor={UI.hint}
+              style={[styles.input, { borderRadius: 12, marginTop: 12 }]}
+              autoCorrect={false}
+              autoCapitalize="none"
+              clearButtonMode="while-editing"
+            />
+
+            <FlatList
+              data={[
+                ...roleRows,
+                ...(roleCustomOptions.length
+                  ? (
+                      [{ type: "header", title: "Custom" }] as IndustryRow[]
+                    ).concat(
+                      roleCustomOptions
+                        .filter(
+                          (c) =>
+                            !roleSearch.trim() ||
+                            c
+                              .toLowerCase()
+                              .includes(roleSearch.trim().toLowerCase()),
+                        )
+                        .map(
+                          (label) =>
+                            ({
+                              type: "option",
+                              category: "Custom",
+                              label,
+                              key: `Custom__${label}`,
+                            }) as IndustryRow,
+                        ),
+                    )
+                  : []),
+              ]}
+              keyExtractor={(item: any) =>
+                item.type === "header" ? `h_${item.title}` : item.key
+              }
+              keyboardShouldPersistTaps="handled"
+              keyboardDismissMode={
+                Platform.OS === "ios" ? "interactive" : "on-drag"
+              }
+              contentContainerStyle={{
+                paddingBottom: MODAL_LIST_BOTTOM_PADDING,
+              }}
+              style={{ marginTop: 12, marginBottom: 12 }}
+              renderItem={({ item }: { item: IndustryRow }) => {
+                if (item.type === "header") {
+                  return (
+                    <LLightText
+                      style={{
+                        marginTop: 14,
+                        marginBottom: 8,
+                        opacity: 0.65,
+                        fontSize: 12,
+                      }}
+                    >
+                      {item.title}
+                    </LLightText>
+                  );
+                }
+
+                const checked = roleTempSelected.has(item.label);
+                const isPredefined = predefinedRoleSet.has(item.label);
+
+                return (
+                  <Pressable
+                    onPress={() => toggleRole(item.label)}
+                    style={{
+                      paddingVertical: 12,
+                      paddingHorizontal: 12,
+                      borderWidth: 1,
+                      borderColor: checked ? UI.text : UI.border,
+                      borderRadius: 12,
+                      marginBottom: 8,
+                      backgroundColor: UI.card,
+                      flexDirection: "row",
+                      alignItems: "center",
+                      justifyContent: "space-between",
+                    }}
+                  >
+                    <View style={{ flex: 1, paddingRight: 10 }}>
+                      <LLightText
+                        style={{
+                          fontSize: 14,
+                          fontWeight: checked ? "800" : "500",
+                        }}
+                      >
+                        {item.label}
+                      </LLightText>
+                      {!isPredefined ? (
+                        <LLightText
+                          style={{ marginTop: 4, fontSize: 12, opacity: 0.55 }}
+                        >
+                          Custom
+                        </LLightText>
+                      ) : null}
+                    </View>
+                    <LLightText style={{ opacity: 0.6 }}>
+                      {checked ? "✓" : ""}
+                    </LLightText>
+                  </Pressable>
+                );
+              }}
+            />
+
+            <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
+              <TextInput
+                value={roleCustomInput}
+                onChangeText={setRoleCustomInput}
+                placeholder="Add custom role…"
+                placeholderTextColor={UI.hint}
+                style={[styles.input, { flex: 1, borderRadius: 12 }]}
+              />
+              <Pressable onPress={onAddCustomRole} style={[styles.pill]}>
+                <BtnText>Add</BtnText>
+              </Pressable>
+            </View>
+
+            <View style={{ flexDirection: "row", gap: 10 }}>
+              <Pressable
+                onPress={onClose}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: UI.borderStrong,
+                  borderRadius: 12,
+                  alignItems: "center",
+                }}
+              >
+                <LLightText style={{ fontWeight: "800" }}>Close</LLightText>
+              </Pressable>
+
+              <Pressable
+                onPress={onApply}
+                style={{
+                  flex: 1,
+                  paddingVertical: 12,
+                  borderWidth: 1,
+                  borderColor: UI.text,
+                  borderRadius: 12,
+                  alignItems: "center",
+                }}
+              >
+                <LLightText style={{ fontWeight: "800" }}>Apply</LLightText>
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </View>
+    </Modal>
+  );
+}
+
 export function RolesSection(props: {
   roles: OpenRole[];
   onPressAdd: () => void;
@@ -1365,23 +1610,32 @@ export function RoleFormModal(props: {
   const styles = useEditStyles();
   const { visible, onClose, onSave, initialRole } = props;
 
-  const [title, setTitle] = React.useState("");
   const [salary, setSalary] = React.useState("");
 
   const [salaryPickerVisible, setSalaryPickerVisible] = React.useState(false);
   const [tempSalary, setTempSalary] = React.useState("");
+  //skills - in a modal
   const [selectedSkills, setSelectedSkills] = React.useState<string[]>([]);
   const [skillsPickerVisible, setSkillsPickerVisible] = React.useState(false);
   const [skillSearch, setSkillSearch] = React.useState("");
   const [skillTempSelected, setSkillTempSelected] = React.useState<Set<string>>(new Set());
   const [skillCustomOptions, setSkillCustomOptions] = React.useState<string[]>([]);
   const [skillCustomInput, setSkillCustomInput] = React.useState("");
+  //roles - in a modal
+  const [selectedRole, setSelectedRole] = React.useState("");
+  const [rolePickerVisible, setRolePickerVisible] = React.useState(false);
+  const [roleSearch, setRoleSearch] = React.useState("");
+  const [roleTempSelected, setRoleTempSelected] = React.useState<Set<string>>(new Set());
+  const [roleCustomOptions, setRoleCustomOptions] = React.useState<string[]>([]);
+  const [roleCustomInput, setRoleCustomInput] = React.useState("");
+
   const [postUrl, setPostUrl] = React.useState("");
   const [workType, setWorkType] = React.useState("");
   const [workTypePickerVisible, setWorkTypePickerVisible] = React.useState(false);
   const [tempWorkType, setTempWorkType] = React.useState("");
   const [isRelocationCovered, setRelocation] = React.useState(false);
 
+  //for skills
   const predefinedSkillSet = React.useMemo(() => {
     const s = new Set<string>();
     for (const cat of SKILLS) for (const opt of cat.options) s.add(opt);
@@ -1403,17 +1657,56 @@ export function RoleFormModal(props: {
     }
     return rows;
   }, [skillSearch]);
+  
+  //for roles
+  const predefinedRoleSet = React.useMemo(() => {
+    const s = new Set<string>();
+    for (const cat of ROLE_TYPES) for (const opt of cat.options) s.add(opt);
+    return s;
+  }, []);
+
+  const roleRows: IndustryRow[] = React.useMemo(() => {
+    const q = roleSearch.trim().toLowerCase();
+    const rows: IndustryRow[] = [];
+    for (const cat of ROLE_TYPES) { //THIS IS WHERE THE CONSTANT IS BEING PASSED IN
+      const opts = q
+        ? cat.options.filter((o) => o.toLowerCase().includes(q) || cat.title.toLowerCase().includes(q))
+        : cat.options;
+      if (!opts.length) continue;
+      if (!q) rows.push({ type: "header", title: cat.title });
+      opts.forEach((label) =>
+        rows.push({ type: "option", category: cat.title, label, key: `${cat.title}::${label}` })
+      );
+    }
+    return rows;
+  }, [roleSearch]);
 
   // Reset/pre-populate fields each time the modal opens
+
+  /*
+  roleTempSelected state changed from string to Set<string> to match what the modal expects
+toggleRole now does single-select: clicking a role selects only it; clicking it again deselects
+onAddCustomRole fixed — adds the custom role and selects it immediately, clears the input
+onApply extracts the single string from the Set via Array.from(...)[0] ?? ""
+onPress syntax error fixed (onPress{ → onPress=)
+Added missing roleCustomOptions and setRoleCustomInput props
+
+  */
   React.useEffect(() => {
     if (visible) {
-      setTitle(initialRole?.title ?? "");
+      setSelectedRole(initialRole?.title ?? ""); //this is our new way to fill in role title variable
+      setRoleTempSelected(new Set(initialRole?.title ? [initialRole.title] : []));
+      setRoleCustomOptions([]);
+      setRoleSearch("");
+      setRoleCustomInput("");
+
       setSalary(initialRole?.salary ?? "");
       setSelectedSkills(initialRole?.skills ?? []);
       setSkillTempSelected(new Set(initialRole?.skills ?? []));
       setSkillCustomOptions([]);
       setSkillSearch("");
       setSkillCustomInput("");
+
       setPostUrl(initialRole?.postUrl ?? "");
       setWorkType(initialRole?.workType ?? "");
       setRelocation(initialRole?.isRelocationCovered ?? false); //if not true, auto false
@@ -1424,16 +1717,17 @@ export function RoleFormModal(props: {
     initialRole?.salary,
     initialRole?.workType,
     initialRole?.skills,
+    initialRole?.isRelocationCovered,
     initialRole?.postUrl,
   ]);
 
-  const canSave = title.trim().length > 0;
+  const canSave = selectedRole.trim().length > 0;
 
   function handleSave() {
     if (!canSave) return;
     onSave({
       id: initialRole?.id ?? String(Date.now()),
-      title: title.trim(),
+      title: selectedRole,
       salary: salary.trim(),
       postedAt: initialRole?.postedAt ?? new Date().toISOString().slice(0, 10),
       skills: selectedSkills,
@@ -1473,13 +1767,61 @@ export function RoleFormModal(props: {
               {initialRole ? "Edit Role" : "Add Role"}
             </LLightText>
 
-            <LLightText style={styles.label}>Role Title *</LLightText>
-            <TextInput
-              value={title}
-              onChangeText={setTitle}
-              placeholder="e.g. Software Engineer"
-              placeholderTextColor={ui.hint}
-              style={[styles.input, { marginBottom: 14 }]}
+            <LLightText style={styles.label}>Role Title</LLightText>
+            <Pressable
+              onPress={() => {
+                setRoleTempSelected(new Set(selectedRole ? [selectedRole] : []));
+                setRolePickerVisible(true);
+              }}
+              style={[
+                styles.input,
+                {
+                  marginBottom: 14,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                },
+              ]}
+            >
+              <LLightText
+                style={{color: selectedRole ? UI.text : UI.hint, flex: 1, paddingRight: 8}}
+                numberOfLines={1}
+              >
+                {selectedRole ? selectedRole : "Select Role Type"}
+
+              </LLightText>
+              <LLightText style={styles.chevron}>›</LLightText>
+            </Pressable>
+            {/*creating an instance of the modal here with current fields*/}
+            <RolePickerModal
+              visible={rolePickerVisible}
+              roleSearch={roleSearch}
+              setRoleSearch={setRoleSearch}
+              roleRows={roleRows}
+              roleCustomOptions={roleCustomOptions}
+              roleCustomInput={roleCustomInput}
+              setRoleCustomInput={setRoleCustomInput}
+              onAddCustomRole={() => {
+                const trimmed = roleCustomInput.trim();
+                if (!trimmed || roleCustomOptions.includes(trimmed)) return;
+                setRoleCustomOptions((prev) => [...prev, trimmed]);
+                setRoleTempSelected(new Set([trimmed]));
+                setRoleCustomInput("");
+              }}
+              roleTempSelected={roleTempSelected}
+              toggleRole={(label) =>
+                setRoleTempSelected((prev) => {
+                  // single-select: if already selected deselect, otherwise select only this one
+                  if (prev.has(label)) return new Set();
+                  return new Set([label]);
+                })
+              }
+              predefinedRoleSet={predefinedRoleSet}
+              onClose={() => setRolePickerVisible(false)}
+              onApply={() => {
+                setSelectedRole(Array.from(roleTempSelected)[0] ?? "");
+                setRolePickerVisible(false);
+              }}
             />
 
             <LLightText style={styles.label}>Salary / Range</LLightText>

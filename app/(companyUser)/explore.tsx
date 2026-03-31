@@ -18,7 +18,7 @@ export default function ExploreScreen() {
 
   return (
     <>
-      <RequireUserType type="home" />
+      <RequireUserType type="company" />
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center", padding: 16, backgroundColor: C.bg }}>
         <Text style={{ fontSize: 24, marginBottom: 12, color: C.text, fontFamily: "Lexend-Regular" }}>Explore</Text>
 

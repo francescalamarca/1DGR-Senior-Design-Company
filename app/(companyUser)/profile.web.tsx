@@ -118,7 +118,7 @@ function SidebarLink({
 export default function ProfileWebScreen() {
   const C = useDynColors();
   const { logout } = useSession();
-  const { width } = useWindowDimensions();
+  const { width, height: windowHeight } = useWindowDimensions();
   const railRef = useRef<FlatList<any> | null>(null);
   const railScrollOffsetRef = useRef(0);
   const {
@@ -144,24 +144,25 @@ export default function ProfileWebScreen() {
     showUrl1,
     showUrl2,
     openVideo,
+    openRoles,
   } = useCompanyProfileScreenData();
 
   // Company-specific derived values (replacing individual-user fields)
   const canToggleName = false;
   const toggleDisplayName = () => {};
-  const openRolesDisplay = String((profile as any).openRoles ?? "").trim(); //display on the profile
 
   // Sidebar rows shown in the expanded ABOUT US panel
   // const [liveQrModalOpen, setLiveQrModalOpen] = useState(false);
   // const [liveQrCopyToken, setLiveQrCopyToken] = useState<number | undefined>(undefined);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [rolesModalOpen, setRolesModalOpen] = useState(false);
   const [sidebarColumnHeight, setSidebarColumnHeight] = useState(760);
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
 
-  const isCompact = width < 1180;
-  const pagePad = width < 1440 ? 32 : 48;
+  const isCompact = width < 1280;
+  const pagePad = Math.max(20, Math.min(64, Math.round(width * 0.035)));
   const heroAvatarSize = width < 1180 ? 128 : 164;
-  const railCardWidth = Math.min(360, Math.max(268, Math.round(width * 0.2)));
+  const railCardWidth = Math.min(360, Math.round(width * 0.22));
   const railStep = railCardWidth + 20;
   const sidebarRows = useMemo(() => { //changed this so that they only change when a dep is changed, not every render
     const qualCol1: any[] = [];
@@ -170,15 +171,14 @@ export default function ProfileWebScreen() {
       { label: "Core Values", value: coreValues.length ? coreValues.join(", ") : "—" },
       { label: "Industry", value: industry || "—" },
       { label: "Benefits", value: benefitsSummary || "—" },
-      { label: "Open Roles", value: openRolesDisplay || "—" },
       { label: "Locations", value: locations.length ? locations.join(", ") : "—" },
     ];
     return [...qualCol1, ...qualCol2];
-  }, [missionStatement, coreValues, industry, benefitsSummary, openRolesDisplay, locations]);
-  const sidebarPanelHeight = isCompact ? 540 : Math.max(sidebarColumnHeight, 760);
+  }, [missionStatement, coreValues, industry, benefitsSummary, locations]);
   const collapsedPanelHeight = 64; // just the header row (ABOUT US + chevron)
-  const sidebarWidth = isCompact ? 0 : 450;
-  const navReturnTo = "/(homeUser)/profile";
+  const sidebarPanelHeight = isCompact ? 540 : Math.max(sidebarColumnHeight, collapsedPanelHeight + 200);
+  const sidebarWidth = isCompact ? 0 : Math.round(width * 0.32);
+  const navReturnTo = "/(companyUser)/profile";
 
   function scrollRail(direction: -1 | 1) {
     const nextOffset = Math.max(0, railScrollOffsetRef.current + direction * railStep);
@@ -210,7 +210,7 @@ export default function ProfileWebScreen() {
   });
   return (
     <>
-      <RequireUserType type="home" />
+      <RequireUserType type="company" />
 
       <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: C.bg }}>
         <ScrollView
@@ -316,7 +316,7 @@ export default function ProfileWebScreen() {
                     flexDirection: isCompact ? "column" : "row",
                     alignItems: isCompact ? "flex-start" : "center",
                     gap: 28,
-                    paddingRight: isCompact ? 0 : sidebarWidth + -5,
+                    paddingRight: isCompact ? 0 : sidebarWidth + 20,
                   }}
                 >
                   <Pressable onPress={() => openVideo(profile.avatarVideoUri)} hitSlop={10}>
@@ -433,7 +433,7 @@ export default function ProfileWebScreen() {
                 </View>
               </View>
 
-              <View style={{ marginTop: 40, paddingHorizontal: pagePad }}>
+              <View style={{ flexDirection: "column", position: "relative" }}>
                 <Text
                   style={{
                     fontFamily: FONTS.LEXEND_LIGHT,
@@ -478,7 +478,7 @@ export default function ProfileWebScreen() {
                             overflow: "hidden",
                           }}
                         >
-                          <View style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 16 }}>
+                          <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 16 }}>
                             <Text
                               style={{
                                 fontFamily: FONTS.CRIMSON_REGULAR,
@@ -652,6 +652,16 @@ export default function ProfileWebScreen() {
                       {sidebarRows.map((row) => (
                         <DetailRow key={row.label} row={row} textColor={C.text} mutedColor={C.subtle} />
                       ))}
+                      <View style={{ gap: 8 }}>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED }}>Open Roles</Text>
+                        <Pressable onPress={() => setRolesModalOpen(true)}>
+                          <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, lineHeight: 21, color: TEXT }}>
+                            {openRoles.length > 0
+                              ? `${openRoles.length} open ${openRoles.length === 1 ? "role" : "roles"}`
+                              : "—"}
+                          </Text>
+                        </Pressable>
+                      </View>
                     </ScrollView>
                   </Animated.View>
                 </Animated.View>
@@ -700,6 +710,94 @@ export default function ProfileWebScreen() {
         />
 
       </SafeAreaView>
+      {/*Now the "Open Roles" row in the About Us panel will show e.g. "X open roles" as a tappable link. Tapping it opens a modal with a card per role showing title, work type, salary, skills, relocation, and post URL. 
+      Tapping the backdrop or the X closes it.*/}
+      <Modal visible={rolesModalOpen} transparent animationType="fade" onRequestClose={() => setRolesModalOpen(false)}>
+        <Pressable
+          style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" }}
+          onPress={() => setRolesModalOpen(false)}
+        >
+          <Pressable
+            style={{
+              backgroundColor: WHITE,
+              borderRadius: 18,
+              width: Math.min(560, width - 48),
+              maxHeight: "80%",
+              overflow: "hidden",
+            }}
+            onPress={() => {}}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                justifyContent: "space-between",
+                paddingHorizontal: 28,
+                paddingTop: 24,
+                paddingBottom: 16,
+                borderBottomWidth: 1,
+                borderBottomColor: BORDER,
+              }}
+            >
+              <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 16, color: TEXT }}>Open Roles</Text>
+              <Pressable onPress={() => setRolesModalOpen(false)} hitSlop={12}>
+                <Feather name="x" size={20} color={MUTED} />
+              </Pressable>
+            </View>
+
+            <ScrollView contentContainerStyle={{ padding: 28, gap: 20 }}>
+              {openRoles.map((role: any) => (
+                <View
+                  key={role.id}
+                  style={{
+                    borderWidth: 1,
+                    borderColor: BORDER,
+                    borderRadius: 14,
+                    padding: 20,
+                    gap: 12,
+                    backgroundColor: BG,
+                  }}
+                >
+                  <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, fontSize: 15, color: TEXT }}>{role.title || "—"}</Text>
+
+                  <View style={{ gap: 8 }}>
+                    {!!role.workType && (
+                      <View style={{ flexDirection: "row", gap: 8 }}>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Work Type</Text>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: TEXT, flex: 1 }}>{role.workType}</Text>
+                      </View>
+                    )}
+                    {!!role.salary && (
+                      <View style={{ flexDirection: "row", gap: 8 }}>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Salary</Text>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: TEXT, flex: 1 }}>{role.salary}</Text>
+                      </View>
+                    )}
+                    {role.skills?.length > 0 && (
+                      <View style={{ flexDirection: "row", gap: 8 }}>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Skills</Text>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: TEXT, flex: 1 }}>{role.skills.join(", ")}</Text>
+                      </View>
+                    )}
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Relocation</Text>
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: TEXT, flex: 1 }}>
+                        {role.isRelocationCovered ? "Covered" : "Not covered"}
+                      </Text>
+                    </View>
+                    {!!role.postUrl && (
+                      <View style={{ flexDirection: "row", gap: 8 }}>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Post URL</Text>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: ACCENT, flex: 1 }}>{role.postUrl}</Text>
+                      </View>
+                    )}
+                  </View>
+                </View>
+              ))}
+            </ScrollView>
+          </Pressable>
+        </Pressable>
+      </Modal>
     </>
   );
 }

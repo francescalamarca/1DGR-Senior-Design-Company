@@ -49,6 +49,7 @@ import {
   BenefitsSection,
   RolesSection,
   RoleFormModal,
+  CompanyCultureSection,
 } from "./profileEdit.ui";
 
 const MODAL_KB_OFFSET_IOS = 12;
@@ -132,21 +133,7 @@ export default function ProfileEditScreen() {
 
   const [editingRole, setEditingRole] = React.useState<import("@/src/features/profile/profile.types").OpenRole | null>(null);
 
-  const workTypeSubtitle = React.useMemo(() => {
-    const wt = String((draft as any).workType ?? "").trim();
-    const wp = String((draft as any).workPreference ?? "").trim();
-    return wt || wp ? [wt, wp].filter(Boolean).join(" · ") : "Select";
-  }, [draft]);
-
-  const openWorkTypePicker = React.useCallback(() => {
-    setWorkTypeTemp(String((draft as any).workType ?? ""));
-    setWorkPreferenceTemp(String((draft as any).workPreference ?? ""));
-    setWorkTypePickerVisible(true);
-  }, [draft]);
-
-  const ui = useUI();
-  const styles = useEditStyles();
-
+  
   //this header enables us to edit the profile and SAVE changes
   const Header = (
     <View style={styles.header}>
@@ -206,6 +193,11 @@ export default function ProfileEditScreen() {
         <BenefitsSection
           benefits={draft.benefitsSummary ?? ""}
           onChangeBenefits={(v: string) => setDraft((p) => ({...p, benefitsSummary: v }))}
+        />
+
+        <CompanyCultureSection
+        culture={draft.companyCulture ?? ""}
+        onChangeCulture={(v: string) => setDraft((p) => ({...p, companyCulture: v}))}
         />
 
         <CoreValuesPickerModal
