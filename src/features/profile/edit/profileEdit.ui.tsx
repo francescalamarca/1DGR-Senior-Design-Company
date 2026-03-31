@@ -337,6 +337,30 @@ export function MissionSection(props: {
   );
 }
 
+export function CompanyCultureSection(props: {
+  culture: string;
+  onChangeCulture: (v: string) => void;
+}) {
+  const {culture, onChangeCulture} = props;
+
+  return (
+    <>
+    <LLightText style = {styles.sectionTitle}> Culture </LLightText>
+    <LLightText style = {styles.sectionHelper}>Company culture, ideals we value, how we treat employees, etc...</LLightText>
+    <View style = {styles.fieldStack}>
+      <TextInput
+      value = {culture?.trim().length ? culture : ""}
+      onChangeText = {onChangeCulture}
+      placeholder="Write something about the company culture..."
+      placeholderTextColor={UI.hint}
+      style={styles.inputMultiline}
+      multiline
+      />
+    </View>
+    </>
+  )
+}
+
 export function BenefitsSection(props: {
   benefits: string;
   onChangeBenefits: (v: string) => void;

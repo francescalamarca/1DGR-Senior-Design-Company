@@ -143,6 +143,7 @@ export function useCompanyProfileScreenData() {
           email: user?.email || prev.email || "",
           phoneNumber: user?.phone_number || prev.phoneNumber || "",
           missionStatement: user?.mission_statement || user?.missionStatement || prev.missionStatement || "",
+          companyCulture: user?.company_culture || user?.companyCulture || prev.companyCulture || "",
           benefitsSummary: user?.benefits_summary || user?.benefitsSummary || prev.benefitsSummary || "",
           coreValues: Array.isArray(user?.core_values) ? user.core_values : (Array.isArray(user?.coreValues) ? user.coreValues : prev.coreValues ?? []),
           openRoles: Array.isArray(user?.open_roles) ? user.open_roles : (Array.isArray(user?.openRoles) ? user.openRoles : prev.openRoles ?? []),
@@ -180,6 +181,7 @@ export function useCompanyProfileScreenData() {
     // Company info sections
     const missionStatement = String(profile.missionStatement ?? "").trim();
     const benefitsSummary = String(profile.benefitsSummary ?? "").trim();
+    const companyCulture = String(profile.companyCulture ?? "").trim();
     const coreValues: string[] = Array.isArray(profile.coreValues) ? profile.coreValues : [];
     const openRoles: any[] = Array.isArray(profile.openRoles) ? profile.openRoles : [];
     const industry = String(profile.industry ?? "").trim();
@@ -210,6 +212,7 @@ export function useCompanyProfileScreenData() {
       displayName,
       missionStatement,
       benefitsSummary,
+      companyCulture,
       coreValues,
       openRoles,
       industry,

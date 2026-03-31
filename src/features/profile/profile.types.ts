@@ -67,6 +67,8 @@ export type Profile = {
   companyName: string;
 
   missionStatement: string;
+  
+  companyCulture: string;
 
   coreValues: string[]; //corevalues
 

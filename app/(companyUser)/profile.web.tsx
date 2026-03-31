@@ -124,7 +124,7 @@ function SidebarLink({
 
 export default function ProfileWebScreen() {
   const { logout } = useSession();
-  const { width } = useWindowDimensions();
+  const { width, height: windowHeight } = useWindowDimensions();
   const railRef = useRef<FlatList<any> | null>(null);
   const railScrollOffsetRef = useRef(0);
   const {
@@ -165,10 +165,10 @@ export default function ProfileWebScreen() {
   const [sidebarColumnHeight, setSidebarColumnHeight] = useState(760);
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
 
-  const isCompact = width < 1180;
-  const pagePad = width < 1440 ? 32 : 48;
+  const isCompact = width < 1280;
+  const pagePad = Math.max(20, Math.min(64, Math.round(width * 0.035)));
   const heroAvatarSize = width < 1180 ? 128 : 164;
-  const railCardWidth = Math.min(360, Math.max(268, Math.round(width * 0.2)));
+  const railCardWidth = Math.min(360, Math.round(width * 0.22));
   const railStep = railCardWidth + 20;
   const sidebarRows = useMemo(() => { //changed this so that they only change when a dep is changed, not every render
     const qualCol1: any[] = [];
@@ -181,9 +181,9 @@ export default function ProfileWebScreen() {
     ];
     return [...qualCol1, ...qualCol2];
   }, [missionStatement, coreValues, industry, benefitsSummary, locations]);
-  const sidebarPanelHeight = isCompact ? 540 : Math.max(sidebarColumnHeight, 760);
   const collapsedPanelHeight = 64; // just the header row (ABOUT US + chevron)
-  const sidebarWidth = isCompact ? 0 : 450;
+  const sidebarPanelHeight = isCompact ? 540 : Math.max(sidebarColumnHeight, collapsedPanelHeight + 200);
+  const sidebarWidth = isCompact ? 0 : Math.round(width * 0.32);
   const navReturnTo = "/(companyUser)/profile";
 
   function scrollRail(direction: -1 | 1) {
@@ -322,7 +322,7 @@ export default function ProfileWebScreen() {
                     flexDirection: isCompact ? "column" : "row",
                     alignItems: isCompact ? "flex-start" : "center",
                     gap: 28,
-                    paddingRight: isCompact ? 0 : sidebarWidth + -5,
+                    paddingRight: isCompact ? 0 : sidebarWidth + 20,
                   }}
                 >
                   <Pressable onPress={() => openVideo(profile.avatarVideoUri)} hitSlop={10}>
@@ -439,7 +439,7 @@ export default function ProfileWebScreen() {
                 </View>
               </View>
 
-              <View style={{ marginTop: 40, paddingHorizontal: pagePad }}>
+              <View style={{ flexDirection: "column", position: "relative" }}>
                 <Text
                   style={{
                     fontFamily: FONTS.LEXEND_LIGHT,
@@ -457,7 +457,7 @@ export default function ProfileWebScreen() {
                   locations={[0, 0.08, 1]}
                   start={{ x: 0.5, y: 0 }}
                   end={{ x: 0.5, y: 1 }}
-                  style={{ marginTop: -12, marginHorizontal: -pagePad, paddingTop: 20, paddingBottom: 18, paddingHorizontal: pagePad }}
+                  style={{ flex: 1, marginTop: -12, marginHorizontal: -pagePad, paddingTop: 20, paddingBottom: 18, paddingHorizontal: pagePad }}
                 >
                   <FlatList
                     ref={railRef}
@@ -488,7 +488,7 @@ export default function ProfileWebScreen() {
                             overflow: "hidden",
                           }}
                         >
-                          <View style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 16 }}>
+                          <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 16 }}>
                             <Text
                               style={{
                                 fontFamily: FONTS.CRIMSON_REGULAR,
