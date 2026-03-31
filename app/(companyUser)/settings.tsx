@@ -21,33 +21,29 @@
  *   (replaces Crimson + DM Mono ONLY in those sections)
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  Alert,
-  Platform,
-  TextInput,
-  Modal,
-  StyleSheet,
-  Animated,
-  Easing,
-  UIManager,
-} from "react-native";
-import { router, useFocusEffect } from "expo-router";
-import { useActionSheet } from "@expo/react-native-action-sheet";
-import { Feather } from "@expo/vector-icons";
+import { aws_config } from "@/constants/aws-config";
+import KeyboardScreen from "@/src/components/KeyboardScreen";
 import { RequireUserType } from "@/src/components/RequireUserType";
 import { useProfile } from "@/src/features/profile/profile.store";
-import * as Clipboard from "expo-clipboard";
-import type { Profile } from "@/src/features/profile/profile.types";
-import { aws_config } from "@/constants/aws-config";
 import { useSession } from "@/src/state/session";
-import KeyboardScreen from "@/src/components/KeyboardScreen";
-import { BrandColors, BrandFonts } from "@/src/theme/brand";
 import { useThemePreference, type ThemePreference } from "@/src/state/theme-preference";
+import { BrandColors, BrandFonts } from "@/src/theme/brand";
+import { useActionSheet } from "@expo/react-native-action-sheet";
+import { Feather } from "@expo/vector-icons";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Alert,
+  Animated,
+  Easing,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput, TouchableOpacity, UIManager,
+  View
+} from "react-native";
 
 const FONTS = {
   LEXEND_REGULAR: BrandFonts.lexendRegular,
@@ -1117,26 +1113,79 @@ export default function SettingsScreen() {
           </Collapsible>
 
           <AccordionHeader
-            title="Support"
-            open={openSection === "support"}
-            onToggle={() => toggleSection("support")}
-            bgColor={dynColors.sectionBg}
-            textColor={dynColors.text}
-          />
+          title="Support"
+          open={openSection === "support"}
+          onToggle={() => toggleSection("support")}
+          bgColor={dynColors.sectionBg}
+          textColor={dynColors.text}
+        />
 
-          {/* support settings, for contacting admin, deleting account, etc */}
-          <Collapsible open={openSection === "support"} openBg openBgColor={dynColors.sectionOpenBg}>
-            <View style={styles.accordionBodyPad}>
-                  <LLText style={styles.bodyDescription}>
-                    {`support settings, for contacting admin, deleting account, etc `}
-                  </LLText>
-                </View>`
-          </Collapsible>
+        {/* support settings: FAQ, chat with admin, report an issue, delete account */}
+        <Collapsible open={openSection === "support"} openBg openBgColor={dynColors.sectionOpenBg}>
+          <View style={styles.accordionBodyPad}>
 
-          </>
+            {/* FAQ */}
+            <TouchableOpacity
+              style={styles.supportRow}
+              onPress={() => router.push("/(companyUser)/faq")}
+            >
+              <LLText style={styles.supportRowText}>FAQ</LLText>
+              <LText style={[styles.accordionChevron, { color: dynColors.text }]}>›</LText>
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
+            {/* Chat with Admin */}
+            <TouchableOpacity
+              style={styles.supportRow}
+              onPress={() => router.push("/(companyUser)/admin-chat")}
+            >
+              <LLText style={styles.supportRowText}>Chat with Admin</LLText>
+              <LText style={[styles.accordionChevron, { color: dynColors.text }]}>›</LText>
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
+            {/* Report an Issue */}
+            <TouchableOpacity
+              style={styles.supportRow}
+              onPress={() => router.push("/(companyUser)/report-issue")}
+            >
+              <LLText style={styles.supportRowText}>Report an Issue</LLText>
+              <LText style={[styles.accordionChevron, { color: dynColors.text }]}>›</LText>
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
+            {/* Delete Account */}
+            <TouchableOpacity
+              style={styles.supportRow}
+              onPress={() => {
+                Alert.alert(
+                  "Delete Account",
+                  "Are you sure you want to delete your account? This action cannot be undone.",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Delete",
+                      style: "destructive",
+                      onPress: () => handleDeleteAccount(),
+                    },
+                  ]
+                );
+              }}
+            >
+              <LLText style={[styles.supportRowText, styles.deleteText]}>Delete Account</LLText>
+              
+            </TouchableOpacity>
+
+          </View>
+        </Collapsible>
+
+        </>
         </View>
-      </KeyboardScreen>
-    </>
+        </KeyboardScreen>
+        </>
   );
 }
 
@@ -1470,6 +1519,23 @@ const styles = StyleSheet.create({
   },
   modalBtnPressed: { backgroundColor: COLORS.pressed },
   modalBtnText: { fontWeight: "600" },
+  supportRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 14,
+  },
+  supportRowText: {
+    fontSize: 15,
+  },
+  deleteText: {
+    color: "red",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: COLORS.divider, // swap for your divider color token if different
+    opacity: 0.3,
+  },
 });
 
 /** Segmented control for Light / Dark / System selection */
@@ -1503,5 +1569,5 @@ const themeSwitchStyles = StyleSheet.create({
   },
   btnLabelSelected: {
     color: COLORS.primaryCtaText,
-  },
+  }, 
 });
