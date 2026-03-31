@@ -26,5 +26,7 @@ export function mapDraftToApiPayload(draft: DraftProfile) {
     custom_background_color: draft.customBackgroundColor ?? "",
     open_roles: Array.isArray(draft.openRoles) ? draft.openRoles : [],
     logo_image_key: draft.avatarImageUri ?? draft.logoImageURI ?? "",
-  };
-}
+    company_email: draft.companyEmail ?? "",
+    company_phone: draft.companyPhone ?? "",
+  }
+};

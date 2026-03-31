@@ -2033,6 +2033,74 @@ Added missing roleCustomOptions and setRoleCustomInput props
   );
 }
 
+export function ContactSection(props: {
+  companyEmail: string;
+  companyPhone: string;
+  onChangeEmail: (v: string) => void;
+  onChangePhone: (v: string) => void;
+}) {
+  const ui = useUI();
+  const styles = useEditStyles();
+  const { companyEmail, companyPhone, onChangeEmail, onChangePhone } = props;
+
+  const [companyEmail, setCompanyEmail] = React.useState("");
+  const [companyPhone, setCompanyPhone] = React.useState("");
+
+  return (
+    <>
+      <LLightText style={[styles.sectionTitle, { marginTop: 17 }]}>
+        Interested Candidate Contact Information
+      </LLightText>
+      <LLightText style={styles.sectionHelper}>
+        Add a company email and phone that can be publically contacted.
+      </LLightText>
+
+      <View
+        style={[
+          styles.inlineCard,
+          {
+            marginTop: 14,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 14,
+          },
+        ]}
+      >
+	        {/* URL input row */}
+          <View style={{ flexDirection: "row", gap: 10 }}>
+            <TextInput className = "input"
+              style={[styles.input, { flex: 1, fontSize: 12 }]}
+              placeholder="Add a company email."
+              placeholderTextColor={ui.hint}
+              value={companyEmail}
+              onChangeText={setCompanyEmail}
+              autoCapitalize="none"
+              autoCorrect={false}
+              keyboardType="url"
+              editable={!isSaving}
+            />
+            <Pressable
+              onPress={() => {
+                if (urlInput.trim()) {
+                  onSetAvatarFromUrl(urlInput.trim());
+                  setUrlInput("");
+                }
+              }}
+              disabled={!urlInput.trim() || isSaving}
+              style={[
+                styles.pill,
+                { paddingHorizontal: 14 },
+                !urlInput.trim() || isSaving ? { opacity: 0.4 } : null,
+              ]}
+            >
+              <BtnText>Use URL</BtnText>
+            </Pressable>
+          </View>
+      </View>
+    </>
+);  
+}
+
 export function CoreValuesPickerModal(props: {
   visible: boolean;
   selected: string[];

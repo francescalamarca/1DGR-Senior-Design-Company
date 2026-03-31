@@ -44,6 +44,8 @@ export type DraftProfile = Profile & {
   benefitsSummary?: string;
   customBackgroundColor?: string;
   logoImageURI?: string;
+  companyEmail: string;
+  companyPhone: string;
 };
 
 
@@ -65,6 +67,8 @@ export function normalizeForCompare(p: DraftProfile) {
       .sort(),
     customBackgroundColor: (p.customBackgroundColor ?? "").trim(),
     logoImageURI: (p.avatarImageUri ?? p.logoImageURI ?? "").trim(),
+    companyEmail: (p.companyEmail ?? "").trim(),
+    companyPhone: (p.companyPhone ?? "").trim(),
   };
 }
 
