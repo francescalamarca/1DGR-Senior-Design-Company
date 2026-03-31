@@ -10,7 +10,6 @@ import {
 import { useSession } from "@/src/state/session";
 import { useDynColors } from "@/src/state/theme-colors";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useMemo, useRef, useState } from "react";
 import {
@@ -447,12 +446,8 @@ export default function ProfileWebScreen() {
                   FIRST CONNECT
                 </Text>
 
-                <LinearGradient
-                  colors={["#ffffff", "#eef4f7", "#dfe9ee"]}
-                  locations={[0, 0.08, 1]}
-                  start={{ x: 0.5, y: 0 }}
-                  end={{ x: 0.5, y: 1 }}
-                  style={{ marginTop: -12, marginHorizontal: -pagePad, paddingTop: 20, paddingBottom: 18, paddingHorizontal: pagePad }}
+                <View
+                  style={{ marginTop: -12, marginHorizontal: -pagePad, paddingTop: 20, paddingBottom: 18, paddingHorizontal: pagePad, backgroundColor: "rgba(255,255,255,0.72)" }}
                 >
                   <FlatList
                     ref={railRef}
@@ -574,7 +569,7 @@ export default function ProfileWebScreen() {
                       </Pressable>
                     </View>
                   ) : null}
-                </LinearGradient>
+                </View>
               </View>
 
               <View
