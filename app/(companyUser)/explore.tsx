@@ -10,7 +10,7 @@ import { View, Text, Pressable } from "react-native"; //will use this on login f
 import { router } from "expo-router";
 import { useSession } from "@/src/state/session";
 import { RequireUserType } from "@/src/components/RequireUserType";
-import { useDynColors } from "@/src/theme/theme-colors";
+import { useDynColors } from "@/src/state/theme-colors";
 
 export default function ExploreScreen() {
   const C = useDynColors();

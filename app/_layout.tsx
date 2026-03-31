@@ -18,13 +18,16 @@ only need the backslash before a route on Redirect href = "" or router.replace
 import { Slot } from "expo-router";
 import { ProfileProvider } from "@/src/features/profile/profile.store";
 import { SessionProvider } from "@/src/state/session";
+import { ThemePreferenceProvider } from "@/src/state/theme-preference";
 
 export default function RootLayout() {
   return (
-    <SessionProvider>
-      <ProfileProvider>
-        <Slot />
-      </ProfileProvider>
-    </SessionProvider>
+    <ThemePreferenceProvider>
+      <SessionProvider>
+        <ProfileProvider>
+          <Slot />
+        </ProfileProvider>
+      </SessionProvider>
+    </ThemePreferenceProvider>
   );
 }

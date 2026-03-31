@@ -18,6 +18,7 @@ import {
   type QualRowValue,
 } from "@/src/features/profile/edit/profileScreen.shared";
 import { useSession } from "@/src/state/session";
+import { useDynColors } from "@/src/state/theme-colors";
 import { useActionSheet } from "@expo/react-native-action-sheet";
 import { Feather } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -90,6 +91,8 @@ function QualValue({ value, textStyle }: { value: QualRowValue; textStyle: any }
 }
 
 export default function ProfileScreen() {
+  const C = useDynColors();
+  const { showActionSheetWithOptions } = useActionSheet();
   const { logout } = useSession();
   const { profile, copyEmail, copyPhone, copyUrl, refreshing, fetchLatestProfile, displayName, missionStatement, companyCulture, benefitsSummary, coreValues, openRoles, industry, locations, videos, contactEmail, contactPhone, contactUrl1, contactUrl2, contactUrl1Label, contactUrl2Label, showUrl1, showUrl2, openVideo } =
     useCompanyProfileScreenData();
@@ -108,14 +111,14 @@ export default function ProfileScreen() {
         ...lexLight,
         fontSize: 28,
         textAlign: "center" as const,
-        color: TEXT,
+        color: C.text,
       } as const,
 
       headline: {
         ...lexLight,
         fontSize: 13.5,
         textAlign: "center" as const,
-        color: TEXT,
+        color: C.text,
         marginTop: 10,
       } as const,
 
@@ -126,24 +129,24 @@ export default function ProfileScreen() {
         fontSize: 21,
         lineHeight: 31,
         paddingHorizontal: 4,
-        color: TEXT,
+        color: C.text,
       } as const,
 
       sectionHeader: {
         ...lexLight,
         fontSize: 13,
         letterSpacing: 2.2,
-        color: TEXT,
+        color: C.text,
       } as const,
       contactLabel: { ...lexLight, fontSize: 12.5, color: "#5E5E5E", opacity: 1 } as const,
       contactLinkLabel: { ...lexLight, fontSize: 12.5, color: "#5E5E5E", opacity: 1 } as const,
-      contactValue: { ...lexLight, fontSize: 14, color: TEXT, opacity: 1 } as const,
+      contactValue: { ...lexLight, fontSize: 14, color: C.text, opacity: 1 } as const,
 
       qualHeader: {
         ...lexLight,
         fontSize: 13,
         letterSpacing: 2.1,
-        color: TEXT,
+        color: C.text,
         opacity: 1,
       } as const,
 
@@ -153,7 +156,7 @@ export default function ProfileScreen() {
         ...lexLight,
         fontSize: 13,
         marginLeft: 10,
-        color: TEXT,
+        color: C.text,
         opacity: 1,
         lineHeight: 18,
         flexShrink: 1,
@@ -161,8 +164,10 @@ export default function ProfileScreen() {
         width: "90%", // ✅ keep as requested
       } as const,
 
-      videoCaption: { ...lexReg, fontSize: 16.5, lineHeight: 22, color: TEXT } as const,
-      logout: { ...lexLight, color: TEXT } as const,
+      videoCaption: { ...lexReg, fontSize: 16.5, lineHeight: 22, color: C.text } as const,
+      logout: { ...lexLight, color: C.text } as const,
+    };
+  }, [C.text]);
 
       blockABg: (profile.customBackgroundColor ?? "").trim() || BG, //if custom available, use that, else default, where applied
     };
@@ -439,11 +444,11 @@ export default function ProfileScreen() {
     <>
       <RequireUserType type="company" />
 
-      <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: BG }}>
+      <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: C.bg }}>
         <Animated.ScrollView
           ref={scrollViewRef}
-          style={{ backgroundColor: BG }}
-          contentContainerStyle={{ paddingBottom: 0, flexGrow: 1 }}
+          style={{ backgroundColor: C.bg }}
+          contentContainerStyle={{ paddingBottom: 0 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchLatestProfile} />}
           onScroll={Animated.event([{ nativeEvent: { contentOffset: { y: scrollY } } }], { useNativeDriver: false })}
           scrollEventThrottle={16}
@@ -453,7 +458,7 @@ export default function ProfileScreen() {
               height: 64,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: WHITE,
+              backgroundColor: C.card,
               borderBottomWidth: 1,
               borderBottomColor: BORDER,
             }}
@@ -469,7 +474,7 @@ export default function ProfileScreen() {
           </View>
 
           {/* Block A */}
-          <View style={{ backgroundColor: WHITE }}>
+          <View style={{ backgroundColor: C.card }}>
             <View style={{ paddingHorizontal: 18, paddingTop: 12, paddingBottom: 22 }}>
               <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
                 <Pressable
@@ -530,7 +535,7 @@ export default function ProfileScreen() {
 
           {/* Block C — Company Info */}
           <View
-            style={{ backgroundColor: WHITE, paddingHorizontal: 22, paddingVertical: 12 }}
+            style={{ backgroundColor: C.card, paddingHorizontal: 22, paddingVertical: 12 }}
             onLayout={(event) => setQualSectionY(event.nativeEvent.layout.y)}
           >
             <Pressable
@@ -710,7 +715,7 @@ export default function ProfileScreen() {
                       onPress={() => openVideo(uri)}
                     style={{
                       width: CARD_W,
-                      backgroundColor: WHITE,
+                      backgroundColor: C.card,
                       borderRadius: 16,
                       borderWidth: 1,
                       borderColor: "#9db3c0",

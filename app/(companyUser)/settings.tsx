@@ -47,6 +47,7 @@ import { aws_config } from "@/constants/aws-config";
 import { useSession } from "@/src/state/session";
 import KeyboardScreen from "@/src/components/KeyboardScreen";
 import { BrandColors, BrandFonts } from "@/src/theme/brand";
+import { useThemePreference, type ThemePreference } from "@/src/state/theme-preference";
 
 const FONTS = {
   LEXEND_REGULAR: BrandFonts.lexendRegular,
@@ -495,11 +496,13 @@ function Collapsible({
   children,
   duration = 220,
   openBg = false,
+  openBgColor,
 }: {
   open: boolean;
   children: React.ReactNode;
   duration?: number;
   openBg?: boolean;
+  openBgColor?: string;
 }) {
   const progress = useRef(new Animated.Value(open ? 1 : 0)).current;
   const [contentHeight, setContentHeight] = useState(0);
@@ -532,7 +535,7 @@ function Collapsible({
   }, [open, duration, progress]);
 
   return (
-    <View style={[styles.collapsibleWrap, openBg && styles.sectionOpenBg]}>
+    <View style={[styles.collapsibleWrap, openBg && (openBgColor ? { backgroundColor: openBgColor } : styles.sectionOpenBg)]}>
       {/* Hidden measurer */}
       <View
         style={styles.collapsibleMeasurer}
@@ -564,11 +567,15 @@ function AccordionHeader({
   open,
   onToggle,
   isFirst,
+  bgColor,
+  textColor,
 }: {
   title: string;
   open: boolean;
   onToggle: () => void;
   isFirst?: boolean;
+  bgColor?: string;
+  textColor?: string;
 }) {
   const rot = useRef(new Animated.Value(open ? 1 : 0)).current;
 
@@ -597,14 +604,16 @@ function AccordionHeader({
         accessibilityHint={open ? "Collapses folder" : "Expands folder"}
         style={({ pressed }) => [
           styles.accordionHeaderRowPress,
+          bgColor && { backgroundColor: bgColor },
           open && styles.accordionHeaderRowOpen,
+          open && bgColor && { backgroundColor: bgColor },
           pressed && styles.accordionHeaderPressed,
         ]}
       >
-        <LLText style={styles.accordionTitle}>{title}</LLText>
+        <LLText style={[styles.accordionTitle, textColor && { color: textColor }]}>{title}</LLText>
 
         <Animated.View style={[styles.rightGutter, { transform: [{ rotate }], opacity: 0.9 }]}>
-          <LText style={styles.accordionChevron}>›</LText>
+          <LText style={[styles.accordionChevron, textColor && { color: textColor }]}>›</LText>
         </Animated.View>
       </Pressable>
     </View>
@@ -618,6 +627,29 @@ export default function SettingsScreen() {
   const { accessToken } = useSession();
   const scrollRef = useRef<ScrollView>(null);
   const { profile, setProfile } = useProfile();
+  const { preference: themePreference, setPreference: setThemePreference, colorScheme } = useThemePreference();
+  const isDark = colorScheme === "dark";
+  const dynColors = isDark
+    ? {
+        bg: "#3E424B",
+        text: "#ECEDEE",
+        subtle: "#9BA1A6",
+        sectionBg: "#474B54",
+        sectionOpenBg: "#383C45",
+        headerBg: "#3E424B",
+        cardBg: "#3E424B",
+        btnBorder: "#5A5F6B",
+      }
+    : {
+        bg: COLORS.bg,
+        text: COLORS.text,
+        subtle: COLORS.subtle,
+        sectionBg: COLORS.sectionHeaderBg,
+        sectionOpenBg: COLORS.sectionOpenBg,
+        headerBg: COLORS.bg,
+        cardBg: COLORS.bg,
+        btnBorder: COLORS.divider,
+      };
 
 
   type SectionKey = "account" | "profile settings" | "support";
@@ -779,7 +811,7 @@ export default function SettingsScreen() {
   }
 
   const Header = (
-    <View style={styles.header}>
+    <View style={[styles.header, { backgroundColor: dynColors.headerBg }]}>
       <Pressable
         onPress={() => {
           setDraftSettings({
@@ -808,15 +840,20 @@ export default function SettingsScreen() {
         accessibilityRole="button"
         accessibilityLabel="Cancel settings"
       >
-        <LText style={styles.headerActionText}>Cancel</LText>
+        <LText style={[styles.headerActionText, { color: dynColors.text }]}>Cancel</LText>
       </Pressable>
 
-      <LLText pointerEvents="none" style={styles.headerTitle}>
+      <LLText pointerEvents="none" style={[styles.headerTitle, { color: dynColors.text }]}>
         Settings & Privacy
       </LLText>
 
       <Pressable
         onPress={async () => {
+          if (!canSaveTop) {
+            router.replace("/(companyUser)/profile");
+            return;
+          }
+
           if (!accessToken) return;
 
           try {
@@ -857,14 +894,13 @@ export default function SettingsScreen() {
             Alert.alert("Error", "Failed to save settings.");
           }
         }}
-        disabled={!canSaveTop}
-        style={[styles.headerRight, { opacity: canSaveTop ? 1 : 0.4 }]}
+        style={styles.headerRight}
         hitSlop={10}
         accessibilityRole="button"
         accessibilityLabel="Save settings"
         accessibilityHint={canSaveTop ? "Saves your changes" : "No changes to save"}
       >
-        <LText style={styles.headerActionText}>Save</LText>
+        <LText style={[styles.headerActionText, { color: dynColors.text }]}>Save</LText>
       </Pressable>
     </View>
   );
@@ -877,20 +913,22 @@ export default function SettingsScreen() {
         header={Header}
         scroll
         scrollRef={scrollRef}
-        backgroundColor={COLORS.bg}
+        backgroundColor={dynColors.bg}
         keyboardVerticalOffset={76}
-        contentContainerStyle={styles.screenContent}
+        contentContainerStyle={{ ...styles.screenContent, backgroundColor: dynColors.bg }}
       >
-        <View style={styles.groupCard}>
+        <View style={[styles.groupCard, { backgroundColor: dynColors.cardBg }]}>
           <>
               <AccordionHeader
                 title="Account"
                 open={openSection === "account"}
                 onToggle={() => toggleSection("account")}
                 isFirst
+                bgColor={dynColors.sectionBg}
+                textColor={dynColors.text}
               />
 
-              <Collapsible open={openSection === "account"} openBg>
+              <Collapsible open={openSection === "account"} openBg openBgColor={dynColors.sectionOpenBg}>
             <FullWidthStack>
               {/* 0) Title row */}
               <View style={styles.linkItemWrap}>
@@ -1030,25 +1068,64 @@ export default function SettingsScreen() {
             </FullWidthStack>
           </Collapsible>
               
-          <AccordionHeader title="Profile Display" open={openSection === "profile settings"} onToggle={() => toggleSection("profile settings")} />
+          <AccordionHeader
+            title="Profile Display"
+            open={openSection === "profile settings"}
+            onToggle={() => toggleSection("profile settings")}
+            bgColor={dynColors.sectionBg}
+            textColor={dynColors.text}
+          />
 
-          {/* PROFILE DISPLAY now uses Lexend Light components */}
-          <Collapsible open={openSection === "profile settings"} openBg>
+          {/* PROFILE DISPLAY — light / dark selector */}
+          <Collapsible open={openSection === "profile settings"} openBg openBgColor={dynColors.sectionOpenBg}>
             <View style={styles.accordionBodyPad}>
-                  <LLText style={styles.bodyDescription}>
-                    {`Profile Settings - Light, dark, system aligned`}
-                  </LLText>
-                </View>`
+              <LLText style={[styles.bodyDescription, { marginBottom: 14, color: dynColors.subtle }]}>
+                Choose your preferred display
+              </LLText>
+              <View style={themeSwitchStyles.row}>
+                {(["light", "dark"] as ThemePreference[]).map((opt) => {
+                  const selected = themePreference === opt;
+                  const label = opt.charAt(0).toUpperCase() + opt.slice(1);
+                  return (
+                    <Pressable
+                      key={opt}
+                      onPress={() => setThemePreference(opt)}
+                      style={({ pressed }) => [
+                        themeSwitchStyles.btn,
+                        { borderColor: dynColors.btnBorder, backgroundColor: "transparent" },
+                        selected && { backgroundColor: "#9BB4C0", borderColor: "#9BB4C0" },
+                        pressed && !selected && { backgroundColor: dynColors.sectionBg },
+                      ]}
+                      accessibilityRole="radio"
+                      accessibilityState={{ selected }}
+                      accessibilityLabel={`${label} mode`}
+                    >
+                      <LLText
+                        style={[
+                          themeSwitchStyles.btnLabel,
+                          { color: dynColors.text, opacity: selected ? 1 : 0.55 },
+                          selected && { color: "#fff", opacity: 1 },
+                        ]}
+                      >
+                        {label}
+                      </LLText>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </View>
           </Collapsible>
 
           <AccordionHeader
             title="Support"
             open={openSection === "support"}
             onToggle={() => toggleSection("support")}
+            bgColor={dynColors.sectionBg}
+            textColor={dynColors.text}
           />
 
           {/* support settings, for contacting admin, deleting account, etc */}
-          <Collapsible open={openSection === "support"} openBg>
+          <Collapsible open={openSection === "support"} openBg openBgColor={dynColors.sectionOpenBg}>
             <View style={styles.accordionBodyPad}>
                   <LLText style={styles.bodyDescription}>
                     {`support settings, for contacting admin, deleting account, etc `}
@@ -1393,4 +1470,38 @@ const styles = StyleSheet.create({
   },
   modalBtnPressed: { backgroundColor: COLORS.pressed },
   modalBtnText: { fontWeight: "600" },
+});
+
+/** Segmented control for Light / Dark / System selection */
+const themeSwitchStyles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    gap: 8,
+    marginBottom: 8,
+  },
+  btn: {
+    flex: 1,
+    paddingVertical: 10,
+    borderRadius: RADII.md,
+    borderWidth: 1,
+    borderColor: COLORS.divider,
+    backgroundColor: COLORS.bg,
+    alignItems: "center",
+  },
+  btnSelected: {
+    backgroundColor: COLORS.primaryCtaBg,
+    borderColor: COLORS.primaryCtaBg,
+  },
+  btnPressed: {
+    backgroundColor: COLORS.pressed,
+  },
+  btnLabel: {
+    fontFamily: FONTS.LEXEND_LIGHT,
+    fontSize: 13,
+    letterSpacing: 0.5,
+    color: COLORS.text,
+  },
+  btnLabelSelected: {
+    color: COLORS.primaryCtaText,
+  },
 });
