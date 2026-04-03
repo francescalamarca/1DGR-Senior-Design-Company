@@ -52,6 +52,12 @@ const TOP_NAV_ITEMS = [
 /*
 Array (string[]): renders each item as its own Text line with spacing between them (e.g. a list of skills or education entries)
 Single value (line 70): renders it as a single Text element
+
+renders a profile field's value
+- If the value is an array (e.g. a list of core values or locations), it renders each item as its own Text line with a small gap between them. Empty array shows —.
+- If the value is a single string, it just renders one Text element.
+- Both cases run the value through softWrapLongTokens to prevent layout breakage from long unbroken strings.
+
 */
 function QualValue({ value, textStyle }: { value: QualRowValue; textStyle: any }) {
   if (Array.isArray(value)) {
@@ -74,6 +80,12 @@ function QualValue({ value, textStyle }: { value: QualRowValue; textStyle: any }
   return <Text style={textStyle}>{softWrapLongTokens(value)}</Text>;
 }
 
+/*
+renders one labeled fielf in the sidebar
+- Shows the field's label (e.g. "Mission Statement", "Industry") in small muted text above.
+- Then renders the value below it using QualValue.
+- Accepts optional textColor/mutedColor so it can adapt to dark mode via the dynamic colors from C.
+*/
 function DetailRow({ row, textColor = TEXT, mutedColor = MUTED }: { row: QualRow; textColor?: string; mutedColor?: string }) {
   return (
     <View style={{ gap: 8 }}>
@@ -88,6 +100,10 @@ function DetailRow({ row, textColor = TEXT, mutedColor = MUTED }: { row: QualRow
   );
 }
 
+/*
+the two functions above builds an array of {label, value} objects, and each one is 
+rendered as a <DetailRow> inside the "ABOUT US" expandable panel
+*/
 function SidebarLink({
   label,
   value,
@@ -436,6 +452,9 @@ export default function ProfileWebScreen() {
                 </View>
               </View>
 
+              {/* moving the about page here with all information shown*/}
+              
+              
               <View style={{ flex: 1, flexDirection: "column", position: "relative" }}>
                 <Text
                   style={{
