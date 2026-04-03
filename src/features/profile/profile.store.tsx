@@ -222,8 +222,8 @@ const initialProfile: Profile = {
     showCompanyName: true,
   },
 
-  phoneNumber: "",
-  email: "",
+  companyPhone: "",
+  companyEmail: "",
   contactUrl1: "",
   contactUrl2: "",
   contactUrl1Label: "URL 1",
@@ -536,7 +536,8 @@ const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
       //unsure if contact display settings need to persist - loads from async
       const mappedProfile: Partial<Profile> = {
         companyName: userData.company_name || "",
-        email: userData.email || "",
+        companyEmail: userData.companyEmail || "",
+        companyPhone: userData.companyPhone || "",
         industry: Array.isArray(userData.industry) ? (userData.industry[0] ?? "") : (userData.industry || ""),
         businessAge: userData.business_age || "",
         workType: userData.work_type || "",

@@ -94,7 +94,7 @@ export default function ProfileScreen() {
   const C = useDynColors();
   const { showActionSheetWithOptions } = useActionSheet();
   const { logout } = useSession();
-  const { profile, copyEmail, copyPhone, copyUrl, refreshing, fetchLatestProfile, displayName, missionStatement, companyCulture, benefitsSummary, coreValues, openRoles, industry, locations, videos, contactEmail, contactPhone, contactUrl1, contactUrl2, contactUrl1Label, contactUrl2Label, showUrl1, showUrl2, openVideo } =
+  const { profile, copyEmail, copyPhone, copyUrl, refreshing, fetchLatestProfile, displayName, missionStatement, companyCulture, benefitsSummary, coreValues, openRoles, industry, locations, videos, companyEmail, companyPhone, contactUrl1, contactUrl2, contactUrl1Label, contactUrl2Label, showUrl1, showUrl2, openVideo } =
     useCompanyProfileScreenData();
 
   const [activeVideoIndex, setActiveVideoIndex] = useState(0);

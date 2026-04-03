@@ -127,4 +127,7 @@ export type Profile = {
 
   contactDisplaySettings: ContactDisplaySettings;
 
+  companyEmail: string;
+  companyPhone: string;
+
 };

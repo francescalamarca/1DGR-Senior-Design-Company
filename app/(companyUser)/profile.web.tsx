@@ -135,8 +135,8 @@ export default function ProfileWebScreen() {
     industry,
     locations,
     videos,
-    contactEmail,
-    contactPhone,
+    companyEmail,
+    companyPhone,
     contactUrl1,
     contactUrl2,
     contactUrl1Label,
@@ -674,8 +674,8 @@ export default function ProfileWebScreen() {
                   <View style={{ height: 1, backgroundColor: C.border }} />
 
                   <View style={{ gap: 20 }}>
-                    <SidebarLink label="Email" value={contactEmail} onPress={copyEmail} disabled={!contactEmail} textColor={C.text} mutedColor={C.subtle} />
-                    <SidebarLink label="Phone" value={contactPhone} onPress={copyPhone} disabled={!contactPhone} textColor={C.text} mutedColor={C.subtle} />
+                    <SidebarLink label="Email" value={companyEmail} onPress={copyEmail} disabled={!companyEmail} textColor={C.text} mutedColor={C.subtle} />
+                    <SidebarLink label="Phone" value={companyPhone} onPress={copyPhone} disabled={!companyPhone} textColor={C.text} mutedColor={C.subtle} />
                     {showUrl1 ? (
                       <SidebarLink
                         label={contactUrl1Label}

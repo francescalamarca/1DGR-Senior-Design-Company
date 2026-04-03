@@ -88,8 +88,8 @@ export function useCompanyProfileScreenData() {
   
     const displayName = String(profile.companyName ?? "").trim() || "Company";
   
-    const contactEmail = String(profile.email ?? "").trim();
-    const contactPhone = String(profile.phoneNumber ?? "").trim();
+    const companyEmail = String(profile.companyEmail ?? "").trim();
+    const companyPhone = String(profile.companyPhone ?? "").trim();
     const contactUrl1 = String((profile as any).contactUrl1 ?? "").trim();
     const contactUrl2 = String((profile as any).contactUrl2 ?? "").trim();
     const contactUrl1Label = String((profile as any).contactUrl1Label ?? "URL 1").trim() || "URL 1";
@@ -98,16 +98,16 @@ export function useCompanyProfileScreenData() {
     const showUrl2 = !!(profile as any)?.contactDisplaySettings?.showUrl2;
   
     const copyEmail = useCallback(async () => {
-      if (!contactEmail) return;
-      await Clipboard.setStringAsync(contactEmail);
+      if (!companyEmail) return;
+      await Clipboard.setStringAsync(companyEmail);
       Alert.alert("Copied", "Email copied to clipboard.");
-    }, [contactEmail]);
+    }, [companyEmail]);
   
     const copyPhone = useCallback(async () => {
-      if (!contactPhone) return;
-      await Clipboard.setStringAsync(contactPhone);
+      if (!companyPhone) return;
+      await Clipboard.setStringAsync(companyPhone);
       Alert.alert("Copied", "Phone number copied to clipboard.");
-    }, [contactPhone]);
+    }, [companyPhone]);
   
     const copyUrl = useCallback(async (url: string) => {
       if (!url) return;
@@ -218,8 +218,8 @@ export function useCompanyProfileScreenData() {
       industry,
       locations,
       videos,
-      contactEmail,
-      contactPhone,
+      companyEmail,
+      companyPhone,
       contactUrl1,
       contactUrl2,
       contactUrl1Label,

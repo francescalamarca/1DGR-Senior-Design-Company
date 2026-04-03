@@ -23,7 +23,7 @@ import { View, Pressable, ActivityIndicator, Modal, FlatList, TextInput, Keyboar
 
 import { RequireUserType } from "@/src/components/RequireUserType";
 
-import { useUI, useEditStyles, UI} from "./profileEdit.styles";
+import { useEditStyles, UI} from "./profileEdit.styles";
 import { LLightText, KeyboardScreen } from "./profileEdit.components";
 import {
   COMPANY_AGE_OPTIONS,
@@ -50,6 +50,7 @@ import {
   RolesSection,
   RoleFormModal,
   CompanyCultureSection,
+  ContactSection,
 } from "./profileEdit.ui";
 
 const MODAL_KB_OFFSET_IOS = 12;
@@ -321,6 +322,14 @@ export default function ProfileEditScreen() {
             setWorkTypePickerVisible(false);
           }}
         />
+
+        <ContactSection
+          companyEmail = {draft.companyEmail ?? ""}
+          companyPhone = {draft.companyPhone ?? ""}
+          onChangeEmail={(v: string) => setDraft((p) => ({ ...p, companyEmail: v }))}
+          onChangePhone={(v: string) => setDraft((p) => ({ ...p, companyPhone: v }))}
+        />
+
       </KeyboardScreen>
     </>
   );

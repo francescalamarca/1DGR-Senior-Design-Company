@@ -2041,15 +2041,18 @@ export function ContactSection(props: {
 }) {
   const ui = useUI();
   const styles = useEditStyles();
-  const { companyEmail, companyPhone, onChangeEmail, onChangePhone } = props;
+  const { 
+    companyEmail, 
+    companyPhone, 
+    onChangeEmail, 
+    onChangePhone,
+  } = props;
 
-  const [companyEmail, setCompanyEmail] = React.useState("");
-  const [companyPhone, setCompanyPhone] = React.useState("");
 
   return (
     <>
       <LLightText style={[styles.sectionTitle, { marginTop: 17 }]}>
-        Interested Candidate Contact Information
+        Company Contact Information
       </LLightText>
       <LLightText style={styles.sectionHelper}>
         Add a company email and phone that can be publically contacted.
@@ -2060,45 +2063,40 @@ export function ContactSection(props: {
           styles.inlineCard,
           {
             marginTop: 14,
-            flexDirection: "row",
-            alignItems: "center",
+            flexDirection: "column", //this makes it so the values are stacked on top of one another
             gap: 14,
           },
         ]}
       >
-	        {/* URL input row */}
-          <View style={{ flexDirection: "row", gap: 10 }}>
+	        {/* email and phone input rows */}
+          <View style={[styles.fieldStack, {flexDirection: "column", gap: 10 }]}>
+            <LLightText style={styles.label}>Company Email</LLightText>
             <TextInput className = "input"
-              style={[styles.input, { flex: 1, fontSize: 12 }]}
-              placeholder="Add a company email."
-              placeholderTextColor={ui.hint}
               value={companyEmail}
-              onChangeText={setCompanyEmail}
-              autoCapitalize="none"
-              autoCorrect={false}
-              keyboardType="url"
-              editable={!isSaving}
+              onChangeText={onChangeEmail}
+              placeholder="Company Email"
+              placeholderTextColor={ui.hint}
+              style={styles.input}
             />
-            <Pressable
-              onPress={() => {
-                if (urlInput.trim()) {
-                  onSetAvatarFromUrl(urlInput.trim());
-                  setUrlInput("");
-                }
-              }}
-              disabled={!urlInput.trim() || isSaving}
-              style={[
-                styles.pill,
-                { paddingHorizontal: 14 },
-                !urlInput.trim() || isSaving ? { opacity: 0.4 } : null,
-              ]}
-            >
-              <BtnText>Use URL</BtnText>
-            </Pressable>
           </View>
-      </View>
+
+
+            <View style={[styles.fieldStack, {flexDirection: "column", gap: 10 }]}>
+              <LLightText style={styles.label}>Company Phone</LLightText>
+              <TextInput className = "input"
+                value={companyPhone}
+                onChangeText={onChangePhone}
+                placeholder="Company Phone"
+                placeholderTextColor={ui.hint}
+                style={styles.input}
+              />
+            </View>
+            <Pressable>
+              <BtnText></BtnText>
+            </Pressable>
+        </View>
     </>
-);  
+  );  
 }
 
 export function CoreValuesPickerModal(props: {
