@@ -38,6 +38,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { styles } from "@/src/features/profile/edit/profileEdit.styles";
 
 const FONTS = {
   LEXEND_LIGHT: "Lexend-Light",
@@ -391,7 +392,7 @@ export default function ProfileWebScreen() {
                       </Text>
                     </Pressable>
 
-                    {(!!missionStatement && !!headquarters) && (
+                    {(!!missionStatement || !!headquarters) && (
                       <Text
                         style={{
                           fontFamily: FONTS.LEXEND_LIGHT,
@@ -469,7 +470,8 @@ export default function ProfileWebScreen() {
               </View>
 
               {/* moving the about page here with all information shown*/}
-               <View style={{ flex: 1, flexDirection: "column", position: "relative" }}>
+               <View style={{ flex: 1, flexDirection: "column", position: "relative"}}>
+                <View style={styles.floatingCard}>
                 <Text
                   style={{
                     fontFamily: FONTS.LEXEND_LIGHT,
@@ -479,147 +481,151 @@ export default function ProfileWebScreen() {
                     marginBottom: 14,
                   }}
                 >
-                  About Us
+                  ABOUT US
                 </Text>
+                
+                </View>
               </View>
+
               
               <View style={{ flex: 1, flexDirection: "column", position: "relative" }}>
-                <Text
-                  style={{
-                    fontFamily: FONTS.LEXEND_LIGHT,
-                    fontSize: 13,
-                    letterSpacing: 2,
-                    color: C.text,
-                    marginBottom: 14,
-                  }}
-                >
-                  FIRST CONNECT
-                </Text>
-
-                <View
-                  style={{ flex: 1, marginTop: -12, marginHorizontal: -pagePad, paddingTop: 20, paddingBottom: 18, paddingHorizontal: pagePad, backgroundColor: profile.customBackgroundColor || "rgba(255,255,255,0.72)" }}
-                >
-                  <FlatList
-                    ref={railRef}
-                    data={videos}
-                    horizontal
-                    keyExtractor={(item: any) => String(item.id ?? `${item.slot ?? "x"}_${item.videoUri ?? ""}`)}
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ paddingRight: 4 }}
-                    ItemSeparatorComponent={() => <View style={{ width: 20 }} />}
-                    onScroll={(event) => {
-                      railScrollOffsetRef.current = event.nativeEvent.contentOffset.x;
+                <View style={styles.floatingCard}>
+                  <Text
+                    style={{
+                      fontFamily: FONTS.LEXEND_LIGHT,
+                      fontSize: 13,
+                      letterSpacing: 2,
+                      color: C.text,
+                      marginBottom: 14,
                     }}
-                    scrollEventThrottle={16}
-                    renderItem={({ item }: { item: any }) => {
-                      const uri = String(item.videoUri ?? "").trim();
-                      const thumb = String(item.imageUri ?? "").trim();
-                      const caption = String(item.caption ?? "Untitled");
+                  >
+                    FIRST CONNECT
+                  </Text>
+                  <View
+                    style={{ flex: 1, marginTop: -12, marginHorizontal: -pagePad, paddingTop: 20, paddingBottom: 18, paddingHorizontal: pagePad, backgroundColor: profile.customBackgroundColor || "rgba(255,255,255,0.72)" }}
+                  >
+                    <FlatList
+                      ref={railRef}
+                      data={videos}
+                      horizontal
+                      keyExtractor={(item: any) => String(item.id ?? `${item.slot ?? "x"}_${item.videoUri ?? ""}`)}
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{ paddingRight: 4 }}
+                      ItemSeparatorComponent={() => <View style={{ width: 20 }} />}
+                      onScroll={(event) => {
+                        railScrollOffsetRef.current = event.nativeEvent.contentOffset.x;
+                      }}
+                      scrollEventThrottle={16}
+                      renderItem={({ item }: { item: any }) => {
+                        const uri = String(item.videoUri ?? "").trim();
+                        const thumb = String(item.imageUri ?? "").trim();
+                        const caption = String(item.caption ?? "Untitled");
 
-                      return (
-                        <Pressable
-                          onPress={() => openVideo(uri)}
+                        return (
+                          <Pressable
+                            onPress={() => openVideo(uri)}
+                            style={{
+                              width: railCardWidth,
+                              borderWidth: 1,
+                              borderColor: "#9eb2bf",
+                              borderRadius: 18,
+                              backgroundColor: C.card,
+                              overflow: "hidden",
+                            }}
+                          >
+                            <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 16 }}>
+                              <Text
+                                style={{
+                                  fontFamily: FONTS.CRIMSON_REGULAR,
+                                  fontSize: 18,
+                                  lineHeight: 25,
+                                  color: C.text,
+                                }}
+                              >
+                                {caption}
+                              </Text>
+                            </View>
+
+                            <View style={{ aspectRatio: 0.98, backgroundColor: "#e8ecef" }}>
+                              {!!thumb ? <Image source={{ uri: thumb }} style={{ width: "100%", height: "100%" }} /> : null}
+                            </View>
+                          </Pressable>
+                        );
+                      }}
+                      ListEmptyComponent={
+                        <View
                           style={{
-                            width: railCardWidth,
+                            width: 320,
+                            minHeight: 260,
                             borderWidth: 1,
-                            borderColor: "#9eb2bf",
+                            borderColor: C.border,
                             borderRadius: 18,
-                            backgroundColor: C.card,
-                            overflow: "hidden",
+                            backgroundColor: C.bg,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: 24,
                           }}
                         >
-                          <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 16 }}>
-                            <Text
-                              style={{
-                                fontFamily: FONTS.CRIMSON_REGULAR,
-                                fontSize: 18,
-                                lineHeight: 25,
-                                color: C.text,
-                              }}
-                            >
-                              {caption}
-                            </Text>
-                          </View>
+                          <Text
+                            style={{
+                              fontFamily: FONTS.LEXEND_LIGHT,
+                              fontSize: 14,
+                              lineHeight: 21,
+                              color: C.subtle,
+                              textAlign: "center",
+                            }}
+                          >
+                            No response videos yet.
+                          </Text>
+                        </View>
+                      }
+                    />
 
-                          <View style={{ aspectRatio: 0.98, backgroundColor: "#e8ecef" }}>
-                            {!!thumb ? <Image source={{ uri: thumb }} style={{ width: "100%", height: "100%" }} /> : null}
-                          </View>
-                        </Pressable>
-                      );
-                    }}
-                    ListEmptyComponent={
+                    {videos.length > 0 ? (
                       <View
                         style={{
-                          width: 320,
-                          minHeight: 260,
-                          borderWidth: 1,
-                          borderColor: C.border,
-                          borderRadius: 18,
-                          backgroundColor: C.bg,
-                          alignItems: "center",
+                          marginTop: 9,
+                          flexDirection: "row",
                           justifyContent: "center",
-                          padding: 24,
+                          gap: 12,
+                          marginLeft: isCompact ? 0 : 340,
                         }}
                       >
-                        <Text
+                        <Pressable
+                          onPress={() => scrollRail(-1)}
                           style={{
-                            fontFamily: FONTS.LEXEND_LIGHT,
-                            fontSize: 14,
-                            lineHeight: 21,
-                            color: C.subtle,
-                            textAlign: "center",
+                            width: 34,
+                            height: 34,
+                            borderRadius: 999,
+                            borderWidth: 1,
+                            borderColor: "#9eb2bf",
+                            backgroundColor: C.card,
+                            alignItems: "center",
+                            justifyContent: "center",
                           }}
                         >
-                          No response videos yet.
-                        </Text>
+                          <Feather name="arrow-left" size={14} color={C.subtle} />
+                        </Pressable>
+
+                        <Pressable
+                          onPress={() => scrollRail(1)}
+                          style={{
+                            width: 34,
+                            height: 34,
+                            borderRadius: 999,
+                            borderWidth: 1,
+                            borderColor: "#9eb2bf",
+                            backgroundColor: C.card,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Feather name="arrow-right" size={14} color={C.subtle} />
+                        </Pressable>
                       </View>
-                    }
-                  />
-
-                  {videos.length > 0 ? (
-                    <View
-                      style={{
-                        marginTop: 9,
-                        flexDirection: "row",
-                        justifyContent: "center",
-                        gap: 12,
-                        marginLeft: isCompact ? 0 : 340,
-                      }}
-                    >
-                      <Pressable
-                        onPress={() => scrollRail(-1)}
-                        style={{
-                          width: 34,
-                          height: 34,
-                          borderRadius: 999,
-                          borderWidth: 1,
-                          borderColor: "#9eb2bf",
-                          backgroundColor: C.card,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Feather name="arrow-left" size={14} color={C.subtle} />
-                      </Pressable>
-
-                      <Pressable
-                        onPress={() => scrollRail(1)}
-                        style={{
-                          width: 34,
-                          height: 34,
-                          borderRadius: 999,
-                          borderWidth: 1,
-                          borderColor: "#9eb2bf",
-                          backgroundColor: C.card,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Feather name="arrow-right" size={14} color={C.subtle} />
-                      </Pressable>
-                    </View>
-                  ) : null}
-                </View>
+                    ) : null}
+                  </View>
+                </View> {/* end floating card view close */}
               </View>
 
               <View
