@@ -1595,6 +1595,9 @@ export function RolesSection(props: {
             {!!role.salary.trim() && (
               <LLightText style={styles.rowSub}>{role.salary}</LLightText>
             )}
+            {!!role.location.trim() && (
+              <LLightText style={styles.rowSub}>{role.location}</LLightText> //added location bc this is important
+            )}
             {role.skills.length > 0 && (
               <LLightText style={styles.rowSub} numberOfLines={1}>
                 {role.skills.join(", ")}
@@ -1641,6 +1644,14 @@ export function RoleFormModal(props: {
   const [roleTempSelected, setRoleTempSelected] = React.useState<Set<string>>(new Set());
   const [roleCustomOptions, setRoleCustomOptions] = React.useState<string[]>([]);
   const [roleCustomInput, setRoleCustomInput] = React.useState("");
+
+  //location - call city modal
+  const [location, setLocation] = React.useState("");
+  const [locationPickerVisible, setLocationPickerVisible] = React.useState(false);
+  const [locationSearch, setLocationSearch] = React.useState("");
+  const [selectedLocation, setSelectedLocation] = React.useState("");
+  const [selectedTempLocation, setLocationTempSelected] = React.useState<Set<string>>(new Set());
+
 
   const [postUrl, setPostUrl] = React.useState("");
   const [workType, setWorkType] = React.useState("");
@@ -1720,6 +1731,10 @@ Added missing roleCustomOptions and setRoleCustomInput props
       setSkillSearch("");
       setSkillCustomInput("");
 
+      setLocation(initialRole?.location ?? "");
+      setLocationSearch("");
+      setLocationTempSelected(new Set(initialRole?.location ? [initialRole.location] : []));
+
       setPostUrl(initialRole?.postUrl ?? "");
       setWorkType(initialRole?.workType ?? "");
       setRelocation(initialRole?.isRelocationCovered ?? false); //if not true, auto false
@@ -1728,6 +1743,7 @@ Added missing roleCustomOptions and setRoleCustomInput props
     visible,
     initialRole?.title,
     initialRole?.salary,
+    initialRole?.location,
     initialRole?.workType,
     initialRole?.skills,
     initialRole?.isRelocationCovered,
@@ -1744,6 +1760,7 @@ Added missing roleCustomOptions and setRoleCustomInput props
       salary: salary.trim(),
       postedAt: initialRole?.postedAt ?? new Date().toISOString().slice(0, 10),
       skills: selectedSkills,
+      location: location,
       postUrl: postUrl.trim(),
       workType: workType.trim(),
       isRelocationCovered: false,
@@ -1877,6 +1894,33 @@ Added missing roleCustomOptions and setRoleCustomInput props
             <Pressable
               onPress={() => {
                 setSkillTempSelected(new Set(selectedSkills));
+                setSkillsPickerVisible(true);
+              }}
+              style={[
+                styles.input,
+                {
+                  marginBottom: 14,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                },
+              ]}
+            >
+              <LLightText
+                style={{ color: selectedSkills.length ? ui.text : ui.hint, flex: 1, paddingRight: 8 }}
+                numberOfLines={1}
+              >
+                {selectedSkills.length
+                  ? selectedSkills.join(", ")
+                  : "Select skills"}
+              </LLightText>
+              <LLightText style={styles.chevron}>›</LLightText>
+            </Pressable>
+
+            <LLightText style={styles.label}>Position Location</LLightText>
+            <Pressable
+              onPress={() => {
+                setLocationTempSelected(new Set(selectedLocation));
                 setSkillsPickerVisible(true);
               }}
               style={[

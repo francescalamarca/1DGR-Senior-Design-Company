@@ -1,4 +1,7 @@
 /**
+ * 
+ * THIS IS MOBILE VIEW DO NOT TOUCH THIS JUST CHANGE IT BASED ON WHAT THE APP VERSION IS LOOKING LIKE
+ * 
  * Profile Screen (V2 Visual Redesign)
  * - Preserves: avatar press-to-play, slot-based videos, name toggle logic, live share sheet, fetch/refresh.
  * - Visual changes only unless explicitly noted.

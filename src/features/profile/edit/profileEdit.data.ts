@@ -15,6 +15,7 @@ export function mapDraftToApiPayload(draft: DraftProfile) {
   return {
     company_name: draft.companyName ?? "",
     industry: draft.industry ?? "",
+    headquarters: draft.headquarters ?? "",
     business_age: draft.businessAge ?? "",
     work_type: draft.workType ?? "",
     locations: Array.isArray(draft.locations) ? draft.locations: [], //an array of all locations the company is based out of

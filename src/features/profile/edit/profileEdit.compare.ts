@@ -33,6 +33,7 @@ import type { Profile, OpenRole } from "@/src/features/profile/profile.types";
 export type DraftProfile = Profile & {
   companyName?: string;
   industry?: string; //company should only be able to be in one industry at a time
+  headquarters?: string;
   businessAge?: string;
   workType?: string;
   locations?: string[]; //this is an array of strings that will be populated by the companies choice of cities that they operate in
@@ -54,6 +55,7 @@ export function normalizeForCompare(p: DraftProfile) {
   return {
     companyName: (p.companyName ?? "").trim(),
     industry: (Array.isArray(p.industry) ? (p.industry[0] ?? "") : (p.industry ?? "")).trim(),
+    headquarters: (p.headquarters ?? "").trim(),
     businessAge:(p.businessAge ?? "").trim(),
     workType: (p.workType ?? "").trim(),
     locations: (p.locations ?? []).map((s) => s.trim()).filter(Boolean).sort(), //same as the coreValues array functionality for checking change

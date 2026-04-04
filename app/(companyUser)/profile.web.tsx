@@ -1,3 +1,16 @@
+/*
+THIS IS THE WEB BASED PROFILE APPEARANCE, WILL LOOK SLIGHTLY DIFFERENT THAN MOBILE
+company name section
+- mission
+- headquarters location with the pin emoji
+- maybe industry would be good to include here?
+About Us
+- have the about below the mission section
+- this will have all information in the about except for current employees which will be in the side bar
+- may try both views with and without the side bar to see what looks cleanest
+*/
+
+
 import { ProfileBrandWordmark } from "@/src/components/ProfileBrandWordmark";
 import { WebFooter } from "@/src/components/WebFooter";
 import { RequireUserType } from "@/src/components/RequireUserType";
@@ -48,6 +61,7 @@ const TOP_NAV_ITEMS = [
   { key: "record", label: "Record", route: "/(companyUser)/record", icon: "video", iconSet: "feather" },
   { key: "profile", label: "Profile", route: "/(companyUser)/profile", icon: "user", iconSet: "feather" },
 ] as const;
+
 
 /*
 Array (string[]): renders each item as its own Text line with spacing between them (e.g. a list of skills or education entries)
@@ -137,6 +151,7 @@ export default function ProfileWebScreen() {
   const { width, height: windowHeight } = useWindowDimensions();
   const railRef = useRef<FlatList<any> | null>(null);
   const railScrollOffsetRef = useRef(0);
+  const scrollViewRef = useRef<any>(null);
   const {
     profile,
     copyEmail,
@@ -146,6 +161,7 @@ export default function ProfileWebScreen() {
     fetchLatestProfile,
     displayName,
     missionStatement,
+    headquarters,
     benefitsSummary,
     coreValues,
     industry,
@@ -375,7 +391,7 @@ export default function ProfileWebScreen() {
                       </Text>
                     </Pressable>
 
-                    {!!missionStatement && (
+                    {(!!missionStatement && !!headquarters) && (
                       <Text
                         style={{
                           fontFamily: FONTS.LEXEND_LIGHT,
@@ -385,12 +401,12 @@ export default function ProfileWebScreen() {
                           marginTop: 6,
                         }}
                       >
-                        {missionStatement}
+                        {missionStatement} - 📍 {headquarters}
                       </Text>
                     )}
 
                   </View>
-
+                  {/* This is where the side window in the web view is to get settings, edit, library, etc*/}
                   <View
                     style={{
                       width: isCompact ? "100%" : 132,
@@ -448,12 +464,24 @@ export default function ProfileWebScreen() {
                       <Feather name="refresh-cw" size={18} color={C.text} />
                     </Pressable>
 
-                  </View>
+                  </View> {/* close view of the controls on the right */}
                 </View>
               </View>
 
               {/* moving the about page here with all information shown*/}
-              
+               <View style={{ flex: 1, flexDirection: "column", position: "relative" }}>
+                <Text
+                  style={{
+                    fontFamily: FONTS.LEXEND_LIGHT,
+                    fontSize: 13,
+                    letterSpacing: 2,
+                    color: C.text,
+                    marginBottom: 14,
+                  }}
+                >
+                  About Us
+                </Text>
+              </View>
               
               <View style={{ flex: 1, flexDirection: "column", position: "relative" }}>
                 <Text
@@ -630,7 +658,7 @@ export default function ProfileWebScreen() {
                       paddingLeft: 35,
                       paddingRight: 22,
                       paddingVertical: 20,
-                      borderBottomWidth: sidebarOpen ? 1 : 0,
+                      borderBottomWidth: sidebarOpen ? 1 : 1, //cheating the system here because the whole side bar functionality is already set, the only option is to be open
                       borderBottomColor: "rgba(214, 221, 226, 0.9)",
                       backgroundColor: "rgba(255,255,255,0.72)",
                       flexDirection: "row",
@@ -647,16 +675,45 @@ export default function ProfileWebScreen() {
                           color: C.text,
                         }}
                       >
-                        ABOUT US
+                        CONTACT US
                       </Text>
+
+                      <View style={{ paddingLeft: 1, paddingRight: 22, paddingTop: 20, paddingBottom: 28, gap: 20 }}>
+
+                      <View style={{ gap: 20 }}>
+                        <SidebarLink label="Email" value={companyEmail} onPress={copyEmail} disabled={!companyEmail} textColor={C.text} mutedColor={C.subtle} />
+                        <SidebarLink label="Phone" value={companyPhone} onPress={copyPhone} disabled={!companyPhone} textColor={C.text} mutedColor={C.subtle} />
+                        {showUrl1 ? (
+                          <SidebarLink
+                            label={contactUrl1Label}
+                            value={contactUrl1}
+                            onPress={() => copyUrl(contactUrl1)}
+                            disabled={!contactUrl1}
+                            textColor={C.text}
+                            mutedColor={C.subtle}
+                          />
+                        ) : null}
+                        {showUrl2 ? (
+                          <SidebarLink
+                            label={contactUrl2Label}
+                            value={contactUrl2}
+                            onPress={() => copyUrl(contactUrl2)}
+                            disabled={!contactUrl2}
+                            textColor={C.text}
+                            mutedColor={C.subtle}
+                          />
+                        ) : null}
+                      </View>
 
                     </View>
 
-                    <Feather
+                    </View>
+
+                    {/* <Feather
                       name={sidebarOpen ? "chevron-up" : "chevron-down"}
                       size={20}
                       color={C.text}
-                    />
+                    /> */}
                   </Pressable>
 
                   <Animated.View
@@ -689,39 +746,10 @@ export default function ProfileWebScreen() {
                 </Animated.View>
 
                 {/* Contact links and action buttons — always visible regardless of collapse state */}
-                <View style={{ paddingLeft: 35, paddingRight: 22, paddingTop: 20, paddingBottom: 28, gap: 20 }}>
-                  <View style={{ height: 1, backgroundColor: C.border }} />
-
-                  <View style={{ gap: 20 }}>
-                    <SidebarLink label="Email" value={companyEmail} onPress={copyEmail} disabled={!companyEmail} textColor={C.text} mutedColor={C.subtle} />
-                    <SidebarLink label="Phone" value={companyPhone} onPress={copyPhone} disabled={!companyPhone} textColor={C.text} mutedColor={C.subtle} />
-                    {showUrl1 ? (
-                      <SidebarLink
-                        label={contactUrl1Label}
-                        value={contactUrl1}
-                        onPress={() => copyUrl(contactUrl1)}
-                        disabled={!contactUrl1}
-                        textColor={C.text}
-                        mutedColor={C.subtle}
-                      />
-                    ) : null}
-                    {showUrl2 ? (
-                      <SidebarLink
-                        label={contactUrl2Label}
-                        value={contactUrl2}
-                        onPress={() => copyUrl(contactUrl2)}
-                        disabled={!contactUrl2}
-                        textColor={C.text}
-                        mutedColor={C.subtle}
-                      />
-                    ) : null}
-                  </View>
-
-                </View>
 
               </View>
             </View>
-          </View>
+          </View> {/* close view of the main page formatting, overall container*/}
         </ScrollView>
         {/* this had to be placed outside of the scrollview or else it will move with it, placed it in a reusable component for easy find and edit*/}
         <WebFooter

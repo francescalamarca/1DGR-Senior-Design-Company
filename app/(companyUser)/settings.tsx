@@ -679,8 +679,8 @@ export default function SettingsScreen() {
   }));
 
   const [editingAccountInfo, setEditingAccountInfo] = useState(false);
-  const [draftEmail, setDraftEmail] = useState(profile.email ?? "");
-  const [draftPhone, setDraftPhone] = useState(() => formatPhone(profile.phoneNumber ?? ""));
+  const [draftEmail, setDraftEmail] = useState(profile.companyEmail ?? "");
+  const [draftPhone, setDraftPhone] = useState(() => formatPhone(profile.companyPhone ?? ""));
   const profileContactUrl1 = String((profile as any).contactUrl1 ?? "");
   const profileContactUrl2 = String((profile as any).contactUrl2 ?? "");
   const [draftContactUrl1, setDraftContactUrl1] = useState(profileContactUrl1);
@@ -710,15 +710,11 @@ export default function SettingsScreen() {
 
   useFocusEffect(
     useCallback(() => {
-      setDraftEmail(profile.email ?? "");
-      setDraftPhone(formatPhone(profile.phoneNumber ?? ""));
       setDraftContactUrl1(profileContactUrl1);
       setDraftContactUrl2(profileContactUrl2);
       setDraftContactUrl1Label(profileContactUrl1Label);
       setDraftContactUrl2Label(profileContactUrl2Label);
     }, [
-      profile.email,
-      profile.phoneNumber,
       profileContactUrl1,
       profileContactUrl2,
       profileContactUrl1Label,
@@ -738,9 +734,6 @@ export default function SettingsScreen() {
       showUrl2: false,
     };
 
-    const emailChanged =
-      (draftEmail.trim().toLowerCase() || "") !== ((profile.email ?? "").trim().toLowerCase() || "");
-    const phoneChanged = (draftPhone.trim() || "") !== (formatPhone(profile.phoneNumber ?? "").trim() || "");
     const url1Changed =
       (draftContactUrl1.trim() || "") !== (profileContactUrl1.trim() || "");
     const url2Changed =
@@ -753,8 +746,6 @@ export default function SettingsScreen() {
     return (
       JSON.stringify(a) !== JSON.stringify(b) ||
       JSON.stringify(c) !== JSON.stringify(d) ||
-      emailChanged ||
-      phoneChanged ||
       url1Changed ||
       url2Changed ||
       url1LabelChanged ||
@@ -764,10 +755,6 @@ export default function SettingsScreen() {
     draftSettings,
     profile.nameDisplaySettings,
     profile.contactDisplaySettings,
-    profile.email,
-    profile.phoneNumber,
-    draftEmail,
-    draftPhone,
     draftContactUrl1,
     draftContactUrl2,
     draftContactUrl1Label,
@@ -783,8 +770,6 @@ export default function SettingsScreen() {
   }
 
   function cancelAccountInfo() {
-    setDraftEmail(profile.email ?? "");
-    setDraftPhone(formatPhone(profile.phoneNumber ?? ""));
     setDraftContactUrl1(profileContactUrl1);
     setDraftContactUrl2(profileContactUrl2);
     setDraftContactUrl1Label(profileContactUrl1Label);
@@ -825,8 +810,6 @@ export default function SettingsScreen() {
               },
           });
 
-          setDraftEmail(profile.email ?? "");
-          setDraftPhone(formatPhone(profile.phoneNumber ?? ""));
           setDraftContactUrl1(profileContactUrl1);
           setDraftContactUrl2(profileContactUrl2);
           setDraftContactUrl1Label(profileContactUrl1Label);
@@ -864,8 +847,6 @@ export default function SettingsScreen() {
                 Authorization: accessToken,
               },
               body: JSON.stringify({
-                email: draftEmail.trim().toLowerCase(),
-                phoneNumber: draftPhone.trim(),
                 urls: [
                   { title: draftContactUrl1Label, url: draftContactUrl1 },
                   { title: draftContactUrl2Label, url: draftContactUrl2 }
@@ -880,8 +861,6 @@ export default function SettingsScreen() {
               ...p,
               nameDisplaySettings: draftSettings.nameDisplaySettings,
               contactDisplaySettings: draftSettings.contactDisplaySettings,
-              email: draftEmail.trim().toLowerCase(),
-              phoneNumber: draftPhone.trim(),
               contactUrl1: draftContactUrl1.trim(),
               contactUrl2: draftContactUrl2.trim(),
               contactUrl1Label: draftContactUrl1Label.trim() || "URL 1",
@@ -978,38 +957,7 @@ export default function SettingsScreen() {
                 </View>
               </View>
 
-              {/* 4) Email input row */}
-              <View style={[styles.linkItemWrap, styles.linkItemDivider]}>
-                <InputRowLL
-                  label="Email"
-                  value={draftEmail}
-                  placeholder="you@email.com"
-                  onChangeText={setDraftEmail}
-                  visible={editingAccountInfo}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  textContentType="emailAddress"
-                  autoComplete="email"
-                />
-              </View>
-
-              {/* 5) Phone input row */}
-              <View style={[styles.linkItemWrap, styles.linkItemDivider]}>
-                <InputRowLL
-                  label="Phone number"
-                  value={draftPhone}
-                  placeholder="(555)-555-5555"
-                  onChangeText={(t) => setDraftPhone(formatPhone(t))}
-                  visible={editingAccountInfo}
-                  keyboardType="phone-pad"
-                  autoCapitalize="none"
-                  textContentType="telephoneNumber"
-                  autoComplete="tel"
-                  maxLength={14}
-                />
-              </View>
-
-              {/* 6) URL 1 title row */}
+              {/* 4) URL 1 title row */}
               <View style={[styles.linkItemWrap, styles.linkItemDivider]}>
                 <InputRowLL
                   label="URL 1 title"

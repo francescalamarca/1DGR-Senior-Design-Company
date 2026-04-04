@@ -87,7 +87,7 @@ export function useCompanyProfileScreenData() {
     const didFetchOnceRef = useRef(false);
   
     const displayName = String(profile.companyName ?? "").trim() || "Company";
-  
+    const headquarters = String(profile.headquarters ?? "").trim() || "Headquarters";
     const companyEmail = String(profile.companyEmail ?? "").trim();
     const companyPhone = String(profile.companyPhone ?? "").trim();
     const contactUrl1 = String((profile as any).contactUrl1 ?? "").trim();
@@ -140,8 +140,8 @@ export function useCompanyProfileScreenData() {
         setProfile((prev: any) => ({
           ...prev,
           companyName: user?.company_name || user?.companyName || prev.companyName || "",
-          email: user?.email || prev.email || "",
-          phoneNumber: user?.phone_number || prev.phoneNumber || "",
+          companyEmail: user?.company_email || prev.companyEmail || "",
+          companyPhone: user?.company_phone || prev.companyPhone || "",
           missionStatement: user?.mission_statement || user?.missionStatement || prev.missionStatement || "",
           companyCulture: user?.company_culture || user?.companyCulture || prev.companyCulture || "",
           benefitsSummary: user?.benefits_summary || user?.benefitsSummary || prev.benefitsSummary || "",
@@ -217,6 +217,7 @@ export function useCompanyProfileScreenData() {
       openRoles,
       industry,
       locations,
+      headquarters,
       videos,
       companyEmail,
       companyPhone,

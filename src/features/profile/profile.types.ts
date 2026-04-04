@@ -22,6 +22,7 @@ export type OpenRole = {
   id: string;
   title: string;
   salary: string;
+  location: string;
   postedAt: string; // ISO date string, e.g. "2024-03-22"
   skills: string[]; // this will be populated by a dropdown
   postUrl: string;
@@ -64,6 +65,7 @@ export type ContactDisplaySettings = {
 };
 
 export type Profile = {
+  headquarters: any;
   companyName: string;
 
   missionStatement: string;
@@ -98,8 +100,6 @@ export type Profile = {
 
   nameDisplaySettings: NameDisplaySettings;
 
-  phoneNumber: string;
-  email: string;
   //linkedinUrl: string; this may not apply here
   contactUrl1?: string;
   contactUrl2?: string;
