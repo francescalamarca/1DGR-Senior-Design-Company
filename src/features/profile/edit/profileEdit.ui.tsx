@@ -27,6 +27,7 @@ import { useUI, useEditStyles } from "./profileEdit.styles";
 import { Route } from "expo-router/build/Route";
 import { router } from "expo-router";
 import { styleText } from "node:util";
+import { useProfileEditController } from "./useProfileEditController";
 
 // ---------- Types the screen expects ----------
 export type IndustryRow =
@@ -527,17 +528,18 @@ export function VideoLibrarySection(props: {
         Upload a new video + thumbnail + caption into your library.
       </LLightText>
 
+      <Pressable
+          onPress={() => router.replace("/(companyUser)/video-library")} //made this so that the back will return to the last found URL
+          style={[styles.pill, { marginTop: 10 }]}
+        >
+            See Current Video Library
+        </Pressable>
+
       <View style={[styles.inlineCard, { marginTop: 14 }]}>
         <LLightText style={{ fontSize: 13, opacity: 0.7 }}>
           Step 1 — Pick a video
         </LLightText>
 
-        <Pressable
-          onPress={() => router.replace("/(companyUser)/video-library")} //made this so that the back will return to the last found URL
-          style={styles.sectionHelper}
-        >
-            See Current Video Library
-        </Pressable>
         <Pressable
           onPress={onPickVideo}
           style={[styles.pill, { marginTop: 10 }]}
@@ -1650,7 +1652,8 @@ export function RoleFormModal(props: {
   const [locationPickerVisible, setLocationPickerVisible] = React.useState(false);
   const [locationSearch, setLocationSearch] = React.useState("");
   const [selectedLocation, setSelectedLocation] = React.useState("");
-  const [selectedTempLocation, setLocationTempSelected] = React.useState<Set<string>>(new Set());
+  const [selectedTempLocation, setLocationTempSelected] = React.useState("");
+  const { filteredCities } = useProfileEditController();
 
 
   const [postUrl, setPostUrl] = React.useState("");
@@ -1731,9 +1734,11 @@ Added missing roleCustomOptions and setRoleCustomInput props
       setSkillSearch("");
       setSkillCustomInput("");
 
+      //for selecting the initial location
       setLocation(initialRole?.location ?? "");
       setLocationSearch("");
-      setLocationTempSelected(new Set(initialRole?.location ? [initialRole.location] : []));
+      setLocationTempSelected(initialRole?.location ?? "");
+      setSelectedLocation(initialRole?.location ?? "")
 
       setPostUrl(initialRole?.postUrl ?? "");
       setWorkType(initialRole?.workType ?? "");
@@ -1917,33 +1922,6 @@ Added missing roleCustomOptions and setRoleCustomInput props
               <LLightText style={styles.chevron}>›</LLightText>
             </Pressable>
 
-            <LLightText style={styles.label}>Position Location</LLightText>
-            <Pressable
-              onPress={() => {
-                setLocationTempSelected(new Set(selectedLocation));
-                setSkillsPickerVisible(true);
-              }}
-              style={[
-                styles.input,
-                {
-                  marginBottom: 14,
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                },
-              ]}
-            >
-              <LLightText
-                style={{ color: selectedSkills.length ? ui.text : ui.hint, flex: 1, paddingRight: 8 }}
-                numberOfLines={1}
-              >
-                {selectedSkills.length
-                  ? selectedSkills.join(", ")
-                  : "Select skills"}
-              </LLightText>
-              <LLightText style={styles.chevron}>›</LLightText>
-            </Pressable>
-
             <SkillsPickerModal
               visible={skillsPickerVisible}
               skillSearch={skillSearch}
@@ -1975,6 +1953,45 @@ Added missing roleCustomOptions and setRoleCustomInput props
                 setSkillsPickerVisible(false);
               }}
             />
+
+            <LLightText style={styles.label}>Position Location</LLightText>
+            <Pressable
+              onPress={() => {
+                setLocationTempSelected(location); //needed to be single string picker, only a string gets passed in not a set of them
+                setLocationPickerVisible(true);
+              }}
+              style={[
+                styles.input,
+                {
+                  marginBottom: 14,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                },
+              ]}
+            >
+              <LLightText style={{ color: location ? ui.text : ui.hint }}>
+                {location || "Select location where position is being offered."}
+              </LLightText>
+            </Pressable>
+
+            <CityPickerModal
+              visible={locationPickerVisible}
+              title="Role Location"
+              citySearch={locationSearch}
+              setCitySearch={setLocationSearch}
+              data={filteredCities}
+              selectedLabel={location}        // single string
+              // no selectedLabels prop
+              onSelect={(label) => {
+                setLocation(label);
+                setLocationPickerVisible(false); // auto-close on pick
+              }}
+              canApply={true}
+              onClose={() => setLocationPickerVisible(false)}
+              onApply={() => setLocationPickerVisible(false)}
+            />
+
 
             <LLightText style={styles.label}>Work Type</LLightText>
             <Pressable

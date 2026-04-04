@@ -817,6 +817,12 @@ export default function ProfileWebScreen() {
                         <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: TEXT, flex: 1 }}>{role.workType}</Text>
                       </View>
                     )}
+                    {!!role.location && (
+                      <View style={{ flexDirection: "row", gap: 8 }}>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Location</Text>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: TEXT, flex: 1 }}>📍{role.location}</Text>
+                      </View>
+                    )}
                     {!!role.salary && (
                       <View style={{ flexDirection: "row", gap: 8 }}>
                         <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Salary</Text>
