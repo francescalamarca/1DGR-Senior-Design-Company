@@ -154,7 +154,6 @@ export default function ProfileWebScreen() {
                 pagePad={pagePad}
                 isCompact={isCompact}
                 sidebarWidth={sidebarWidth}
-                missionStatement={missionStatement}
                 coreValues={coreValues}
                 industry={industry}
                 benefitsSummary={benefitsSummary}

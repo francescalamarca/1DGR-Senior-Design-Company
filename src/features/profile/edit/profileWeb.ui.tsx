@@ -336,7 +336,6 @@ export function AboutUsCard({
   pagePad,
   isCompact,
   sidebarWidth,
-  missionStatement,
   coreValues,
   industry,
   benefitsSummary,
@@ -347,7 +346,6 @@ export function AboutUsCard({
   pagePad: number;
   isCompact: boolean;
   sidebarWidth: number;
-  missionStatement: string;
   coreValues: string[];
   industry: string;
   benefitsSummary: string;
@@ -358,7 +356,6 @@ export function AboutUsCard({
   const C = useDynColors();
 
   const rows = [
-    { label: "Mission Statement", value: missionStatement || "—" },
     { label: "Core Values",       value: coreValues.length ? coreValues.join(", ") : "—" },
     { label: "Industry",          value: industry || "—" },
     { label: "Benefits",          value: benefitsSummary || "—" },
@@ -428,6 +425,25 @@ export function AboutUsCard({
   );
 }
 
+export function OpenRolesCard({
+  pagePad,
+  isCompact,
+  sidebarWidth,
+  openRoles,
+  onOpenRolesModal,
+}: {
+  pagePad: number;
+  isCompact: boolean;
+  sidebarWidth: number;
+  openRoles: any[];
+  onOpenRolesModal: () => void;
+}) {
+  const C = useDynColors();
+  return (
+    <>
+    </>
+  );
+}
 // ─────────────────────────────────────────────────────────────────────────────
 // FirstConnectCard  (horizontal video rail)
 // ─────────────────────────────────────────────────────────────────────────────
