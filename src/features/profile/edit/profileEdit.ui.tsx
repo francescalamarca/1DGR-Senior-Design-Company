@@ -1571,17 +1571,26 @@ export function RolePickerModal(props: {
 
 export function RolesSection(props: {
   roles: OpenRole[];
+  showRoles: boolean;
+  onToggleShowRoles: (val: boolean) => void;
   onPressAdd: () => void;
   onRemove: (id: string) => void;
   onPressEdit: (role: OpenRole) => void;
 }) {
   const ui = useUI();
   const styles = useEditStyles();
-  const { roles, onPressAdd, onRemove, onPressEdit } = props;
+  const { roles, onPressAdd, onRemove, onPressEdit, showRoles, onToggleShowRoles } = props;
 
   return (
     <>
+      <View style={{flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
       <LLightText style={styles.sectionTitle}>Open Roles</LLightText>
+        <Switch 
+            value={ showRoles ?? true}
+            onValueChange={onToggleShowRoles}
+            trackColor={{ false: ui.hint, true: ui.text }}
+        />
+      </View>
       <LLightText style={styles.sectionHelper}>
         Add positions you are actively hiring for.
       </LLightText>

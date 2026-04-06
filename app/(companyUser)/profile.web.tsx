@@ -337,7 +337,7 @@ export default function ProfileWebScreen() {
                 borderTopColor: C.border,
                 position: "relative",
               }}
-            >
+            > {/* side bar start of formatting */}
               <View
                 style={{
                   flex: 1,
@@ -481,6 +481,10 @@ export default function ProfileWebScreen() {
                   }}
                 >
                   ABOUT US
+                </Text>
+
+                <Text style={styles.header}>
+                  Company Culture
                 </Text>
               </View>
 
