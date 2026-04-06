@@ -13,7 +13,7 @@ import type { OpenRole } from "@/src/features/profile/profile.types";
 import { INDUSTRIES } from "./profileEdit.constants";
 import { mapDraftToApiPayload } from "./profileEdit.data";
 import { filterCitiesByQuery, mapCitiesFromJson } from "./profileEdit.mappers"; //label is defined in this map function
-import { buildCdnUrlFromKey, pickImageFromLibrary, pickVideoFromLibrary, removeBackgroundAndSave, uploadToS3 } from "./profileEdit.media";
+import { buildCdnUrlFromKey, downloadImageToCache, pickImageFromLibrary, pickVideoFromLibrary, uploadToS3 } from "./profileEdit.media";
 import {type CityRow, type IndustryRow } from "./profileEdit.ui";
 
 
@@ -286,7 +286,6 @@ function updateRole(role: OpenRole) {
       const uri = await pickImageFromLibrary();
       if (!uri) return;
 
-      // Show original as preview immediately while processing
       setAvatarLocalUri(uri);
 
       if (!accessToken) {
@@ -294,12 +293,7 @@ function updateRole(role: OpenRole) {
         return;
       }
 
-      // Remove background, then upload the processed PNG to S3
-      const processedUri = await removeBackgroundAndSave({ localUri: uri });
-      const uploadUri = processedUri ?? uri;
-      if (processedUri) setAvatarLocalUri(processedUri);
-
-      const remoteKey = await uploadToS3({ localUri: uploadUri, type: "image", accessToken });
+      const remoteKey = await uploadToS3({ localUri: uri, type: "image", accessToken });
       if (remoteKey) setDraft((p) => ({ ...p, avatarImageUri: remoteKey }));
     } catch (e) {
       console.error(e);
@@ -334,17 +328,17 @@ function updateRole(role: OpenRole) {
 
     try {
       setPickingAvatarImage(true);
-      const processedUri = await removeBackgroundAndSave({ imageUrl: trimmed });
-      if (!processedUri) {
-        Alert.alert("Failed", "Could not process logo from that URL.");
+      const localUri = await downloadImageToCache(trimmed);
+      if (!localUri) {
+        Alert.alert("Failed", "Could not load image from that URL.");
         return;
       }
-      setAvatarLocalUri(processedUri);
-      const remoteKey = await uploadToS3({ localUri: processedUri, type: "image", accessToken });
+      setAvatarLocalUri(localUri);
+      const remoteKey = await uploadToS3({ localUri, type: "image", accessToken });
       if (remoteKey) setDraft((p) => ({ ...p, avatarImageUri: remoteKey }));
     } catch (e) {
       console.error(e);
-      Alert.alert("Logo processing failed", "Please try again.");
+      Alert.alert("Failed", "Could not load image from that URL.");
     } finally {
       setPickingAvatarImage(false);
     }
