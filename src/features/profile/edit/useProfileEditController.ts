@@ -134,7 +134,12 @@ export function useProfileEditController() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   function handleCancel() {
-    router.navigate("/(companyUser)/profile");
+    // Navigate first — always, regardless of token state.
+    if (Platform.OS === "web") {
+      router.replace("/(companyUser)/web-profile" as any);
+    } else {
+      router.navigate("/(companyUser)/profile" as any);
+    }
   }
 
   function handleSave() {
