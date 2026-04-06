@@ -187,20 +187,28 @@ export default function ProfileEditScreen() {
           onSelect={selectBackgroundColor}
         />
 
+        <MissionSection mission={draft.missionStatement ?? ""} onChangeMission={(v: string) => setDraft((p) => ({ ...p, missionStatement: v }))} />
+
         <CoreValuesSection
           coreValues={draft.coreValues ?? []}
           onPressAdd={openCoreValuesPicker}
           onRemove={removeCoreValue}
+          showCoreValues={draft.showCoreValues ?? true}
+          onToggleShowCoreValues={(val) => setDraft((p) => ({...p, showCoreValues: val}))}
         />
 
         <BenefitsSection
           benefits={draft.benefitsSummary ?? ""}
           onChangeBenefits={(v: string) => setDraft((p) => ({...p, benefitsSummary: v }))}
+          showBenefits={draft.showBenefitsSummary ?? true}
+          onToggleShowBenefits={(val) => setDraft((p) => ({...p, showBenefits: val}))}
         />
 
         <CompanyCultureSection
         culture={draft.companyCulture ?? ""}
         onChangeCulture={(v: string) => setDraft((p) => ({...p, companyCulture: v}))}
+        showCulture={draft.showCulture ?? true}
+        onToggleShowCulture={(val) => setDraft((p) => ({...p, showCulture: val}))}
         />
 
         <CoreValuesPickerModal
@@ -209,8 +217,6 @@ export default function ProfileEditScreen() {
           onToggle={addCoreValue}
           onClose={() => setCoreValuesPickerVisible(false)}
         />
-
-        <MissionSection mission={draft.missionStatement ?? ""} onChangeMission={(v: string) => setDraft((p) => ({ ...p, missionStatement: v }))} />
 
         <IndustryTypeSection
           companyAgeSubtitle={draft.businessAge?.trim() ? draft.businessAge : "Select"}

@@ -45,8 +45,20 @@ export type DraftProfile = Profile & {
   benefitsSummary?: string;
   customBackgroundColor?: string;
   logoImageURI?: string;
-  companyEmail: string;
-  companyPhone: string;
+  companyEmail?: string;
+  companyPhone?: string;
+  //booleans that save on the draft to determine whether is prop is shown on profile
+  showIndustry?: boolean;
+  showAge?: boolean;
+  showWorkType?: boolean;
+  showLocations?: boolean;
+  showCoreValues?: boolean;
+  showCulture?: boolean;
+  showCurrentEmployees?: boolean;
+  showOpenRoles?: boolean;
+  showBenefitsSummary?: boolean;
+  showEmail?: boolean;
+  showPhone?: boolean;
 };
 
 
@@ -71,6 +83,17 @@ export function normalizeForCompare(p: DraftProfile) {
     logoImageURI: (p.avatarImageUri ?? p.logoImageURI ?? "").trim(),
     companyEmail: (p.companyEmail ?? "").trim(),
     companyPhone: (p.companyPhone ?? "").trim(),
+    showIndustry: p.showIndustry,
+    showWorkType: p.showWorkType,
+    showLocations: p.showLocations,
+    showAge: p.showAge,
+    showCoreValues: p.showCoreValues,
+    showCulture: p.showCulture,
+    showCurrentEmployees: p.showCurrentEmployees,
+    showOpenRoles: p.showOpenRoles,
+    showBenefitsSummary: p.showBenefitsSummary,
+    showEmail: p.showEmail,
+    showPhone: p.showPhone,
   };
 }
 

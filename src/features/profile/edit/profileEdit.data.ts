@@ -29,5 +29,16 @@ export function mapDraftToApiPayload(draft: DraftProfile) {
     logo_image_key: draft.avatarImageUri ?? draft.logoImageURI ?? "",
     company_email: draft.companyEmail ?? "",
     company_phone: draft.companyPhone ?? "",
+    showIndustry: draft.showIndustry,
+    showWorkType: draft.showWorkType,
+    showLocations: draft.showLocations,
+    showCoreValues: draft.showCoreValues,
+    showAge: draft.showAge,
+    showCulture: draft.showCulture,
+    showCurrentEmployees: draft.showCurrentEmployees,
+    showOpenRoles: draft.showOpenRoles,
+    showBenefitsSummary: draft.showBenefitsSummary,
+    showEmail: draft.showEmail,
+    showPhone: draft.showPhone,
   }
 };

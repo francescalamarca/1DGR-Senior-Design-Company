@@ -470,8 +470,7 @@ export default function ProfileWebScreen() {
               </View>
 
               {/* moving the about page here with all information shown*/}
-               <View style={{ flex: 1, flexDirection: "column", position: "relative"}}>
-                <View style={styles.floatingCard}>
+              <View style={[styles.floatingCard, { marginTop: 20, marginHorizontal: pagePad, borderTopWidth: 1, borderLeftWidth: 1, borderRightWidth: 1, borderRadius: 14 }]}>
                 <Text
                   style={{
                     fontFamily: FONTS.LEXEND_LIGHT,
@@ -483,13 +482,10 @@ export default function ProfileWebScreen() {
                 >
                   ABOUT US
                 </Text>
-                
-                </View>
               </View>
 
-              
-              <View style={{ flex: 1, flexDirection: "column", position: "relative" }}>
-                <View style={styles.floatingCard}>
+              <View style={[styles.floatingCard, { marginTop: 16, marginHorizontal: pagePad, borderTopWidth: 1, borderLeftWidth: 1, borderRightWidth: 1, borderRadius: 14 }]}>
+              <View style={{ flex: 1, flexDirection: "column" }}>
                   <Text
                     style={{
                       fontFamily: FONTS.LEXEND_LIGHT,
@@ -625,8 +621,8 @@ export default function ProfileWebScreen() {
                       </View>
                     ) : null}
                   </View>
-                </View> {/* end floating card view close */}
-              </View>
+                </View> {/* closes inner column View */}
+              </View> {/* closes floatingCard (FIRST CONNECT) */}
 
               <View
                 onLayout={(event) => {

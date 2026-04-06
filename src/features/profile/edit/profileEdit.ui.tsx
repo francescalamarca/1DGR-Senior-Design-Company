@@ -15,6 +15,7 @@ import {
 } from "react-native";
 
 import type { OpenRole } from "@/src/features/profile/profile.types";
+import { hasProfileChanged, type DraftProfile } from "./profileEdit.compare";
 import { BtnText, LLightText } from "./profileEdit.components";
 import { BACKGROUND_COLOR_OPTIONS, 
   CORE_VALUES, 
@@ -356,14 +357,23 @@ export function MissionSection(props: {
 export function CompanyCultureSection(props: {
   culture: string;
   onChangeCulture: (v: string) => void;
+  showCulture: boolean;
+  onToggleShowCulture: (val: boolean ) => void;
 }) {
   const ui = useUI();
   const styles = useEditStyles();
-  const {culture, onChangeCulture} = props;
+  const {culture, onChangeCulture, showCulture, onToggleShowCulture} = props;
 
   return (
     <>
-    <LLightText style = {styles.sectionTitle}> Culture </LLightText>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}> 
+      <LLightText style={styles.sectionTitle}> Culture </LLightText>
+      <Switch
+          value={showCulture ?? true}
+          onValueChange={onToggleShowCulture}
+          trackColor={{ false: ui.hint, true: ui.text }}
+        />
+    </View>
     <LLightText style = {styles.sectionHelper}>Company culture, ideals we value, how we treat employees, etc...</LLightText>
     <View style = {styles.fieldStack}>
       <TextInput className = "input"
@@ -382,18 +392,26 @@ export function CompanyCultureSection(props: {
 export function BenefitsSection(props: {
   benefits: string;
   onChangeBenefits: (v: string) => void;
+  showBenefits: boolean;
+  onToggleShowBenefits: (val: boolean) => void;
 }) {
   const ui = useUI();
   const styles = useEditStyles();
-  const { benefits, onChangeBenefits } = props;
+  const { benefits, onChangeBenefits, showBenefits, onToggleShowBenefits} = props;
 
   return (
     <>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}> 
       <LLightText style={styles.sectionTitle}> Benefits </LLightText>
+      <Switch
+          value={showBenefits ?? true}
+          onValueChange={onToggleShowBenefits}
+          trackColor={{ false: ui.hint, true: ui.text }}
+        />
+    </View>
       <LLightText style={styles.sectionHelper}>
         The benefits of the company. 401k, work schedule, overtime, etc.
       </LLightText>
-
       <View style={styles.fieldStack}>
         <TextInput className = "input"
           value={benefits?.trim().length ? benefits : ""}
@@ -408,12 +426,19 @@ export function BenefitsSection(props: {
   );
 }
 
+//TODO COME BACK TO THIS ADD THE TOGGLES TO SHOW ON PROFILE
 export function IndustryTypeSection(props: {
   companyAgeSubtitle: string;
-  industrySubtitle: string;
-  locations: string[];
+  showAge: boolean;
+  onToggleShowAge: (val: boolean) => void;
   onPressCompanyAge: () => void;
+  industrySubtitle: string;
+  showIndustry: boolean;
+  onToggleShowIndustry: (val: boolean) => void;
   onPressIndustry: () => void;
+  locations: string[];
+  showLocations: boolean;
+  onToggleShowLocations: (val: boolean) => void;
   onPressAddLocation: () => void;
   onRemoveLocation: (label: string) => void;
 }) {
@@ -427,6 +452,12 @@ export function IndustryTypeSection(props: {
     onPressIndustry,
     onPressAddLocation,
     onRemoveLocation,
+    showAge,
+    onToggleShowAge,
+    showIndustry,
+    onToggleShowIndustry,
+    showLocations,
+    onToggleShowLocations,
   } = props;
   return (
     <>
@@ -436,12 +467,14 @@ export function IndustryTypeSection(props: {
       </LLightText>
 
       <GroupCard>
+
         <PickerRow
           title="Company Age (years)"
           subtitle={companyAgeSubtitle}
           onPress={onPressCompanyAge}
           showDivider
         />
+
         <PickerRow
           title="Industry Type"
           subtitle={industrySubtitle}
@@ -2259,16 +2292,23 @@ export function CoreValuesSection(props: {
   coreValues: string[];
   onPressAdd: () => void;
   onRemove: (value: string) => void;
+  showCoreValues: boolean;
+  onToggleShowCoreValues: (val: boolean) => void;
 }) {
   const ui = useUI();
   const styles = useEditStyles();
-  const { coreValues, onPressAdd, onRemove } = props;
+  const { coreValues, onPressAdd, onRemove, showCoreValues, onToggleShowCoreValues } = props;
 
   return (
     <>
-      <LLightText style={[styles.sectionTitle, { marginTop: 14 }]}>
-        Core Values
-      </LLightText>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}> 
+      <LLightText style={styles.sectionTitle}> Core Values </LLightText>
+      <Switch
+          value={showCoreValues ?? true}
+          onValueChange={onToggleShowCoreValues}
+          trackColor={{ false: ui.hint, true: ui.text }}
+        />
+    </View>
       <LLightText style={[styles.sectionHelper, { marginTop: 4 }]}>
         Choose up to 5.
       </LLightText>
