@@ -126,6 +126,10 @@ export default function HomeUserLayout() {
           <Tabs.Screen name="profile-edit" options={{ href: null, tabBarStyle: { display: "none" } }} />
           <Tabs.Screen name="video" options={{ href: null, tabBarStyle: { display: "none" } }} />
           <Tabs.Screen name="recording-studio" options={{ href: null, tabBarStyle: { display: "none" } }} />
+          <Tabs.Screen name="faq" options={{ href: null }} />
+          <Tabs.Screen name="admin-chat" options={{ href: null }} />
+          <Tabs.Screen name="report-issue" options={{ href: null }} />
+          <Tabs.Screen name="delete-account" options={{ href: null }} />
 
           {/* ✅ Hidden camera utility route (NOT the bottom tab camera) */}
           <Tabs.Screen name="camera-ui" options={{ href: null, tabBarStyle: { display: "none" } }} />

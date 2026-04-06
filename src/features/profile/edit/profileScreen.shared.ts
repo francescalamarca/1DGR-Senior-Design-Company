@@ -192,8 +192,9 @@ export function useCompanyProfileScreenData() {
       return list.filter((m: any) => m?.videoUri?.trim());
     }, [profile.media]);
   
-    const openVideo = useCallback(
-      (uri: string) => {
+    const openVideo = useCallback( //making the string optional avoids error if there are no videos
+      (uri?: string) => {
+        if (!uri) return;
         router.push({
           pathname: "/(companyUser)/video",
           params: { uri, returnTo: pathname, playId: String(Date.now()) },
