@@ -1,3 +1,16 @@
+/*
+THIS IS THE WEB BASED PROFILE APPEARANCE, WILL LOOK SLIGHTLY DIFFERENT THAN MOBILE
+company name section
+- mission
+- headquarters location with the pin emoji
+- maybe industry would be good to include here?
+About Us
+- have the about below the mission section
+- this will have all information in the about except for current employees which will be in the side bar
+- may try both views with and without the side bar to see what looks cleanest
+*/
+
+
 import { ProfileBrandWordmark } from "@/src/components/ProfileBrandWordmark";
 import { WebFooter } from "@/src/components/WebFooter";
 import { RequireUserType } from "@/src/components/RequireUserType";
@@ -8,8 +21,8 @@ import {
   type QualRowValue,
 } from "@/src/features/profile/edit/profileScreen.shared";
 import { useSession } from "@/src/state/session";
+import { useDynColors } from "@/src/state/theme-colors";
 import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
 import { useMemo, useRef, useState } from "react";
 import {
@@ -25,6 +38,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { styles } from "@/src/features/profile/edit/profileEdit.styles";
 
 const FONTS = {
   LEXEND_LIGHT: "Lexend-Light",
@@ -49,9 +63,16 @@ const TOP_NAV_ITEMS = [
   { key: "profile", label: "Profile", route: "/(companyUser)/profile", icon: "user", iconSet: "feather" },
 ] as const;
 
+
 /*
 Array (string[]): renders each item as its own Text line with spacing between them (e.g. a list of skills or education entries)
 Single value (line 70): renders it as a single Text element
+
+renders a profile field's value
+- If the value is an array (e.g. a list of core values or locations), it renders each item as its own Text line with a small gap between them. Empty array shows —.
+- If the value is a single string, it just renders one Text element.
+- Both cases run the value through softWrapLongTokens to prevent layout breakage from long unbroken strings.
+
 */
 function QualValue({ value, textStyle }: { value: QualRowValue; textStyle: any }) {
   if (Array.isArray(value)) {
@@ -74,47 +95,50 @@ function QualValue({ value, textStyle }: { value: QualRowValue; textStyle: any }
   return <Text style={textStyle}>{softWrapLongTokens(value)}</Text>;
 }
 
-function DetailRow({ row }: { row: QualRow }) {
+/*
+renders one labeled fielf in the sidebar
+- Shows the field's label (e.g. "Mission Statement", "Industry") in small muted text above.
+- Then renders the value below it using QualValue.
+- Accepts optional textColor/mutedColor so it can adapt to dark mode via the dynamic colors from C.
+*/
+function DetailRow({ row, textColor = TEXT, mutedColor = MUTED }: { row: QualRow; textColor?: string; mutedColor?: string }) {
   return (
     <View style={{ gap: 8 }}>
-      <Text
-        style={{
-          fontFamily: FONTS.LEXEND_LIGHT,
-          fontSize: 13,
-          color: MUTED,
-        }}
-      >
+      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: mutedColor }}>
         {row.label}
       </Text>
       <QualValue
         value={row.value}
-        textStyle={{
-          fontFamily: FONTS.LEXEND_LIGHT,
-          fontSize: 14,
-          lineHeight: 21,
-          color: TEXT,
-        }}
+        textStyle={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, lineHeight: 21, color: textColor }}
       />
     </View>
   );
 }
 
+/*
+the two functions above builds an array of {label, value} objects, and each one is 
+rendered as a <DetailRow> inside the "ABOUT US" expandable panel
+*/
 function SidebarLink({
   label,
   value,
   onPress,
   disabled,
+  textColor = TEXT,
+  mutedColor = MUTED,
 }: {
   label: string;
   value: string;
   onPress: () => void;
   disabled?: boolean;
+  textColor?: string;
+  mutedColor?: string;
 }) {
   return (
     <View style={{ gap: 8 }}>
-      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED }}>{label}</Text>
+      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: mutedColor }}>{label}</Text>
       <Pressable onPress={onPress} disabled={disabled} style={{ opacity: disabled ? 0.5 : 1 }}>
-        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, lineHeight: 21, color: TEXT }}>
+        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, lineHeight: 21, color: textColor }}>
           {value || "—"}
         </Text>
       </Pressable>
@@ -123,10 +147,12 @@ function SidebarLink({
 }
 
 export default function ProfileWebScreen() {
+  const C = useDynColors();
   const { logout } = useSession();
-  const { width } = useWindowDimensions();
+  const { width, height: windowHeight } = useWindowDimensions();
   const railRef = useRef<FlatList<any> | null>(null);
   const railScrollOffsetRef = useRef(0);
+  const scrollViewRef = useRef<any>(null);
   const {
     profile,
     copyEmail,
@@ -136,13 +162,14 @@ export default function ProfileWebScreen() {
     fetchLatestProfile,
     displayName,
     missionStatement,
+    headquarters,
     benefitsSummary,
     coreValues,
     industry,
     locations,
     videos,
-    contactEmail,
-    contactPhone,
+    companyEmail,
+    companyPhone,
     contactUrl1,
     contactUrl2,
     contactUrl1Label,
@@ -165,10 +192,10 @@ export default function ProfileWebScreen() {
   const [sidebarColumnHeight, setSidebarColumnHeight] = useState(760);
   const sidebarAnimation = useRef(new Animated.Value(0)).current;
 
-  const isCompact = width < 1180;
-  const pagePad = width < 1440 ? 32 : 48;
+  const isCompact = width < 1280;
+  const pagePad = Math.max(20, Math.min(64, Math.round(width * 0.035)));
   const heroAvatarSize = width < 1180 ? 128 : 164;
-  const railCardWidth = Math.min(360, Math.max(268, Math.round(width * 0.2)));
+  const railCardWidth = Math.min(360, Math.round(width * 0.22));
   const railStep = railCardWidth + 20;
   const sidebarRows = useMemo(() => { //changed this so that they only change when a dep is changed, not every render
     const qualCol1: any[] = [];
@@ -181,9 +208,9 @@ export default function ProfileWebScreen() {
     ];
     return [...qualCol1, ...qualCol2];
   }, [missionStatement, coreValues, industry, benefitsSummary, locations]);
-  const sidebarPanelHeight = isCompact ? 540 : Math.max(sidebarColumnHeight, 760);
   const collapsedPanelHeight = 64; // just the header row (ABOUT US + chevron)
-  const sidebarWidth = isCompact ? 0 : 450;
+  const sidebarPanelHeight = isCompact ? 540 : Math.max(sidebarColumnHeight, collapsedPanelHeight + 200);
+  const sidebarWidth = isCompact ? 0 : Math.round(width * 0.32);
   const navReturnTo = "/(companyUser)/profile";
 
   function scrollRail(direction: -1 | 1) {
@@ -218,19 +245,20 @@ export default function ProfileWebScreen() {
     <>
       <RequireUserType type="company" />
 
-      <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: PAPER }}>
+      <SafeAreaView edges={["top", "left", "right"]} style={{ flex: 1, backgroundColor: C.bg }}>
         <ScrollView
-          style={{ flex: 1, backgroundColor: PAPER }}
+          style={{ flex: 1, backgroundColor: C.bg }}
+          contentContainerStyle={{ flexGrow: 1 }}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchLatestProfile} />}
         >
           <View
             style={{
               height: 64,
               borderBottomWidth: 1,
-              borderBottomColor: BORDER,
+              borderBottomColor: C.border,
               alignItems: "center",
               justifyContent: "center",
-              backgroundColor: WHITE,
+              backgroundColor: C.card,
               position: "relative",
             }}
           >
@@ -247,7 +275,7 @@ export default function ProfileWebScreen() {
             >
               {TOP_NAV_ITEMS.map((item) => {
                 const active = item.key === "profile";
-                const color = active ? ACCENT : MUTED;
+                const color = active ? C.accent : C.subtle;
 
                 return (
                   <Pressable
@@ -291,7 +319,8 @@ export default function ProfileWebScreen() {
 
           <View
             style={{
-              backgroundColor: PAPER,
+              flex: 1,
+              backgroundColor: C.bg,
               paddingHorizontal: 0,
               paddingTop: 0,
               paddingBottom: 0,
@@ -299,15 +328,16 @@ export default function ProfileWebScreen() {
           >
             <View
               style={{
+                flex: 1,
                 flexDirection: "column",
                 alignItems: "stretch",
                 gap: 0,
-                backgroundColor: WHITE,
+                backgroundColor: C.card,
                 borderTopWidth: 1,
-                borderTopColor: BORDER,
+                borderTopColor: C.border,
                 position: "relative",
               }}
-            >
+            > {/* side bar start of formatting */}
               <View
                 style={{
                   flex: 1,
@@ -322,7 +352,7 @@ export default function ProfileWebScreen() {
                     flexDirection: isCompact ? "column" : "row",
                     alignItems: isCompact ? "flex-start" : "center",
                     gap: 28,
-                    paddingRight: isCompact ? 0 : sidebarWidth + -5,
+                    paddingRight: isCompact ? 0 : sidebarWidth + 20,
                   }}
                 >
                   <Pressable onPress={() => openVideo(profile.avatarVideoUri)} hitSlop={10}>
@@ -355,29 +385,29 @@ export default function ProfileWebScreen() {
                           fontFamily: FONTS.LEXEND_LIGHT,
                           fontSize: isCompact ? 38 : 50,
                           lineHeight: isCompact ? 44 : 56,
-                          color: TEXT,
+                          color: C.text,
                         }}
                       >
                         {displayName}
                       </Text>
                     </Pressable>
 
-                    {!!missionStatement && (
+                    {(!!missionStatement || !!headquarters) && (
                       <Text
                         style={{
                           fontFamily: FONTS.LEXEND_LIGHT,
                           fontSize: 15,
                           lineHeight: 22,
-                          color: MUTED,
+                          color: C.subtle,
                           marginTop: 6,
                         }}
                       >
-                        {missionStatement}
+                        {missionStatement} - 📍 {headquarters}
                       </Text>
                     )}
 
                   </View>
-
+                  {/* This is where the side window in the web view is to get settings, edit, library, etc*/}
                   <View
                     style={{
                       width: isCompact ? "100%" : 132,
@@ -391,33 +421,33 @@ export default function ProfileWebScreen() {
                       onPress={() => router.push({ pathname: "/(companyUser)/video-library", params: { returnTo: navReturnTo } })}
                       style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
                     >
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>
                         LIBRARY
                       </Text>
-                      <Feather name="layers" size={18} color={TEXT} />
+                      <Feather name="layers" size={18} color={C.text} />
                     </Pressable>
 
                     <Pressable
                       onPress={() => router.push("/(companyUser)/profile-edit")}
                       style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
                     >
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>
                         EDIT
                       </Text>
-                      <Feather name="edit-2" size={18} color={TEXT} />
+                      <Feather name="edit-2" size={18} color={C.text} />
                     </Pressable>
 
                     <Pressable
                       onPress={() => router.push("/(companyUser)/settings")}
                       style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
                     >
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>
                         SETTINGS
                       </Text>
-                      <Feather name="settings" size={18} color={TEXT} />
+                      <Feather name="settings" size={18} color={C.text} />
                     </Pressable>
 
-                    <View style={{ height: 1, backgroundColor: BORDER, marginVertical: 2 }} />
+                    <View style={{ height: 1, backgroundColor: C.border, marginVertical: 2 }} />
 
                     <Pressable
                       onPress={fetchLatestProfile}
@@ -429,158 +459,174 @@ export default function ProfileWebScreen() {
                         opacity: refreshing ? 0.45 : 1,
                       }}
                     >
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: MUTED }}>
+                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>
                         REFRESH
                       </Text>
-                      <Feather name="refresh-cw" size={18} color={TEXT} />
+                      <Feather name="refresh-cw" size={18} color={C.text} />
                     </Pressable>
 
-                  </View>
+                  </View> {/* close view of the controls on the right */}
                 </View>
               </View>
 
-              <View style={{ marginTop: 40, paddingHorizontal: pagePad }}>
+              {/* moving the about page here with all information shown*/}
+              <View style={[styles.floatingCard, { marginTop: 20, marginHorizontal: pagePad, borderTopWidth: 1, borderLeftWidth: 1, borderRightWidth: 1, borderRadius: 14 }]}>
                 <Text
                   style={{
                     fontFamily: FONTS.LEXEND_LIGHT,
                     fontSize: 13,
                     letterSpacing: 2,
-                    color: TEXT,
+                    color: C.text,
                     marginBottom: 14,
                   }}
                 >
-                  FIRST CONNECT
+                  ABOUT US
                 </Text>
 
-                <LinearGradient
-                  colors={["#ffffff", "#eef4f7", "#dfe9ee"]}
-                  locations={[0, 0.08, 1]}
-                  start={{ x: 0.5, y: 0 }}
-                  end={{ x: 0.5, y: 1 }}
-                  style={{ marginTop: -12, marginHorizontal: -pagePad, paddingTop: 20, paddingBottom: 18, paddingHorizontal: pagePad }}
-                >
-                  <FlatList
-                    ref={railRef}
-                    data={videos}
-                    horizontal
-                    keyExtractor={(item: any) => String(item.id ?? `${item.slot ?? "x"}_${item.videoUri ?? ""}`)}
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={{ paddingRight: 4 }}
-                    ItemSeparatorComponent={() => <View style={{ width: 20 }} />}
-                    onScroll={(event) => {
-                      railScrollOffsetRef.current = event.nativeEvent.contentOffset.x;
-                    }}
-                    scrollEventThrottle={16}
-                    renderItem={({ item }: { item: any }) => {
-                      const uri = String(item.videoUri ?? "").trim();
-                      const thumb = String(item.imageUri ?? "").trim();
-                      const caption = String(item.caption ?? "Untitled");
+                <Text style={styles.header}>
+                  Company Culture
+                </Text>
+              </View>
 
-                      return (
-                        <Pressable
-                          onPress={() => openVideo(uri)}
+              <View style={[styles.floatingCard, { marginTop: 16, marginHorizontal: pagePad, borderTopWidth: 1, borderLeftWidth: 1, borderRightWidth: 1, borderRadius: 14 }]}>
+              <View style={{ flex: 1, flexDirection: "column" }}>
+                  <Text
+                    style={{
+                      fontFamily: FONTS.LEXEND_LIGHT,
+                      fontSize: 13,
+                      letterSpacing: 2,
+                      color: C.text,
+                      marginBottom: 14,
+                    }}
+                  >
+                    FIRST CONNECT
+                  </Text>
+                  <View
+                    style={{ flex: 1, marginTop: -12, marginHorizontal: -pagePad, paddingTop: 20, paddingBottom: 18, paddingHorizontal: pagePad, backgroundColor: profile.customBackgroundColor || "rgba(255,255,255,0.72)" }}
+                  >
+                    <FlatList
+                      ref={railRef}
+                      data={videos}
+                      horizontal
+                      keyExtractor={(item: any) => String(item.id ?? `${item.slot ?? "x"}_${item.videoUri ?? ""}`)}
+                      showsHorizontalScrollIndicator={false}
+                      contentContainerStyle={{ paddingRight: 4 }}
+                      ItemSeparatorComponent={() => <View style={{ width: 20 }} />}
+                      onScroll={(event) => {
+                        railScrollOffsetRef.current = event.nativeEvent.contentOffset.x;
+                      }}
+                      scrollEventThrottle={16}
+                      renderItem={({ item }: { item: any }) => {
+                        const uri = String(item.videoUri ?? "").trim();
+                        const thumb = String(item.imageUri ?? "").trim();
+                        const caption = String(item.caption ?? "Untitled");
+
+                        return (
+                          <Pressable
+                            onPress={() => openVideo(uri)}
+                            style={{
+                              width: railCardWidth,
+                              borderWidth: 1,
+                              borderColor: "#9eb2bf",
+                              borderRadius: 18,
+                              backgroundColor: C.card,
+                              overflow: "hidden",
+                            }}
+                          >
+                            <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 16 }}>
+                              <Text
+                                style={{
+                                  fontFamily: FONTS.CRIMSON_REGULAR,
+                                  fontSize: 18,
+                                  lineHeight: 25,
+                                  color: C.text,
+                                }}
+                              >
+                                {caption}
+                              </Text>
+                            </View>
+
+                            <View style={{ aspectRatio: 0.98, backgroundColor: "#e8ecef" }}>
+                              {!!thumb ? <Image source={{ uri: thumb }} style={{ width: "100%", height: "100%" }} /> : null}
+                            </View>
+                          </Pressable>
+                        );
+                      }}
+                      ListEmptyComponent={
+                        <View
                           style={{
-                            width: railCardWidth,
+                            width: 320,
+                            minHeight: 260,
                             borderWidth: 1,
-                            borderColor: "#9eb2bf",
+                            borderColor: C.border,
                             borderRadius: 18,
-                            backgroundColor: WHITE,
-                            overflow: "hidden",
+                            backgroundColor: C.bg,
+                            alignItems: "center",
+                            justifyContent: "center",
+                            padding: 24,
                           }}
                         >
-                          <View style={{ paddingHorizontal: 20, paddingTop: 18, paddingBottom: 16 }}>
-                            <Text
-                              style={{
-                                fontFamily: FONTS.CRIMSON_REGULAR,
-                                fontSize: 18,
-                                lineHeight: 25,
-                                color: TEXT,
-                              }}
-                            >
-                              {caption}
-                            </Text>
-                          </View>
+                          <Text
+                            style={{
+                              fontFamily: FONTS.LEXEND_LIGHT,
+                              fontSize: 14,
+                              lineHeight: 21,
+                              color: C.subtle,
+                              textAlign: "center",
+                            }}
+                          >
+                            No response videos yet.
+                          </Text>
+                        </View>
+                      }
+                    />
 
-                          <View style={{ aspectRatio: 0.98, backgroundColor: "#e8ecef" }}>
-                            {!!thumb ? <Image source={{ uri: thumb }} style={{ width: "100%", height: "100%" }} /> : null}
-                          </View>
-                        </Pressable>
-                      );
-                    }}
-                    ListEmptyComponent={
+                    {videos.length > 0 ? (
                       <View
                         style={{
-                          width: 320,
-                          minHeight: 260,
-                          borderWidth: 1,
-                          borderColor: BORDER,
-                          borderRadius: 18,
-                          backgroundColor: PAPER,
-                          alignItems: "center",
+                          marginTop: 9,
+                          flexDirection: "row",
                           justifyContent: "center",
-                          padding: 24,
+                          gap: 12,
+                          marginLeft: isCompact ? 0 : 340,
                         }}
                       >
-                        <Text
+                        <Pressable
+                          onPress={() => scrollRail(-1)}
                           style={{
-                            fontFamily: FONTS.LEXEND_LIGHT,
-                            fontSize: 14,
-                            lineHeight: 21,
-                            color: MUTED,
-                            textAlign: "center",
+                            width: 34,
+                            height: 34,
+                            borderRadius: 999,
+                            borderWidth: 1,
+                            borderColor: "#9eb2bf",
+                            backgroundColor: C.card,
+                            alignItems: "center",
+                            justifyContent: "center",
                           }}
                         >
-                          No response videos yet.
-                        </Text>
+                          <Feather name="arrow-left" size={14} color={C.subtle} />
+                        </Pressable>
+
+                        <Pressable
+                          onPress={() => scrollRail(1)}
+                          style={{
+                            width: 34,
+                            height: 34,
+                            borderRadius: 999,
+                            borderWidth: 1,
+                            borderColor: "#9eb2bf",
+                            backgroundColor: C.card,
+                            alignItems: "center",
+                            justifyContent: "center",
+                          }}
+                        >
+                          <Feather name="arrow-right" size={14} color={C.subtle} />
+                        </Pressable>
                       </View>
-                    }
-                  />
-
-                  {videos.length > 0 ? (
-                    <View
-                      style={{
-                        marginTop: 9,
-                        flexDirection: "row",
-                        justifyContent: "center",
-                        gap: 12,
-                        marginLeft: isCompact ? 0 : 340,
-                      }}
-                    >
-                      <Pressable
-                        onPress={() => scrollRail(-1)}
-                        style={{
-                          width: 34,
-                          height: 34,
-                          borderRadius: 999,
-                          borderWidth: 1,
-                          borderColor: "#9eb2bf",
-                          backgroundColor: WHITE,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Feather name="arrow-left" size={14} color={MUTED} />
-                      </Pressable>
-
-                      <Pressable
-                        onPress={() => scrollRail(1)}
-                        style={{
-                          width: 34,
-                          height: 34,
-                          borderRadius: 999,
-                          borderWidth: 1,
-                          borderColor: "#9eb2bf",
-                          backgroundColor: WHITE,
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <Feather name="arrow-right" size={14} color={MUTED} />
-                      </Pressable>
-                    </View>
-                  ) : null}
-                </LinearGradient>
-              </View>
+                    ) : null}
+                  </View>
+                </View> {/* closes inner column View */}
+              </View> {/* closes floatingCard (FIRST CONNECT) */}
 
               <View
                 onLayout={(event) => {
@@ -596,7 +642,7 @@ export default function ProfileWebScreen() {
                   width: isCompact ? "100%" : sidebarWidth,
                   borderLeftWidth: isCompact || !sidebarOpen ? 0 : 1,
                   borderTopWidth: isCompact ? 1 : 0,
-                  borderColor: BORDER,
+                  borderColor: C.border,
                   backgroundColor: "transparent",
                   overflow: "visible",
                 }}
@@ -604,7 +650,7 @@ export default function ProfileWebScreen() {
                 <Animated.View
                   style={{
                     height: animatedPanelHeight,
-                    backgroundColor: "rgba(251,251,251,0.95)",
+                    backgroundColor: C.isDark ? "rgba(71,75,84,0.97)" : "rgba(251,251,251,0.95)",
                     borderLeftWidth: !sidebarOpen && !isCompact ? 1 : 0,
                     borderRightWidth: !sidebarOpen && !isCompact ? 1 : 0,
                     borderBottomWidth: 0,
@@ -618,7 +664,7 @@ export default function ProfileWebScreen() {
                       paddingLeft: 35,
                       paddingRight: 22,
                       paddingVertical: 20,
-                      borderBottomWidth: sidebarOpen ? 1 : 0,
+                      borderBottomWidth: sidebarOpen ? 1 : 1, //cheating the system here because the whole side bar functionality is already set, the only option is to be open
                       borderBottomColor: "rgba(214, 221, 226, 0.9)",
                       backgroundColor: "rgba(255,255,255,0.72)",
                       flexDirection: "row",
@@ -632,19 +678,48 @@ export default function ProfileWebScreen() {
                           fontFamily: FONTS.LEXEND_LIGHT,
                           fontSize: 13,
                           letterSpacing: 2,
-                          color: TEXT,
+                          color: C.text,
                         }}
                       >
-                        ABOUT US
+                        CONTACT US
                       </Text>
+
+                      <View style={{ paddingLeft: 1, paddingRight: 22, paddingTop: 20, paddingBottom: 28, gap: 20 }}>
+
+                      <View style={{ gap: 20 }}>
+                        <SidebarLink label="Email" value={companyEmail} onPress={copyEmail} disabled={!companyEmail} textColor={C.text} mutedColor={C.subtle} />
+                        <SidebarLink label="Phone" value={companyPhone} onPress={copyPhone} disabled={!companyPhone} textColor={C.text} mutedColor={C.subtle} />
+                        {showUrl1 ? (
+                          <SidebarLink
+                            label={contactUrl1Label}
+                            value={contactUrl1}
+                            onPress={() => copyUrl(contactUrl1)}
+                            disabled={!contactUrl1}
+                            textColor={C.text}
+                            mutedColor={C.subtle}
+                          />
+                        ) : null}
+                        {showUrl2 ? (
+                          <SidebarLink
+                            label={contactUrl2Label}
+                            value={contactUrl2}
+                            onPress={() => copyUrl(contactUrl2)}
+                            disabled={!contactUrl2}
+                            textColor={C.text}
+                            mutedColor={C.subtle}
+                          />
+                        ) : null}
+                      </View>
 
                     </View>
 
-                    <Feather
+                    </View>
+
+                    {/* <Feather
                       name={sidebarOpen ? "chevron-up" : "chevron-down"}
                       size={20}
-                      color={TEXT}
-                    />
+                      color={C.text}
+                    /> */}
                   </Pressable>
 
                   <Animated.View
@@ -660,7 +735,7 @@ export default function ProfileWebScreen() {
                       showsVerticalScrollIndicator
                     >
                       {sidebarRows.map((row) => (
-                        <DetailRow key={row.label} row={row} />
+                        <DetailRow key={row.label} row={row} textColor={C.text} mutedColor={C.subtle} />
                       ))}
                       <View style={{ gap: 8 }}>
                         <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED }}>Open Roles</Text>
@@ -677,35 +752,10 @@ export default function ProfileWebScreen() {
                 </Animated.View>
 
                 {/* Contact links and action buttons — always visible regardless of collapse state */}
-                <View style={{ paddingLeft: 35, paddingRight: 22, paddingTop: 20, paddingBottom: 28, gap: 20 }}>
-                  <View style={{ height: 1, backgroundColor: BORDER }} />
-
-                  <View style={{ gap: 20 }}>
-                    <SidebarLink label="Email" value={contactEmail} onPress={copyEmail} disabled={!contactEmail} />
-                    <SidebarLink label="Phone" value={contactPhone} onPress={copyPhone} disabled={!contactPhone} />
-                    {showUrl1 ? (
-                      <SidebarLink
-                        label={contactUrl1Label}
-                        value={contactUrl1}
-                        onPress={() => copyUrl(contactUrl1)}
-                        disabled={!contactUrl1}
-                      />
-                    ) : null}
-                    {showUrl2 ? (
-                      <SidebarLink
-                        label={contactUrl2Label}
-                        value={contactUrl2}
-                        onPress={() => copyUrl(contactUrl2)}
-                        disabled={!contactUrl2}
-                      />
-                    ) : null}
-                  </View>
-
-                </View>
 
               </View>
             </View>
-          </View>
+          </View> {/* close view of the main page formatting, overall container*/}
         </ScrollView>
         {/* this had to be placed outside of the scrollview or else it will move with it, placed it in a reusable component for easy find and edit*/}
         <WebFooter
@@ -771,6 +821,12 @@ export default function ProfileWebScreen() {
                       <View style={{ flexDirection: "row", gap: 8 }}>
                         <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Work Type</Text>
                         <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: TEXT, flex: 1 }}>{role.workType}</Text>
+                      </View>
+                    )}
+                    {!!role.location && (
+                      <View style={{ flexDirection: "row", gap: 8 }}>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Location</Text>
+                        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: TEXT, flex: 1 }}>📍{role.location}</Text>
                       </View>
                     )}
                     {!!role.salary && (

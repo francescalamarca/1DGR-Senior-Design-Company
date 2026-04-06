@@ -15,15 +15,30 @@ export function mapDraftToApiPayload(draft: DraftProfile) {
   return {
     company_name: draft.companyName ?? "",
     industry: draft.industry ?? "",
+    headquarters: draft.headquarters ?? "",
     business_age: draft.businessAge ?? "",
     work_type: draft.workType ?? "",
     locations: Array.isArray(draft.locations) ? draft.locations: [], //an array of all locations the company is based out of
     mission_statement: draft.missionStatement ?? "",
+    company_culture: draft.companyCulture ?? "",
     core_values: Array.isArray(draft.coreValues) ? draft.coreValues: [], //this is an array bc list of values (up to 5)
     current_employees: Array.isArray(draft.currentEmployees) ? draft.currentEmployees: [],
     benefits_summary: draft.benefitsSummary ?? "",
     custom_background_color: draft.customBackgroundColor ?? "",
     open_roles: Array.isArray(draft.openRoles) ? draft.openRoles : [],
     logo_image_key: draft.avatarImageUri ?? draft.logoImageURI ?? "",
-  };
-}
+    company_email: draft.companyEmail ?? "",
+    company_phone: draft.companyPhone ?? "",
+    showIndustry: draft.showIndustry,
+    showWorkType: draft.showWorkType,
+    showLocations: draft.showLocations,
+    showCoreValues: draft.showCoreValues,
+    showAge: draft.showAge,
+    showCulture: draft.showCulture,
+    showCurrentEmployees: draft.showCurrentEmployees,
+    showOpenRoles: draft.showOpenRoles,
+    showBenefitsSummary: draft.showBenefitsSummary,
+    showEmail: draft.showEmail,
+    showPhone: draft.showPhone,
+  }
+};

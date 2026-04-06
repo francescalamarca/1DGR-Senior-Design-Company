@@ -23,7 +23,7 @@ import { View, Pressable, ActivityIndicator, Modal, FlatList, TextInput, Keyboar
 
 import { RequireUserType } from "@/src/components/RequireUserType";
 
-import { styles, UI } from "./profileEdit.styles";
+import { useEditStyles, UI} from "./profileEdit.styles";
 import { LLightText, KeyboardScreen } from "./profileEdit.components";
 import {
   COMPANY_AGE_OPTIONS,
@@ -49,6 +49,8 @@ import {
   BenefitsSection,
   RolesSection,
   RoleFormModal,
+  CompanyCultureSection,
+  ContactSection,
 } from "./profileEdit.ui";
 
 const MODAL_KB_OFFSET_IOS = 12;
@@ -130,33 +132,25 @@ export default function ProfileEditScreen() {
     updateRole,
   } = useProfileEditController();
 
+  const editStyles = useEditStyles(); //you have to make an instance of something if you want to use it
+
   const [editingRole, setEditingRole] = React.useState<import("@/src/features/profile/profile.types").OpenRole | null>(null);
 
-  const workTypeSubtitle = React.useMemo(() => {
-    const wt = String((draft as any).workType ?? "").trim();
-    const wp = String((draft as any).workPreference ?? "").trim();
-    return wt || wp ? [wt, wp].filter(Boolean).join(" · ") : "Select";
-  }, [draft]);
-
-  const openWorkTypePicker = React.useCallback(() => {
-    setWorkTypeTemp(String((draft as any).workType ?? ""));
-    setWorkPreferenceTemp(String((draft as any).workPreference ?? ""));
-    setWorkTypePickerVisible(true);
-  }, [draft]);
+  
   //this header enables us to edit the profile and SAVE changes
   const Header = (
-    <View style={styles.header}>
-      <Pressable onPress={handleCancel} style={[styles.headerAction, styles.headerLeft]} hitSlop={10} disabled={isSaving}>
+    <View style={editStyles.header}>
+      <Pressable onPress={handleCancel} style={[editStyles.headerAction, editStyles.headerLeft]} hitSlop={10} disabled={isSaving}>
         <LLightText style={{ opacity: isSaving ? 0.5 : 1 }}>Cancel</LLightText>
       </Pressable>
 
-      <LLightText pointerEvents="none" style={styles.headerTitle}>
+      <LLightText pointerEvents="none" style={editStyles.headerTitle}>
         Edit Profile
       </LLightText>
 
       <Pressable
         disabled={!canSave || isSaving}
-        style={[styles.headerAction, styles.headerRight, { opacity: canSave && !isSaving ? 1 : 0.4 }]}
+        style={[editStyles.headerAction, editStyles.headerRight, { opacity: canSave && !isSaving ? 1 : 0.4 }]}
         hitSlop={10}
         onPress={handleSave}
       >
@@ -172,7 +166,7 @@ export default function ProfileEditScreen() {
     <>
       <RequireUserType type="company" />
 
-      <KeyboardScreen scroll scrollRef={scrollRef} header={Header} backgroundColor={UI.bg} contentContainerStyle={styles.content}>
+      <KeyboardScreen scroll scrollRef={scrollRef} header={Header} backgroundColor={UI.bg} contentContainerStyle={editStyles.content}>
         <AvatarSection
           avatarPreviewUri={avatarPreviewUri}
           pickingAvatarImage={pickingAvatarImage}
@@ -193,15 +187,28 @@ export default function ProfileEditScreen() {
           onSelect={selectBackgroundColor}
         />
 
+        <MissionSection mission={draft.missionStatement ?? ""} onChangeMission={(v: string) => setDraft((p) => ({ ...p, missionStatement: v }))} />
+
         <CoreValuesSection
           coreValues={draft.coreValues ?? []}
           onPressAdd={openCoreValuesPicker}
           onRemove={removeCoreValue}
+          showCoreValues={draft.showCoreValues ?? true}
+          onToggleShowCoreValues={(val) => setDraft((p) => ({...p, showCoreValues: val}))}
         />
 
         <BenefitsSection
           benefits={draft.benefitsSummary ?? ""}
           onChangeBenefits={(v: string) => setDraft((p) => ({...p, benefitsSummary: v }))}
+          showBenefits={draft.showBenefitsSummary ?? true}
+          onToggleShowBenefits={(val) => setDraft((p) => ({...p, showBenefits: val}))}
+        />
+
+        <CompanyCultureSection
+        culture={draft.companyCulture ?? ""}
+        onChangeCulture={(v: string) => setDraft((p) => ({...p, companyCulture: v}))}
+        showCulture={draft.showCulture ?? true}
+        onToggleShowCulture={(val) => setDraft((p) => ({...p, showCulture: val}))}
         />
 
         <CoreValuesPickerModal
@@ -210,8 +217,6 @@ export default function ProfileEditScreen() {
           onToggle={addCoreValue}
           onClose={() => setCoreValuesPickerVisible(false)}
         />
-
-        <MissionSection mission={draft.missionStatement ?? ""} onChangeMission={(v: string) => setDraft((p) => ({ ...p, missionStatement: v }))} />
 
         <IndustryTypeSection
           companyAgeSubtitle={draft.businessAge?.trim() ? draft.businessAge : "Select"}
@@ -228,6 +233,13 @@ export default function ProfileEditScreen() {
             })
           }
           onPressIndustry={openIndustryPicker}
+          showAge={draft.showAge ?? true}
+          showIndustry={draft.showIndustry ?? true}
+          showLocations={draft.showLocations ?? true}
+          onToggleShowAge={(val) => setDraft((p) => ({...p, showAge: val}))}
+          onToggleShowIndustry={(val) => setDraft((p) => ({...p, showIndustry: val}))}
+          onToggleShowLocations={(val) => setDraft((p) => ({...p, showLocations: val}))}
+
         />
 
         <RolesSection
@@ -235,6 +247,8 @@ export default function ProfileEditScreen() {
           onPressAdd={() => { setEditingRole(null); setRoleFormVisible(true); }}
           onRemove={removeRole}
           onPressEdit={(role) => { setEditingRole(role); setRoleFormVisible(true); }}
+          showOpenRoles={draft.showOpenRoles ?? true}
+          onToggleShowRoles={(val) => setDraft((p) => ({...p, showOpenRoles: val}))}
         />
 
         <RoleFormModal
@@ -323,6 +337,14 @@ export default function ProfileEditScreen() {
             setWorkTypePickerVisible(false);
           }}
         />
+
+        <ContactSection
+          companyEmail = {draft.companyEmail ?? ""}
+          companyPhone = {draft.companyPhone ?? ""}
+          onChangeEmail={(v: string) => setDraft((p) => ({ ...p, companyEmail: v }))}
+          onChangePhone={(v: string) => setDraft((p) => ({ ...p, companyPhone: v }))}
+        />
+
       </KeyboardScreen>
     </>
   );

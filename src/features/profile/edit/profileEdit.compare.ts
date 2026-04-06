@@ -33,16 +33,32 @@ import type { Profile, OpenRole } from "@/src/features/profile/profile.types";
 export type DraftProfile = Profile & {
   companyName?: string;
   industry?: string; //company should only be able to be in one industry at a time
+  headquarters?: string;
   businessAge?: string;
   workType?: string;
   locations?: string[]; //this is an array of strings that will be populated by the companies choice of cities that they operate in
   missionStatement?: string;
+  companyCulture?: string;
   coreValues?: string[];
   currentEmployees?: string[]; //added to keep track of current employees to display on profile
   openRoles?: OpenRole[];
   benefitsSummary?: string;
   customBackgroundColor?: string;
   logoImageURI?: string;
+  companyEmail?: string;
+  companyPhone?: string;
+  //booleans that save on the draft to determine whether is prop is shown on profile
+  showIndustry?: boolean;
+  showAge?: boolean;
+  showWorkType?: boolean;
+  showLocations?: boolean;
+  showCoreValues?: boolean;
+  showCulture?: boolean;
+  showCurrentEmployees?: boolean;
+  showOpenRoles?: boolean;
+  showBenefitsSummary?: boolean;
+  showEmail?: boolean;
+  showPhone?: boolean;
 };
 
 
@@ -51,10 +67,12 @@ export function normalizeForCompare(p: DraftProfile) {
   return {
     companyName: (p.companyName ?? "").trim(),
     industry: (Array.isArray(p.industry) ? (p.industry[0] ?? "") : (p.industry ?? "")).trim(),
+    headquarters: (p.headquarters ?? "").trim(),
     businessAge:(p.businessAge ?? "").trim(),
     workType: (p.workType ?? "").trim(),
     locations: (p.locations ?? []).map((s) => s.trim()).filter(Boolean).sort(), //same as the coreValues array functionality for checking change
     missionStatement: (p.missionStatement ?? "").trim(),
+    companyCulture: (p.companyCulture ?? "").trim(),
     coreValues: (p.coreValues ?? []).map((s) => s.trim()).filter(Boolean).sort(), //the sort is important bc will read as different wityh the same words in different order
     currentEmployees: (p.currentEmployees ?? []).map((s) => s.trim()).filter(Boolean).sort(),
     benefitsSummary: (p.benefitsSummary ?? "").trim(),
@@ -63,6 +81,19 @@ export function normalizeForCompare(p: DraftProfile) {
       .sort(),
     customBackgroundColor: (p.customBackgroundColor ?? "").trim(),
     logoImageURI: (p.avatarImageUri ?? p.logoImageURI ?? "").trim(),
+    companyEmail: (p.companyEmail ?? "").trim(),
+    companyPhone: (p.companyPhone ?? "").trim(),
+    showIndustry: p.showIndustry,
+    showWorkType: p.showWorkType,
+    showLocations: p.showLocations,
+    showAge: p.showAge,
+    showCoreValues: p.showCoreValues,
+    showCulture: p.showCulture,
+    showCurrentEmployees: p.showCurrentEmployees,
+    showOpenRoles: p.showOpenRoles,
+    showBenefitsSummary: p.showBenefitsSummary,
+    showEmail: p.showEmail,
+    showPhone: p.showPhone,
   };
 }
 

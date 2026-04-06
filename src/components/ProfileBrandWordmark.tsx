@@ -1,6 +1,5 @@
 import { Text, View } from "react-native";
-
-const TEXT = "#202020";
+import { useDynColors } from "@/src/state/theme-colors";
 
 type Props = {
   fontFamily: string;
@@ -23,6 +22,7 @@ export function ProfileBrandWordmark({
   containerOffsetTop = 0,
   containerOffsetLeft = 0,
 }: Props) {
+  const C = useDynColors();
   return (
     <View
       style={{
@@ -37,7 +37,7 @@ export function ProfileBrandWordmark({
         style={{
           fontFamily,
           fontSize: size,
-          color: TEXT,
+          color: C.text,
           letterSpacing,
         }}
       >
@@ -48,7 +48,7 @@ export function ProfileBrandWordmark({
           fontFamily,
           fontSize: markSize,
           lineHeight: markSize + 2,
-          color: TEXT,
+          color: C.text,
           marginLeft: markOffsetLeft,
           marginTop: markOffsetTop,
         }}

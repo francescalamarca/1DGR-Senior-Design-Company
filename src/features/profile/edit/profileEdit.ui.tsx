@@ -15,6 +15,7 @@ import {
 } from "react-native";
 
 import type { OpenRole } from "@/src/features/profile/profile.types";
+import { hasProfileChanged, type DraftProfile } from "./profileEdit.compare";
 import { BtnText, LLightText } from "./profileEdit.components";
 import { BACKGROUND_COLOR_OPTIONS, 
   CORE_VALUES, 
@@ -23,7 +24,11 @@ import { BACKGROUND_COLOR_OPTIONS,
   WORK_TYPE_OPTIONS,
   ROLE_TYPES,
  } from "./profileEdit.constants";
-import { styles, UI } from "./profileEdit.styles";
+import { useUI, useEditStyles } from "./profileEdit.styles";
+import { Route } from "expo-router/build/Route";
+import { router } from "expo-router";
+import { styleText } from "node:util";
+import { useProfileEditController } from "./useProfileEditController";
 
 // ---------- Types the screen expects ----------
 export type IndustryRow =
@@ -52,6 +57,8 @@ function GroupCard({
   children: React.ReactNode;
   style?: any;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
@@ -61,13 +68,17 @@ function PickerRow({
   onPress,
   disabled,
   showDivider,
+  rightSlot,
 }: {
   title: string;
   subtitle?: string;
   onPress: () => void;
   disabled?: boolean;
   showDivider?: boolean;
+  rightSlot?:React.ReactNode; // added for toggle function to be individual
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   return (
     <Pressable
       onPress={onPress}
@@ -84,7 +95,7 @@ function PickerRow({
             </LLightText>
           ) : null}
         </View>
-        <LLightText style={styles.chevron}>›</LLightText>
+        {rightSlot ?? <LLightText style={styles.chevron}>›</LLightText>}
       </View>
 
       {showDivider ? <View style={styles.rowDivider} /> : null}
@@ -102,6 +113,8 @@ export function AvatarSection(props: {
   onRemoveAvatarImage: () => void;
   onSetAvatarFromUrl: (url: string) => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const {
     avatarPreviewUri,
     pickingAvatarImage,
@@ -139,7 +152,7 @@ export function AvatarSection(props: {
             height: 80,
             borderRadius: 999,
             borderWidth: 1,
-            borderColor: UI.border,
+            borderColor: ui.border,
             overflow: "hidden",
             backgroundColor: "#f3f3f3",
             alignItems: "center",
@@ -185,14 +198,14 @@ export function AvatarSection(props: {
                 {
                   flex: 1,
                   borderColor:
-                    hasAvatar && !isSaving ? UI.danger : UI.borderStrong,
+                    hasAvatar && !isSaving ? ui.danger : ui.borderStrong,
                 },
                 !hasAvatar || isSaving ? { opacity: 0.4 } : null,
               ]}
             >
               <BtnText
                 style={{
-                  color: hasAvatar && !isSaving ? UI.danger : undefined,
+                  color: hasAvatar && !isSaving ? ui.danger : undefined,
                 }}
               >
                 Remove
@@ -202,10 +215,10 @@ export function AvatarSection(props: {
 
           {/* URL input row */}
           <View style={{ flexDirection: "row", gap: 10 }}>
-            <TextInput
+            <TextInput className = "input"
               style={[styles.input, { flex: 1, fontSize: 12 }]}
               placeholder="Paste image URL"
-              placeholderTextColor={UI.hint}
+              placeholderTextColor={ui.hint}
               value={urlInput}
               onChangeText={setUrlInput}
               autoCapitalize="none"
@@ -241,6 +254,8 @@ export function NameSection(props: {
   companyName: string;
   onChangeCompanyName: (v: string) => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const { companyName, onChangeCompanyName } = props;
 
   return (
@@ -249,11 +264,11 @@ export function NameSection(props: {
 
       <View style={styles.fieldStack}>
         <LLightText style={styles.label}>Company Name</LLightText>
-        <TextInput
+        <TextInput className = "input"
           value={companyName}
           onChangeText={onChangeCompanyName}
           placeholder="Company Name"
-          placeholderTextColor={UI.hint}
+          placeholderTextColor={ui.hint}
           style={styles.input}
         />
       </View>
@@ -265,6 +280,8 @@ export function BackgroundColorSection(props: {
   selectedColor: string;
   onSelect: (color: string) => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const { selectedColor, onSelect } = props;
 
   return (
@@ -294,7 +311,7 @@ export function BackgroundColorSection(props: {
                 alignItems: "center",
                 justifyContent: "center",
                 borderWidth: selected ? 3 : 1,
-                borderColor: selected ? UI.text : "transparent",
+                borderColor: selected ? ui.text : "transparent",
               }}
             >
               {selected ? (
@@ -314,6 +331,8 @@ export function MissionSection(props: {
   mission: string;
   onChangeMission: (v: string) => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const { mission, onChangeMission } = props;
 
   return (
@@ -324,15 +343,50 @@ export function MissionSection(props: {
       </LLightText>
 
       <View style={styles.fieldStack}>
-        <TextInput
+        <TextInput className = "input"
           value={mission?.trim().length ? mission : ""}
           onChangeText={onChangeMission}
           placeholder="Write something about the mission…"
-          placeholderTextColor={UI.hint}
+          placeholderTextColor={ui.hint}
           style={styles.inputMultiline}
           multiline
         />
       </View>
+    </>
+  );
+}
+
+export function CompanyCultureSection(props: {
+  culture: string;
+  onChangeCulture: (v: string) => void;
+  showCulture: boolean;
+  onToggleShowCulture: (val: boolean ) => void;
+}) {
+  const ui = useUI();
+  const styles = useEditStyles();
+  const {culture, onChangeCulture, showCulture, onToggleShowCulture} = props;
+
+  return (
+    <>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}> 
+      <LLightText style={styles.sectionTitle}> Culture </LLightText>
+      <Switch
+          value={showCulture ?? true}
+          onValueChange={onToggleShowCulture}
+          trackColor={{ false: ui.hint, true: ui.text }}
+        />
+    </View>
+    <LLightText style = {styles.sectionHelper}>Company culture, ideals we value, how we treat employees, etc...</LLightText>
+    <View style = {styles.fieldStack}>
+      <TextInput className = "input"
+      value = {culture?.trim().length ? culture : ""}
+      onChangeText = {onChangeCulture}
+      placeholder="Write something about the company culture..."
+      placeholderTextColor={ui.hint}
+      style={styles.inputMultiline}
+      multiline
+      />
+    </View>
     </>
   );
 }
@@ -340,22 +394,32 @@ export function MissionSection(props: {
 export function BenefitsSection(props: {
   benefits: string;
   onChangeBenefits: (v: string) => void;
+  showBenefits: boolean;
+  onToggleShowBenefits: (val: boolean) => void;
 }) {
-  const { benefits, onChangeBenefits } = props;
+  const ui = useUI();
+  const styles = useEditStyles();
+  const { benefits, onChangeBenefits, showBenefits, onToggleShowBenefits} = props;
 
   return (
     <>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}> 
       <LLightText style={styles.sectionTitle}> Benefits </LLightText>
+      <Switch
+          value={showBenefits ?? true}
+          onValueChange={onToggleShowBenefits}
+          trackColor={{ false: ui.hint, true: ui.text }}
+        />
+    </View>
       <LLightText style={styles.sectionHelper}>
         The benefits of the company. 401k, work schedule, overtime, etc.
       </LLightText>
-
       <View style={styles.fieldStack}>
-        <TextInput
+        <TextInput className = "input"
           value={benefits?.trim().length ? benefits : ""}
           onChangeText={onChangeBenefits}
           placeholder="Write something about the benefits..."
-          placeholderTextColor={UI.hint}
+          placeholderTextColor={ui.hint}
           style={styles.inputMultiline}
           multiline
         />
@@ -364,15 +428,24 @@ export function BenefitsSection(props: {
   );
 }
 
+//TODO COME BACK TO THIS ADD THE TOGGLES TO SHOW ON PROFILE
 export function IndustryTypeSection(props: {
   companyAgeSubtitle: string;
-  industrySubtitle: string;
-  locations: string[];
+  showAge: boolean;
+  onToggleShowAge: (val: boolean) => void;
   onPressCompanyAge: () => void;
+  industrySubtitle: string;
+  showIndustry: boolean;
+  onToggleShowIndustry: (val: boolean) => void;
   onPressIndustry: () => void;
+  locations: string[];
+  showLocations: boolean;
+  onToggleShowLocations: (val: boolean) => void;
   onPressAddLocation: () => void;
   onRemoveLocation: (label: string) => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const {
     companyAgeSubtitle,
     industrySubtitle,
@@ -381,6 +454,12 @@ export function IndustryTypeSection(props: {
     onPressIndustry,
     onPressAddLocation,
     onRemoveLocation,
+    showAge,
+    onToggleShowAge,
+    showIndustry,
+    onToggleShowIndustry,
+    showLocations,
+    onToggleShowLocations,
   } = props;
   return (
     <>
@@ -390,17 +469,31 @@ export function IndustryTypeSection(props: {
       </LLightText>
 
       <GroupCard>
+
         <PickerRow
           title="Company Age (years)"
           subtitle={companyAgeSubtitle}
           onPress={onPressCompanyAge}
           showDivider
+          rightSlot={
+            <Switch
+              value={showAge}
+              onValueChange={onToggleShowAge}
+              trackColor={{false: ui.hint, true: ui.text}}
+            />}
         />
+
         <PickerRow
           title="Industry Type"
           subtitle={industrySubtitle}
           onPress={onPressIndustry}
           showDivider
+          rightSlot={
+            <Switch
+              value={showIndustry}
+              onValueChange={onToggleShowIndustry}
+              trackColor={{false: ui.hint, true: ui.text}}
+            />}
         />
         <PickerRow
           title="Add Location"
@@ -409,6 +502,12 @@ export function IndustryTypeSection(props: {
           }
           onPress={onPressAddLocation}
           showDivider={locations.length > 0} //i got this code from claud, i was unsure how to display the array in this function bc location is an array not single value
+          rightSlot={
+            <Switch
+              value={showLocations}
+              onValueChange={onToggleShowLocations}
+              trackColor={{false: ui.hint, true: ui.text}}
+            />}
         />
         {locations.map((loc) => (
           <Pressable
@@ -417,7 +516,7 @@ export function IndustryTypeSection(props: {
             style={[styles.rowPressable, { paddingVertical: 14 }]}
           >
             <LLightText style={styles.rowTitle}>{loc}</LLightText>
-            <LLightText style={[styles.rowTitle, { color: UI.danger }]}>
+            <LLightText style={[styles.rowTitle, { color: ui.danger }]}>
               Remove
             </LLightText>
           </Pressable>
@@ -448,6 +547,8 @@ export function VideoLibrarySection(props: {
   onChangeCaption: (v: string) => void;
   onUpload: () => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const {
     mediaVideoUri,
     mediaThumbUri,
@@ -480,10 +581,18 @@ export function VideoLibrarySection(props: {
         Upload a new video + thumbnail + caption into your library.
       </LLightText>
 
+      <Pressable
+          onPress={() => router.replace("/(companyUser)/video-library")} //made this so that the back will return to the last found URL
+          style={[styles.pill, { marginTop: 10 }]}
+        >
+            See Current Video Library
+        </Pressable>
+
       <View style={[styles.inlineCard, { marginTop: 14 }]}>
         <LLightText style={{ fontSize: 13, opacity: 0.7 }}>
           Step 1 — Pick a video
         </LLightText>
+
         <Pressable
           onPress={onPickVideo}
           style={[styles.pill, { marginTop: 10 }]}
@@ -519,7 +628,7 @@ export function VideoLibrarySection(props: {
           </View>
         ) : null}
 
-        {/* ✅ Manual pick always available (before or after choosing a video) */}
+        {/* Manual pick always available (before or after choosing a video) */}
         <Pressable
           onPress={onPickThumb}
           style={[styles.pill, { marginTop: 10 }]}
@@ -553,7 +662,7 @@ export function VideoLibrarySection(props: {
                       borderRadius: 14,
                       overflow: "hidden",
                       borderWidth: 2,
-                      borderColor: selected ? UI.text : UI.border,
+                      borderColor: selected ? ui.text : ui.border,
                       position: "relative",
                     }}
                   >
@@ -607,11 +716,11 @@ export function VideoLibrarySection(props: {
         <LLightText style={{ fontSize: 13, opacity: 0.7 }}>
           Step 3 — Caption
         </LLightText>
-        <TextInput
+        <TextInput className = "input"
           value={mediaCaption}
           onChangeText={onChangeCaption}
           placeholder="Add a caption/title…"
-          placeholderTextColor={UI.hint}
+          placeholderTextColor={ui.hint}
           style={[styles.input, { marginTop: 10 }]}
         />
 
@@ -640,6 +749,8 @@ export function ProfileMediaResetSection(props: {
   isSaving: boolean;
   onReset: () => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const { isSaving, onReset } = props;
 
   return (
@@ -654,11 +765,11 @@ export function ProfileMediaResetSection(props: {
         disabled={isSaving}
         style={[
           styles.pill,
-          { marginTop: 14, borderColor: UI.danger },
+          { marginTop: 14, borderColor: ui.danger },
           isSaving ? { opacity: 0.5 } : null,
         ]}
       >
-        <BtnText style={{ color: UI.danger }}>Reset profile videos</BtnText>
+        <BtnText style={{ color: ui.danger }}>Reset profile videos</BtnText>
       </Pressable>
     </>
   );
@@ -683,6 +794,8 @@ export function IndustryPickerModal(props: {
   onClose: () => void;
   onApply: () => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const {
     visible,
     industrySearch,
@@ -714,7 +827,7 @@ export function IndustryPickerModal(props: {
         >
           <View
             style={{
-              backgroundColor: UI.card,
+              backgroundColor: ui.card,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               paddingHorizontal: 16,
@@ -727,11 +840,11 @@ export function IndustryPickerModal(props: {
               Industry Type
             </LLightText>
 
-            <TextInput
+            <TextInput className = "input"
               value={industrySearch}
               onChangeText={setIndustrySearch}
               placeholder='Search industries (e.g. "software", "health")'
-              placeholderTextColor={UI.hint}
+              placeholderTextColor={ui.hint}
               style={[styles.input, { borderRadius: 12, marginTop: 12 }]}
               autoCorrect={false}
               autoCapitalize="none"
@@ -802,10 +915,10 @@ export function IndustryPickerModal(props: {
                       paddingVertical: 12,
                       paddingHorizontal: 12,
                       borderWidth: 1,
-                      borderColor: checked ? UI.text : UI.border,
+                      borderColor: checked ? ui.text : ui.border,
                       borderRadius: 12,
                       marginBottom: 8,
-                      backgroundColor: UI.card,
+                      backgroundColor: ui.card,
                       flexDirection: "row",
                       alignItems: "center",
                       justifyContent: "space-between",
@@ -837,11 +950,11 @@ export function IndustryPickerModal(props: {
             />
 
             <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
-              <TextInput
+              <TextInput className = "input"
                 value={industryCustomInput}
                 onChangeText={setIndustryCustomInput}
                 placeholder="Add custom industry…"
-                placeholderTextColor={UI.hint}
+                placeholderTextColor={ui.hint}
                 style={[styles.input, { flex: 1, borderRadius: 12 }]}
               />
               <Pressable onPress={onAddCustomIndustry} style={[styles.pill]}>
@@ -856,7 +969,7 @@ export function IndustryPickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.borderStrong,
+                  borderColor: ui.borderStrong,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -870,7 +983,7 @@ export function IndustryPickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.text,
+                  borderColor: ui.text,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -898,6 +1011,8 @@ export function CityPickerModal(props: {
   onClose: () => void;
   onApply: () => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const {
     visible,
     title = "Select City",
@@ -927,7 +1042,7 @@ export function CityPickerModal(props: {
         >
           <View
             style={{
-              backgroundColor: UI.card,
+              backgroundColor: ui.card,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               paddingHorizontal: 16,
@@ -940,11 +1055,11 @@ export function CityPickerModal(props: {
               {title}
             </LLightText>
 
-            <TextInput
+            <TextInput className = "input"
               value={citySearch}
               onChangeText={setCitySearch}
               placeholder='Search (e.g. "san", "austin")'
-              placeholderTextColor={UI.hint}
+              placeholderTextColor={ui.hint}
               style={[styles.input, { borderRadius: 12, marginTop: 12 }]}
               autoCorrect={false}
               autoCapitalize="none"
@@ -977,10 +1092,10 @@ export function CityPickerModal(props: {
                       paddingVertical: 12,
                       paddingHorizontal: 12,
                       borderWidth: 1,
-                      borderColor: selected ? UI.text : UI.border,
+                      borderColor: selected ? ui.text : ui.border,
                       borderRadius: 12,
                       marginBottom: 8,
-                      backgroundColor: UI.card,
+                      backgroundColor: ui.card,
                     }}
                   >
                     <LLightText
@@ -1008,7 +1123,7 @@ export function CityPickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.borderStrong,
+                  borderColor: ui.borderStrong,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -1049,6 +1164,8 @@ export function SkillsPickerModal(props: {
   onClose: () => void;
   onApply: () => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const {
     visible,
     skillSearch,
@@ -1080,7 +1197,7 @@ export function SkillsPickerModal(props: {
         >
           <View
             style={{
-              backgroundColor: UI.card,
+              backgroundColor: ui.card,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               paddingHorizontal: 16,
@@ -1093,11 +1210,11 @@ export function SkillsPickerModal(props: {
               Anticipated Skills - Known/Taught
             </LLightText>
 
-            <TextInput
+            <TextInput className = "input"
               value={skillSearch}
               onChangeText={setSkillSearch}
               placeholder='Search skills (e.g. in "software", "health")'
-              placeholderTextColor={UI.hint}
+              placeholderTextColor={ui.hint}
               style={[styles.input, { borderRadius: 12, marginTop: 12 }]}
               autoCorrect={false}
               autoCapitalize="none"
@@ -1168,10 +1285,10 @@ export function SkillsPickerModal(props: {
                       paddingVertical: 12,
                       paddingHorizontal: 12,
                       borderWidth: 1,
-                      borderColor: checked ? UI.text : UI.border,
+                      borderColor: checked ? ui.text : ui.border,
                       borderRadius: 12,
                       marginBottom: 8,
-                      backgroundColor: UI.card,
+                      backgroundColor: ui.card,
                       flexDirection: "row",
                       alignItems: "center",
                       justifyContent: "space-between",
@@ -1203,11 +1320,11 @@ export function SkillsPickerModal(props: {
             />
 
             <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
-              <TextInput
+              <TextInput className = "input"
                 value={skillCustomInput}
                 onChangeText={setSkillCustomInput}
                 placeholder="Add custom industry…"
-                placeholderTextColor={UI.hint}
+                placeholderTextColor={ui.hint}
                 style={[styles.input, { flex: 1, borderRadius: 12 }]}
               />
               <Pressable onPress={onAddCustomSkill} style={[styles.pill]}>
@@ -1222,7 +1339,7 @@ export function SkillsPickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.borderStrong,
+                  borderColor: ui.borderStrong,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -1236,7 +1353,7 @@ export function SkillsPickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.text,
+                  borderColor: ui.text,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -1284,6 +1401,8 @@ export function RolePickerModal(props: {
     onClose,
     onApply,
   } = props;
+  const ui = useUI();
+  const styles = useEditStyles();
 
   return (
     <Modal
@@ -1300,7 +1419,7 @@ export function RolePickerModal(props: {
         >
           <View
             style={{
-              backgroundColor: UI.card,
+              backgroundColor: ui.card,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               paddingHorizontal: 16,
@@ -1313,12 +1432,12 @@ export function RolePickerModal(props: {
               Role Types
             </LLightText>
 
-            <TextInput
+            <TextInput className = "input"
               value={roleSearch}
               onChangeText={setRoleSearch}
               placeholder='Search roles (e.g. in "software", "health")'
-              placeholderTextColor={UI.hint}
-              style={[styles.input, { borderRadius: 12, marginTop: 12 }]}
+              placeholderTextColor={ui.hint}
+              style={{borderRadius: 12, marginTop: 12 }}
               autoCorrect={false}
               autoCapitalize="none"
               clearButtonMode="while-editing"
@@ -1377,7 +1496,6 @@ export function RolePickerModal(props: {
                     </LLightText>
                   );
                 }
-
                 const checked = roleTempSelected.has(item.label);
                 const isPredefined = predefinedRoleSet.has(item.label);
 
@@ -1388,10 +1506,10 @@ export function RolePickerModal(props: {
                       paddingVertical: 12,
                       paddingHorizontal: 12,
                       borderWidth: 1,
-                      borderColor: checked ? UI.text : UI.border,
+                      borderColor: checked ? ui.text : ui.border,
                       borderRadius: 12,
                       marginBottom: 8,
-                      backgroundColor: UI.card,
+                      backgroundColor: ui.card,
                       flexDirection: "row",
                       alignItems: "center",
                       justifyContent: "space-between",
@@ -1423,11 +1541,11 @@ export function RolePickerModal(props: {
             />
 
             <View style={{ flexDirection: "row", gap: 10, marginBottom: 12 }}>
-              <TextInput
+              <TextInput className = "input"
                 value={roleCustomInput}
                 onChangeText={setRoleCustomInput}
                 placeholder="Add custom role…"
-                placeholderTextColor={UI.hint}
+                placeholderTextColor={ui.hint}
                 style={[styles.input, { flex: 1, borderRadius: 12 }]}
               />
               <Pressable onPress={onAddCustomRole} style={[styles.pill]}>
@@ -1442,7 +1560,7 @@ export function RolePickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.borderStrong,
+                  borderColor: ui.borderStrong,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -1456,7 +1574,7 @@ export function RolePickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.text,
+                  borderColor: ui.text,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -1473,15 +1591,26 @@ export function RolePickerModal(props: {
 
 export function RolesSection(props: {
   roles: OpenRole[];
+  showOpenRoles: boolean;
+  onToggleShowRoles: (val: boolean) => void;
   onPressAdd: () => void;
   onRemove: (id: string) => void;
   onPressEdit: (role: OpenRole) => void;
 }) {
-  const { roles, onPressAdd, onRemove, onPressEdit } = props;
+  const ui = useUI();
+  const styles = useEditStyles();
+  const { roles, onPressAdd, onRemove, onPressEdit, showOpenRoles, onToggleShowRoles } = props;
 
   return (
     <>
+      <View style={{flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
       <LLightText style={styles.sectionTitle}>Open Roles</LLightText>
+        <Switch 
+            value={ showOpenRoles ?? true}
+            onValueChange={onToggleShowRoles}
+            trackColor={{ false: ui.hint, true: ui.text }}
+        />
+      </View>
       <LLightText style={styles.sectionHelper}>
         Add positions you are actively hiring for.
       </LLightText>
@@ -1521,7 +1650,7 @@ export function RolesSection(props: {
                   </LLightText>
                 </Pressable>
                 <Pressable onPress={() => onRemove(role.id)} hitSlop={8}>
-                  <LLightText style={{ color: UI.danger, fontSize: 13 }}>
+                  <LLightText style={{ color: ui.danger, fontSize: 13 }}>
                     Remove
                   </LLightText>
                 </Pressable>
@@ -1529,6 +1658,9 @@ export function RolesSection(props: {
             </View>
             {!!role.salary.trim() && (
               <LLightText style={styles.rowSub}>{role.salary}</LLightText>
+            )}
+            {!!role.location.trim() && (
+              <LLightText style={styles.rowSub}>{role.location}</LLightText> //added location bc this is important
             )}
             {role.skills.length > 0 && (
               <LLightText style={styles.rowSub} numberOfLines={1}>
@@ -1554,6 +1686,8 @@ export function RoleFormModal(props: {
   onSave: (role: OpenRole) => void;
   initialRole?: OpenRole; //lets us take the existing values and populate for editing
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const { visible, onClose, onSave, initialRole } = props;
 
   const [salary, setSalary] = React.useState("");
@@ -1574,6 +1708,15 @@ export function RoleFormModal(props: {
   const [roleTempSelected, setRoleTempSelected] = React.useState<Set<string>>(new Set());
   const [roleCustomOptions, setRoleCustomOptions] = React.useState<string[]>([]);
   const [roleCustomInput, setRoleCustomInput] = React.useState("");
+
+  //location - call city modal
+  const [location, setLocation] = React.useState("");
+  const [locationPickerVisible, setLocationPickerVisible] = React.useState(false);
+  const [locationSearch, setLocationSearch] = React.useState("");
+  const [selectedLocation, setSelectedLocation] = React.useState("");
+  const [selectedTempLocation, setLocationTempSelected] = React.useState("");
+  const { filteredCities } = useProfileEditController();
+
 
   const [postUrl, setPostUrl] = React.useState("");
   const [workType, setWorkType] = React.useState("");
@@ -1653,6 +1796,12 @@ Added missing roleCustomOptions and setRoleCustomInput props
       setSkillSearch("");
       setSkillCustomInput("");
 
+      //for selecting the initial location
+      setLocation(initialRole?.location ?? "");
+      setLocationSearch("");
+      setLocationTempSelected(initialRole?.location ?? "");
+      setSelectedLocation(initialRole?.location ?? "")
+
       setPostUrl(initialRole?.postUrl ?? "");
       setWorkType(initialRole?.workType ?? "");
       setRelocation(initialRole?.isRelocationCovered ?? false); //if not true, auto false
@@ -1661,6 +1810,7 @@ Added missing roleCustomOptions and setRoleCustomInput props
     visible,
     initialRole?.title,
     initialRole?.salary,
+    initialRole?.location,
     initialRole?.workType,
     initialRole?.skills,
     initialRole?.isRelocationCovered,
@@ -1677,6 +1827,7 @@ Added missing roleCustomOptions and setRoleCustomInput props
       salary: salary.trim(),
       postedAt: initialRole?.postedAt ?? new Date().toISOString().slice(0, 10),
       skills: selectedSkills,
+      location: location,
       postUrl: postUrl.trim(),
       workType: workType.trim(),
       isRelocationCovered: false,
@@ -1699,7 +1850,7 @@ Added missing roleCustomOptions and setRoleCustomInput props
         >
           <View
             style={{
-              backgroundColor: UI.card,
+              backgroundColor: ui.card,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               paddingHorizontal: 16,
@@ -1730,7 +1881,7 @@ Added missing roleCustomOptions and setRoleCustomInput props
               ]}
             >
               <LLightText
-                style={{color: selectedRole ? UI.text : UI.hint, flex: 1, paddingRight: 8}}
+                style={{color: selectedRole ? ui.text : ui.hint, flex: 1, paddingRight: 8}}
                 numberOfLines={1}
               >
                 {selectedRole ? selectedRole : "Select Role Type"}
@@ -1786,7 +1937,7 @@ Added missing roleCustomOptions and setRoleCustomInput props
                 },
               ]}
             >
-              <LLightText style={{ color: salary ? UI.text : UI.hint }}>
+              <LLightText style={{ color: salary ? ui.text : ui.hint }}>
                 {salary || "Select salary range"}
               </LLightText>
               <LLightText style={styles.chevron}>›</LLightText>
@@ -1823,7 +1974,7 @@ Added missing roleCustomOptions and setRoleCustomInput props
               ]}
             >
               <LLightText
-                style={{ color: selectedSkills.length ? UI.text : UI.hint, flex: 1, paddingRight: 8 }}
+                style={{ color: selectedSkills.length ? ui.text : ui.hint, flex: 1, paddingRight: 8 }}
                 numberOfLines={1}
               >
                 {selectedSkills.length
@@ -1865,6 +2016,45 @@ Added missing roleCustomOptions and setRoleCustomInput props
               }}
             />
 
+            <LLightText style={styles.label}>Position Location</LLightText>
+            <Pressable
+              onPress={() => {
+                setLocationTempSelected(location); //needed to be single string picker, only a string gets passed in not a set of them
+                setLocationPickerVisible(true);
+              }}
+              style={[
+                styles.input,
+                {
+                  marginBottom: 14,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                },
+              ]}
+            >
+              <LLightText style={{ color: location ? ui.text : ui.hint }}>
+                {location || "Select location where position is being offered."}
+              </LLightText>
+            </Pressable>
+
+            <CityPickerModal
+              visible={locationPickerVisible}
+              title="Role Location"
+              citySearch={locationSearch}
+              setCitySearch={setLocationSearch}
+              data={filteredCities}
+              selectedLabel={location}        // single string
+              // no selectedLabels prop
+              onSelect={(label) => {
+                setLocation(label);
+                setLocationPickerVisible(false); // auto-close on pick
+              }}
+              canApply={true}
+              onClose={() => setLocationPickerVisible(false)}
+              onApply={() => setLocationPickerVisible(false)}
+            />
+
+
             <LLightText style={styles.label}>Work Type</LLightText>
             <Pressable
               onPress={() => {
@@ -1881,7 +2071,7 @@ Added missing roleCustomOptions and setRoleCustomInput props
                 },
               ]}
             >
-              <LLightText style={{ color: workType ? UI.text : UI.hint }}>
+              <LLightText style={{ color: workType ? ui.text : ui.hint }}>
                 {workType || "Select work type"}
               </LLightText>
               <LLightText style={styles.chevron}>›</LLightText>
@@ -1913,17 +2103,17 @@ Added missing roleCustomOptions and setRoleCustomInput props
               <Switch
                 value={isRelocationCovered}
                 onValueChange={(val) => setRelocation(val)}
-                trackColor={{ false: UI.hint, true: UI.text }}
+                trackColor={{ false: ui.hint, true: ui.text }}
               />
               <LLightText>{isRelocationCovered ? "Yes" : "No"}</LLightText>
             </View>
 
             <LLightText style={styles.label}>Job Posting URL </LLightText>
-            <TextInput
+            <TextInput className = "input"
               value={postUrl}
               onChangeText={setPostUrl}
               placeholder="site link"
-              placeholderTextColor={UI.hint}
+              placeholderTextColor={ui.hint}
               style={[styles.input, { marginBottom: 20 }]}
               autoCorrect={false}
             />
@@ -1935,7 +2125,7 @@ Added missing roleCustomOptions and setRoleCustomInput props
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.borderStrong,
+                  borderColor: ui.borderStrong,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -1950,7 +2140,7 @@ Added missing roleCustomOptions and setRoleCustomInput props
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.text,
+                  borderColor: ui.text,
                   borderRadius: 12,
                   alignItems: "center",
                   opacity: canSave ? 1 : 0.4,
@@ -1966,12 +2156,80 @@ Added missing roleCustomOptions and setRoleCustomInput props
   );
 }
 
+export function ContactSection(props: {
+  companyEmail: string;
+  companyPhone: string;
+  onChangeEmail: (v: string) => void;
+  onChangePhone: (v: string) => void;
+}) {
+  const ui = useUI();
+  const styles = useEditStyles();
+  const { 
+    companyEmail, 
+    companyPhone, 
+    onChangeEmail, 
+    onChangePhone,
+  } = props;
+
+
+  return (
+    <>
+      <LLightText style={[styles.sectionTitle, { marginTop: 17 }]}>
+        Company Contact Information
+      </LLightText>
+      <LLightText style={styles.sectionHelper}>
+        Add a company email and phone that can be publically contacted.
+      </LLightText>
+
+      <View
+        style={[
+          styles.inlineCard,
+          {
+            marginTop: 14,
+            flexDirection: "column", //this makes it so the values are stacked on top of one another
+            gap: 14,
+          },
+        ]}
+      >
+	        {/* email and phone input rows */}
+          <View style={[styles.fieldStack, {flexDirection: "column", gap: 10 }]}>
+            <LLightText style={styles.label}>Company Email</LLightText>
+            <TextInput className = "input"
+              value={companyEmail}
+              onChangeText={onChangeEmail}
+              placeholder="Company Email"
+              placeholderTextColor={ui.hint}
+              style={styles.input}
+            />
+          </View>
+
+
+            <View style={[styles.fieldStack, {flexDirection: "column", gap: 10 }]}>
+              <LLightText style={styles.label}>Company Phone</LLightText>
+              <TextInput className = "input"
+                value={companyPhone}
+                onChangeText={onChangePhone}
+                placeholder="Company Phone"
+                placeholderTextColor={ui.hint}
+                style={styles.input}
+              />
+            </View>
+            <Pressable>
+              <BtnText></BtnText>
+            </Pressable>
+        </View>
+    </>
+  );  
+}
+
 export function CoreValuesPickerModal(props: {
   visible: boolean;
   selected: string[];
   onToggle: (value: string) => void;
   onClose: () => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const { visible, selected, onToggle, onClose } = props;
 
   return (
@@ -1984,7 +2242,7 @@ export function CoreValuesPickerModal(props: {
       <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
         <View
           style={{
-            backgroundColor: UI.card,
+            backgroundColor: ui.card,
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
             paddingHorizontal: 16,
@@ -2016,7 +2274,7 @@ export function CoreValuesPickerModal(props: {
                     paddingVertical: 12,
                     paddingHorizontal: 12,
                     borderWidth: 1,
-                    borderColor: checked ? UI.text : UI.border,
+                    borderColor: checked ? ui.text : ui.border,
                     borderRadius: 12,
                     marginBottom: 8,
                     flexDirection: "row",
@@ -2046,7 +2304,7 @@ export function CoreValuesPickerModal(props: {
             style={{
               paddingVertical: 12,
               borderWidth: 1,
-              borderColor: UI.borderStrong,
+              borderColor: ui.borderStrong,
               borderRadius: 12,
               alignItems: "center",
             }}
@@ -2063,14 +2321,23 @@ export function CoreValuesSection(props: {
   coreValues: string[];
   onPressAdd: () => void;
   onRemove: (value: string) => void;
+  showCoreValues: boolean;
+  onToggleShowCoreValues: (val: boolean) => void;
 }) {
-  const { coreValues, onPressAdd, onRemove } = props;
+  const ui = useUI();
+  const styles = useEditStyles();
+  const { coreValues, onPressAdd, onRemove, showCoreValues, onToggleShowCoreValues } = props;
 
   return (
     <>
-      <LLightText style={[styles.sectionTitle, { marginTop: 14 }]}>
-        Core Values
-      </LLightText>
+      <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}> 
+      <LLightText style={styles.sectionTitle}> Core Values </LLightText>
+      <Switch
+          value={showCoreValues ?? true}
+          onValueChange={onToggleShowCoreValues}
+          trackColor={{ false: ui.hint, true: ui.text }}
+        />
+    </View>
       <LLightText style={[styles.sectionHelper, { marginTop: 4 }]}>
         Choose up to 5.
       </LLightText>
@@ -2090,7 +2357,7 @@ export function CoreValuesSection(props: {
             style={[styles.rowPressable, { paddingVertical: 14 }]}
           >
             <LLightText style={styles.rowTitle}>{value}</LLightText>
-            <LLightText style={[styles.rowTitle, { color: UI.danger }]}>
+            <LLightText style={[styles.rowTitle, { color: ui.danger }]}>
               Remove
             </LLightText>
           </Pressable>
@@ -2110,6 +2377,8 @@ export function SinglePickerModal(props: {
   onClose: () => void;
   onApply: () => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const {
     visible,
     title,
@@ -2132,7 +2401,7 @@ export function SinglePickerModal(props: {
         <View style={{ flex: 1, justifyContent: "flex-end" }}>
           <View
             style={{
-              backgroundColor: UI.card,
+              backgroundColor: ui.card,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               paddingHorizontal: 16,
@@ -2159,10 +2428,10 @@ export function SinglePickerModal(props: {
                       paddingVertical: 12,
                       paddingHorizontal: 12,
                       borderWidth: 1,
-                      borderColor: selected ? UI.text : UI.border,
+                      borderColor: selected ? ui.text : ui.border,
                       borderRadius: 12,
                       marginBottom: 8,
-                      backgroundColor: UI.card,
+                      backgroundColor: ui.card,
                       flexDirection: "row",
                       justifyContent: "space-between",
                       alignItems: "center",
@@ -2185,7 +2454,7 @@ export function SinglePickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.borderStrong,
+                  borderColor: ui.borderStrong,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -2200,7 +2469,7 @@ export function SinglePickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.text,
+                  borderColor: ui.text,
                   borderRadius: 12,
                   alignItems: "center",
                   opacity: canApply ? 1 : 0.4,
@@ -2227,6 +2496,8 @@ export function WorkTypePickerModal(props: {
   onClose: () => void;
   onApply: () => void;
 }) {
+  const ui = useUI();
+  const styles = useEditStyles();
   const {
     visible,
     typeOptions,
@@ -2252,7 +2523,7 @@ export function WorkTypePickerModal(props: {
         <View style={{ flex: 1, justifyContent: "flex-end" }}>
           <View
             style={{
-              backgroundColor: UI.card,
+              backgroundColor: ui.card,
               borderTopLeftRadius: 20,
               borderTopRightRadius: 20,
               paddingHorizontal: 16,
@@ -2284,10 +2555,10 @@ export function WorkTypePickerModal(props: {
                       paddingVertical: 12,
                       paddingHorizontal: 12,
                       borderWidth: 1,
-                      borderColor: selected ? UI.text : UI.border,
+                      borderColor: selected ? ui.text : ui.border,
                       borderRadius: 12,
                       marginBottom: 8,
-                      backgroundColor: UI.card,
+                      backgroundColor: ui.card,
                     }}
                   >
                     <LLightText
@@ -2315,10 +2586,10 @@ export function WorkTypePickerModal(props: {
                       paddingVertical: 12,
                       paddingHorizontal: 12,
                       borderWidth: 1,
-                      borderColor: selected ? UI.text : UI.border,
+                      borderColor: selected ? ui.text : ui.border,
                       borderRadius: 12,
                       marginBottom: 8,
-                      backgroundColor: UI.card,
+                      backgroundColor: ui.card,
                     }}
                   >
                     <LLightText
@@ -2338,7 +2609,7 @@ export function WorkTypePickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.borderStrong,
+                  borderColor: ui.borderStrong,
                   borderRadius: 12,
                   alignItems: "center",
                 }}
@@ -2353,7 +2624,7 @@ export function WorkTypePickerModal(props: {
                   flex: 1,
                   paddingVertical: 12,
                   borderWidth: 1,
-                  borderColor: UI.text,
+                  borderColor: ui.text,
                   borderRadius: 12,
                   alignItems: "center",
                   opacity: canApply ? 1 : 0.4,
