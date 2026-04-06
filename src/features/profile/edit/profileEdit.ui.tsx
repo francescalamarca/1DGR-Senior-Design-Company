@@ -68,12 +68,14 @@ function PickerRow({
   onPress,
   disabled,
   showDivider,
+  rightSlot,
 }: {
   title: string;
   subtitle?: string;
   onPress: () => void;
   disabled?: boolean;
   showDivider?: boolean;
+  rightSlot?:React.ReactNode; // added for toggle function to be individual
 }) {
   const ui = useUI();
   const styles = useEditStyles();
@@ -93,7 +95,7 @@ function PickerRow({
             </LLightText>
           ) : null}
         </View>
-        <LLightText style={styles.chevron}>›</LLightText>
+        {rightSlot ?? <LLightText style={styles.chevron}>›</LLightText>}
       </View>
 
       {showDivider ? <View style={styles.rowDivider} /> : null}
@@ -473,6 +475,12 @@ export function IndustryTypeSection(props: {
           subtitle={companyAgeSubtitle}
           onPress={onPressCompanyAge}
           showDivider
+          rightSlot={
+            <Switch
+              value={showAge}
+              onValueChange={onToggleShowAge}
+              trackColor={{false: ui.hint, true: ui.text}}
+            />}
         />
 
         <PickerRow
@@ -480,6 +488,12 @@ export function IndustryTypeSection(props: {
           subtitle={industrySubtitle}
           onPress={onPressIndustry}
           showDivider
+          rightSlot={
+            <Switch
+              value={showIndustry}
+              onValueChange={onToggleShowIndustry}
+              trackColor={{false: ui.hint, true: ui.text}}
+            />}
         />
         <PickerRow
           title="Add Location"
@@ -488,6 +502,12 @@ export function IndustryTypeSection(props: {
           }
           onPress={onPressAddLocation}
           showDivider={locations.length > 0} //i got this code from claud, i was unsure how to display the array in this function bc location is an array not single value
+          rightSlot={
+            <Switch
+              value={showLocations}
+              onValueChange={onToggleShowLocations}
+              trackColor={{false: ui.hint, true: ui.text}}
+            />}
         />
         {locations.map((loc) => (
           <Pressable
@@ -1571,7 +1591,7 @@ export function RolePickerModal(props: {
 
 export function RolesSection(props: {
   roles: OpenRole[];
-  showRoles: boolean;
+  showOpenRoles: boolean;
   onToggleShowRoles: (val: boolean) => void;
   onPressAdd: () => void;
   onRemove: (id: string) => void;
@@ -1579,14 +1599,14 @@ export function RolesSection(props: {
 }) {
   const ui = useUI();
   const styles = useEditStyles();
-  const { roles, onPressAdd, onRemove, onPressEdit, showRoles, onToggleShowRoles } = props;
+  const { roles, onPressAdd, onRemove, onPressEdit, showOpenRoles, onToggleShowRoles } = props;
 
   return (
     <>
       <View style={{flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
       <LLightText style={styles.sectionTitle}>Open Roles</LLightText>
         <Switch 
-            value={ showRoles ?? true}
+            value={ showOpenRoles ?? true}
             onValueChange={onToggleShowRoles}
             trackColor={{ false: ui.hint, true: ui.text }}
         />

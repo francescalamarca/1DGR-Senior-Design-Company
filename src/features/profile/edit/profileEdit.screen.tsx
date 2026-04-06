@@ -233,6 +233,13 @@ export default function ProfileEditScreen() {
             })
           }
           onPressIndustry={openIndustryPicker}
+          showAge={draft.showAge ?? true}
+          showIndustry={draft.showIndustry ?? true}
+          showLocations={draft.showLocations ?? true}
+          onToggleShowAge={(val) => setDraft((p) => ({...p, showAge: val}))}
+          onToggleShowIndustry={(val) => setDraft((p) => ({...p, showIndustry: val}))}
+          onToggleShowLocations={(val) => setDraft((p) => ({...p, showLocations: val}))}
+
         />
 
         <RolesSection
@@ -240,6 +247,8 @@ export default function ProfileEditScreen() {
           onPressAdd={() => { setEditingRole(null); setRoleFormVisible(true); }}
           onRemove={removeRole}
           onPressEdit={(role) => { setEditingRole(role); setRoleFormVisible(true); }}
+          showOpenRoles={draft.showOpenRoles ?? true}
+          onToggleShowRoles={(val) => setDraft((p) => ({...p, showOpenRoles: val}))}
         />
 
         <RoleFormModal
