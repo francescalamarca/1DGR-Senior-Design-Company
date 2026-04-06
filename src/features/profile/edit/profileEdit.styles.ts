@@ -211,6 +211,29 @@ export const styles = StyleSheet.create({
     overflow: "hidden",
     backgroundColor: UI.card,
   },
+  
+  //added this as an element to be on the main web profile with all of the about us information on a raised platform
+  floatingCard: {
+    marginTop: 0,
+    marginHorizontal: 0,
+    borderWidth: 1,
+    borderTopWidth: 0,
+    borderLeftWidth: 0,
+    borderRightWidth: 0,
+    backgroundColor: UI.bg,
+    borderRadius: 12,
+    padding: 16,
+
+    // iOS
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.12,
+    shadowRadius: 8,
+
+    // Android
+    elevation: 6,
+
+  },
 
   rowPressable: {
     paddingVertical: 16,

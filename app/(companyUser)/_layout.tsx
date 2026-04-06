@@ -138,6 +138,9 @@ export default function HomeUserLayout() {
           <Tabs.Screen name="video-library" options={{ href: null, tabBarStyle: { display: "none" } }} />
           <Tabs.Screen name="video-recovery" options={{ href: null, tabBarStyle: { display: "none" } }} />
 
+          {/* Web profile (hidden from bottom tabs) */}
+          <Tabs.Screen name="web-profile" options={{ href: null, tabBarStyle: { display: "none" } }} />
+
           {/* ───────────── Visible bottom tabs ───────────── */}
           <Tabs.Screen name="candidates" options={{ title: "Candidates" }} />
           <Tabs.Screen name="message-inbox" options={{ title: "Networks" }} />

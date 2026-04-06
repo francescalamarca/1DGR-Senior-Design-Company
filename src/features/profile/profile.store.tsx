@@ -96,6 +96,7 @@ const initialProfileBase = {
   companyName: "",
   missionStatement: "",
   companyCulture: "",
+  headquarters: "",
   coreValues: [],
   locations: [],
   currentEmployees: [],
@@ -118,12 +119,12 @@ const initialProfileBase = {
   // ✅ soft-deleted library list (recover screen)
   deletedVideoLibrary: [] as LibraryVideo[],
 
-  email: "",
-  phoneNumber: "",
   contactUrl1: "",
   contactUrl2: "",
 
   customBackgroundColor: "",
+  companyEmail: "",
+  companyPhone: "",
 };
 
 /** ======================
@@ -222,8 +223,9 @@ const initialProfile: Profile = {
     showCompanyName: true,
   },
 
-  phoneNumber: "",
-  email: "",
+  companyPhone: "",
+  companyEmail: "",
+  headquarters: "",
   contactUrl1: "",
   contactUrl2: "",
   contactUrl1Label: "URL 1",
@@ -246,6 +248,7 @@ const initialProfile: Profile = {
   },
 };
 
+//putting this in the form on the display that we want it in
 initialProfile.companyName = getDisplayName(initialProfile);
 
 /** ======================
@@ -536,7 +539,9 @@ const updateProfileState = (nextOrUpdater: React.SetStateAction<Profile>) => {
       //unsure if contact display settings need to persist - loads from async
       const mappedProfile: Partial<Profile> = {
         companyName: userData.company_name || "",
-        email: userData.email || "",
+        companyEmail: userData.company_email || "",
+        companyPhone: userData.company_phone || "",
+        headquarters: userData.headquarters || "",
         industry: Array.isArray(userData.industry) ? (userData.industry[0] ?? "") : (userData.industry || ""),
         businessAge: userData.business_age || "",
         workType: userData.work_type || "",

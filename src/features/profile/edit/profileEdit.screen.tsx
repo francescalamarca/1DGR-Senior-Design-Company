@@ -23,7 +23,7 @@ import { View, Pressable, ActivityIndicator, Modal, FlatList, TextInput, Keyboar
 
 import { RequireUserType } from "@/src/components/RequireUserType";
 
-import { useUI, useEditStyles, UI} from "./profileEdit.styles";
+import { useEditStyles, UI} from "./profileEdit.styles";
 import { LLightText, KeyboardScreen } from "./profileEdit.components";
 import {
   COMPANY_AGE_OPTIONS,
@@ -50,6 +50,7 @@ import {
   RolesSection,
   RoleFormModal,
   CompanyCultureSection,
+  ContactSection,
 } from "./profileEdit.ui";
 
 const MODAL_KB_OFFSET_IOS = 12;
@@ -186,20 +187,28 @@ export default function ProfileEditScreen() {
           onSelect={selectBackgroundColor}
         />
 
+        <MissionSection mission={draft.missionStatement ?? ""} onChangeMission={(v: string) => setDraft((p) => ({ ...p, missionStatement: v }))} />
+
         <CoreValuesSection
           coreValues={draft.coreValues ?? []}
           onPressAdd={openCoreValuesPicker}
           onRemove={removeCoreValue}
+          showCoreValues={draft.showCoreValues ?? true}
+          onToggleShowCoreValues={(val) => setDraft((p) => ({...p, showCoreValues: val}))}
         />
 
         <BenefitsSection
           benefits={draft.benefitsSummary ?? ""}
           onChangeBenefits={(v: string) => setDraft((p) => ({...p, benefitsSummary: v }))}
+          showBenefits={draft.showBenefitsSummary ?? true}
+          onToggleShowBenefits={(val) => setDraft((p) => ({...p, showBenefits: val}))}
         />
 
         <CompanyCultureSection
         culture={draft.companyCulture ?? ""}
         onChangeCulture={(v: string) => setDraft((p) => ({...p, companyCulture: v}))}
+        showCulture={draft.showCulture ?? true}
+        onToggleShowCulture={(val) => setDraft((p) => ({...p, showCulture: val}))}
         />
 
         <CoreValuesPickerModal
@@ -208,8 +217,6 @@ export default function ProfileEditScreen() {
           onToggle={addCoreValue}
           onClose={() => setCoreValuesPickerVisible(false)}
         />
-
-        <MissionSection mission={draft.missionStatement ?? ""} onChangeMission={(v: string) => setDraft((p) => ({ ...p, missionStatement: v }))} />
 
         <IndustryTypeSection
           companyAgeSubtitle={draft.businessAge?.trim() ? draft.businessAge : "Select"}
@@ -226,6 +233,13 @@ export default function ProfileEditScreen() {
             })
           }
           onPressIndustry={openIndustryPicker}
+          showAge={draft.showAge ?? true}
+          showIndustry={draft.showIndustry ?? true}
+          showLocations={draft.showLocations ?? true}
+          onToggleShowAge={(val) => setDraft((p) => ({...p, showAge: val}))}
+          onToggleShowIndustry={(val) => setDraft((p) => ({...p, showIndustry: val}))}
+          onToggleShowLocations={(val) => setDraft((p) => ({...p, showLocations: val}))}
+
         />
 
         <RolesSection
@@ -233,6 +247,8 @@ export default function ProfileEditScreen() {
           onPressAdd={() => { setEditingRole(null); setRoleFormVisible(true); }}
           onRemove={removeRole}
           onPressEdit={(role) => { setEditingRole(role); setRoleFormVisible(true); }}
+          showOpenRoles={draft.showOpenRoles ?? true}
+          onToggleShowRoles={(val) => setDraft((p) => ({...p, showOpenRoles: val}))}
         />
 
         <RoleFormModal
@@ -321,6 +337,14 @@ export default function ProfileEditScreen() {
             setWorkTypePickerVisible(false);
           }}
         />
+
+        <ContactSection
+          companyEmail = {draft.companyEmail ?? ""}
+          companyPhone = {draft.companyPhone ?? ""}
+          onChangeEmail={(v: string) => setDraft((p) => ({ ...p, companyEmail: v }))}
+          onChangePhone={(v: string) => setDraft((p) => ({ ...p, companyPhone: v }))}
+        />
+
       </KeyboardScreen>
     </>
   );
