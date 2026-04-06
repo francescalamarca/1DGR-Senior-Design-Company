@@ -1,13 +1,9 @@
 /*
 THIS IS THE WEB BASED PROFILE APPEARANCE, WILL LOOK SLIGHTLY DIFFERENT THAN MOBILE
-company name section
-- mission
-- headquarters location with the pin emoji
-- maybe industry would be good to include here?
-About Us
-- have the about below the mission section
-- this will have all information in the about except for current employees which will be in the side bar
-- may try both views with and without the side bar to see what looks cleanest
+
+Layout:
+  - Right sidebar:  Contact Us + Employees — always visible, no accordion/collapse
+  - Main body:      Hero → About Us (always expanded) → First Connect video rail
 */
 
 import { WebFooter } from "@/src/components/WebFooter";
@@ -16,9 +12,8 @@ import { useCompanyProfileScreenData } from "@/src/features/profile/edit/profile
 import { useSession } from "@/src/state/session";
 import { useDynColors } from "@/src/state/theme-colors";
 import { router } from "expo-router";
-import { useMemo, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import {
-  Animated,
   FlatList,
   RefreshControl,
   ScrollView,
@@ -32,7 +27,7 @@ import {
   HeroSection,
   AboutUsCard,
   FirstConnectCard,
-  AboutUsSidebar,
+  ContactSidebar,
   RolesModal,
 } from "./profileWeb.ui";
 
@@ -74,13 +69,11 @@ export default function ProfileWebScreen() {
     openRoles,
   } = useCompanyProfileScreenData();
 
-  // Modal / sidebar state
-  const [sidebarOpen,        setSidebarOpen]        = useState(false);
-  const [rolesModalOpen,     setRolesModalOpen]      = useState(false);
-  const [sidebarColumnHeight,setSidebarColumnHeight] = useState(760);
-  const sidebarAnimation = useRef(new Animated.Value(0)).current;
+  // Modal state
+  const [rolesModalOpen,      setRolesModalOpen]      = useState(false);
+  const [sidebarColumnHeight, setSidebarColumnHeight] = useState(760);
 
-  // Layout-derived values
+  // Layout-derived values (unchanged from original)
   const isCompact      = width < 1280;
   const pagePad        = Math.max(20, Math.min(64, Math.round(width * 0.035)));
   const heroAvatarSize = width < 1180 ? 128 : 164;
@@ -89,53 +82,10 @@ export default function ProfileWebScreen() {
   const sidebarWidth   = isCompact ? 0 : Math.round(width * 0.32);
   const navReturnTo    = "/(companyUser)/profile";
 
-  // Sidebar detail rows — memoised so they only recompute when data changes
-  const sidebarRows = useMemo(() => {
-    const qualCol1: any[] = [];
-    const qualCol2: any[] = [
-      { label: "Mission Statement", value: missionStatement || "—" },
-      { label: "Core Values",       value: coreValues.length ? coreValues.join(", ") : "—" },
-      { label: "Industry",          value: industry || "—" },
-      { label: "Benefits",          value: benefitsSummary || "—" },
-      { label: "Locations",         value: locations.length ? locations.join(", ") : "—" },
-    ];
-    return [...qualCol1, ...qualCol2];
-  }, [missionStatement, coreValues, industry, benefitsSummary, locations]);
-
-  // Sidebar animation interpolations
-  const collapsedPanelHeight = 64;
-  const sidebarPanelHeight   = isCompact
-    ? 540
-    : Math.max(sidebarColumnHeight, collapsedPanelHeight + 200);
-
-  const animatedPanelHeight = sidebarAnimation.interpolate({
-    inputRange:  [0, 1],
-    outputRange: [collapsedPanelHeight, sidebarPanelHeight],
-  });
-  const animatedExpandedOpacity = sidebarAnimation.interpolate({
-    inputRange:  [0, 0.7, 1],
-    outputRange: [0, 0.15, 1],
-  });
-  const animatedExpandedHeight = sidebarAnimation.interpolate({
-    inputRange:  [0, 1],
-    outputRange: [0, Math.max(0, sidebarPanelHeight - collapsedPanelHeight)],
-  });
-
-  // Helpers
   function scrollRail(direction: -1 | 1) {
     const nextOffset = Math.max(0, railScrollOffsetRef.current + direction * railStep);
     railRef.current?.scrollToOffset({ offset: nextOffset, animated: true });
     railScrollOffsetRef.current = nextOffset;
-  }
-
-  function toggleSidebar() {
-    const nextOpen = !sidebarOpen;
-    setSidebarOpen(nextOpen);
-    Animated.timing(sidebarAnimation, {
-      toValue: nextOpen ? 1 : 0,
-      duration: 240,
-      useNativeDriver: false,
-    }).start();
   }
 
   return (
@@ -199,10 +149,19 @@ export default function ProfileWebScreen() {
                 />
               </View>
 
-              {/* ── About Us floating card ── */}
-              <AboutUsCard pagePad={pagePad} />
+              {/* ── About Us — always visible, full detail in main body ── */}
+              <AboutUsCard
+                pagePad={pagePad}
+                missionStatement={missionStatement}
+                coreValues={coreValues}
+                industry={industry}
+                benefitsSummary={benefitsSummary}
+                locations={locations}
+                openRoles={openRoles}
+                onOpenRolesModal={() => setRolesModalOpen(true)}
+              />
 
-              {/* ── First Connect floating card (video rail) ── */}
+              {/* ── First Connect video rail ── */}
               <FirstConnectCard
                 pagePad={pagePad}
                 isCompact={isCompact}
@@ -215,16 +174,10 @@ export default function ProfileWebScreen() {
                 onScrollRail={scrollRail}
               />
 
-              {/* ── About Us sidebar (absolute on desktop, stacked on compact) ── */}
-              <AboutUsSidebar
+              {/* ── Right sidebar: Contact Us + Employees, always visible ── */}
+              <ContactSidebar
                 isCompact={isCompact}
                 sidebarWidth={sidebarWidth}
-                sidebarOpen={sidebarOpen}
-                animatedPanelHeight={animatedPanelHeight}
-                animatedExpandedHeight={animatedExpandedHeight}
-                animatedExpandedOpacity={animatedExpandedOpacity}
-                sidebarRows={sidebarRows}
-                openRoles={openRoles}
                 companyEmail={companyEmail}
                 companyPhone={companyPhone}
                 contactUrl1={contactUrl1}
@@ -236,19 +189,16 @@ export default function ProfileWebScreen() {
                 copyEmail={copyEmail}
                 copyPhone={copyPhone}
                 copyUrl={copyUrl}
-                onToggleSidebar={toggleSidebar}
-                onOpenRolesModal={() => setRolesModalOpen(true)}
                 onLayout={(event) => {
-                  // Track sidebar height so the animated panel can expand to fill it
                   if (!isCompact) setSidebarColumnHeight(event.nativeEvent.layout.height);
                 }}
               />
 
             </View>
-          </View> {/* close main page body */}
+          </View>
         </ScrollView>
 
-        {/* Footer sits outside ScrollView so it stays pinned to the bottom */}
+        {/* Footer sits outside ScrollView so it stays pinned */}
         <WebFooter
           onLogout={() => {
             logout();
@@ -257,10 +207,7 @@ export default function ProfileWebScreen() {
         />
       </SafeAreaView>
 
-      {/*
-        Open Roles modal: tapping the backdrop or X closes it.
-        Each role card shows title, work type, location, salary, skills, relocation, postUrl.
-      */}
+      {/* Open Roles modal — triggered from About Us card */}
       <RolesModal
         visible={rolesModalOpen}
         openRoles={openRoles}

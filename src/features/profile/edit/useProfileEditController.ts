@@ -1,7 +1,7 @@
 import { router, useFocusEffect } from "expo-router";
 import * as VideoThumbnails from "expo-video-thumbnails";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, FlatList, ScrollView } from "react-native";
+import { Alert, FlatList, Platform, ScrollView } from "react-native";
 
 import { aws_config } from "@/constants/aws-config";
 import { useProfile } from "@/src/features/profile/profile.store";
@@ -141,7 +141,11 @@ export function useProfileEditController() {
     const apiPayload = mapDraftToApiPayload(draft);
 
     // Navigate first — always, regardless of token state.
-    router.navigate("/(companyUser)/profile");
+    if (Platform.OS === "web") {
+      router.replace("/(companyUser)/web-profile" as any);
+    } else {
+      router.navigate("/(companyUser)/profile" as any);
+    }
 
     // Update local store — use CDN URL if upload succeeded, local URI as fallback, else keep existing.
     setProfile((p: any) => ({

@@ -102,6 +102,13 @@ function QualValue({
 }
 
 export default function ProfileScreen() {
+  // On web, the dedicated web-profile page is used instead
+  useEffect(() => {
+    if (Platform.OS === "web") {
+      router.replace("/(companyUser)/web-profile" as any);
+    }
+  }, []);
+
   const C = useDynColors();
   const { showActionSheetWithOptions } = useActionSheet();
   const { logout } = useSession();

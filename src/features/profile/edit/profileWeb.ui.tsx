@@ -2,8 +2,11 @@
 //
 // All display sections for ProfileWebScreen.
 // Mirrors profileEdit.ui.tsx — the screen file stays thin, all JSX lives here.
-// IMPORTANT: every style value is copied exactly from the original profileWeb.screen.tsx.
-// Nothing about the visual layout has changed.
+//
+// Layout intent:
+//   - Right sidebar:  Contact Us + Employees — always visible, no accordion
+//   - Main body:      About Us card always expanded below the hero (mission,
+//                     core values, industry, benefits, locations, open roles)
 
 import { ProfileBrandWordmark } from "@/src/components/ProfileBrandWordmark";
 import { styles } from "@/src/features/profile/edit/profileEdit.styles";
@@ -12,7 +15,6 @@ import { Feather, MaterialCommunityIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import {
-  Animated,
   FlatList,
   Image,
   Modal,
@@ -23,7 +25,7 @@ import {
 } from "react-native";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Font / color constants  (kept local so the screen doesn't need to import them)
+// Local constants
 // ─────────────────────────────────────────────────────────────────────────────
 
 const FONTS = {
@@ -32,7 +34,6 @@ const FONTS = {
   CRIMSON_REGULAR: "CrimsonText_400Regular",
 } as const;
 
-// Static palette used in the Roles modal (matches originals: WHITE / BG / BORDER / TEXT / MUTED / ACCENT)
 const WHITE  = "#ffffff";
 const BG     = "#f7f8f9";
 const BORDER = "#dde3e8";
@@ -41,7 +42,7 @@ const MUTED  = "#8a9baa";
 const ACCENT = "#3b7dd8";
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Navigation item definitions (used by TopNav)
+// Navigation item definitions
 // ─────────────────────────────────────────────────────────────────────────────
 
 export const TOP_NAV_ITEMS = [
@@ -54,30 +55,32 @@ export const TOP_NAV_ITEMS = [
 // Shared primitives
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** One label + value row used inside the About Us accordion. */
-export function DetailRow({
-  row,
+/** Label above + value below — used in About Us card and sidebar. */
+function DetailRow({
+  label,
+  value,
   textColor,
   mutedColor,
 }: {
-  row: { label: string; value: string };
+  label: string;
+  value: string;
   textColor: string;
   mutedColor: string;
 }) {
   return (
-    <View style={{ gap: 8 }}>
-      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: mutedColor }}>
-        {row.label}
+    <View style={{ gap: 4 }}>
+      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 12, color: mutedColor, letterSpacing: 0.5 }}>
+        {label}
       </Text>
       <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, lineHeight: 21, color: textColor }}>
-        {row.value}
+        {value || "—"}
       </Text>
     </View>
   );
 }
 
-/** Tappable link row used in the Contact Us panel. */
-export function SidebarLink({
+/** Tappable link row — used in the Contact Us sidebar panel. */
+function SidebarLink({
   label,
   value,
   onPress,
@@ -93,8 +96,8 @@ export function SidebarLink({
   mutedColor: string;
 }) {
   return (
-    <Pressable onPress={onPress} disabled={disabled}>
-      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 12, color: mutedColor }}>
+    <Pressable onPress={onPress} disabled={disabled} style={{ gap: 2 }}>
+      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 12, color: mutedColor, letterSpacing: 0.5 }}>
         {label}
       </Text>
       <Text
@@ -102,7 +105,7 @@ export function SidebarLink({
           fontFamily: FONTS.LEXEND_LIGHT,
           fontSize: 14,
           color: disabled ? mutedColor : textColor,
-          opacity: disabled ? 0.5 : 1,
+          opacity: disabled ? 0.45 : 1,
         }}
       >
         {value || "—"}
@@ -112,7 +115,7 @@ export function SidebarLink({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// TopNav  (the 64 px bar with nav items left + wordmark centred)
+// TopNav
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function TopNav({ pagePad }: { pagePad: number }) {
@@ -130,7 +133,6 @@ export function TopNav({ pagePad }: { pagePad: number }) {
         position: "relative",
       }}
     >
-      {/* Left side: nav items */}
       <View
         style={{
           position: "absolute",
@@ -145,7 +147,6 @@ export function TopNav({ pagePad }: { pagePad: number }) {
         {TOP_NAV_ITEMS.map((item) => {
           const active = item.key === "profile";
           const color  = active ? C.accent : C.subtle;
-
           return (
             <Pressable
               key={item.key}
@@ -165,7 +166,6 @@ export function TopNav({ pagePad }: { pagePad: number }) {
         })}
       </View>
 
-      {/* Centre: wordmark */}
       <ProfileBrandWordmark
         fontFamily={FONTS.LEXEND_LIGHT}
         size={28}
@@ -177,7 +177,7 @@ export function TopNav({ pagePad }: { pagePad: number }) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// HeroSection  (avatar + name + mission/HQ subtitle + LIBRARY/EDIT/SETTINGS/REFRESH)
+// HeroSection  (avatar + name + mission/HQ + LIBRARY/EDIT/SETTINGS/REFRESH)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function HeroSection({
@@ -216,7 +216,7 @@ export function HeroSection({
         paddingRight: isCompact ? 0 : sidebarWidth + 20,
       }}
     >
-      {/* Avatar — tapping plays the avatar video */}
+      {/* Avatar */}
       <Pressable onPress={() => openVideo(profile.avatarVideoUri)} hitSlop={10}>
         {profile.avatarImageUri?.trim() ? (
           <Image
@@ -240,9 +240,8 @@ export function HeroSection({
         )}
       </Pressable>
 
-      {/* Name + mission / HQ subtitle */}
+      {/* Name + mission/HQ */}
       <View style={{ flex: 1, minWidth: 0, gap: 12 }}>
-        {/* canToggleName is always false for companies; Pressable kept but disabled */}
         <Pressable disabled hitSlop={10}>
           <Text
             style={{
@@ -271,7 +270,7 @@ export function HeroSection({
         )}
       </View>
 
-      {/* Quick-action column: LIBRARY / EDIT / SETTINGS / divider / REFRESH */}
+      {/* Quick-action column */}
       <View
         style={{
           width: isCompact ? "100%" : 132,
@@ -326,11 +325,38 @@ export function HeroSection({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AboutUsCard  (floating card: ABOUT US label + Company Culture)
+// AboutUsCard  — always visible, full-width below the hero
+// Shows: mission, core values, industry, benefits, locations, open roles
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function AboutUsCard({ pagePad }: { pagePad: number }) {
+export function AboutUsCard({
+  pagePad,
+  missionStatement,
+  coreValues,
+  industry,
+  benefitsSummary,
+  locations,
+  openRoles,
+  onOpenRolesModal,
+}: {
+  pagePad: number;
+  missionStatement: string;
+  coreValues: string[];
+  industry: string;
+  benefitsSummary: string;
+  locations: string[];
+  openRoles: any[];
+  onOpenRolesModal: () => void;
+}) {
   const C = useDynColors();
+
+  const rows = [
+    { label: "Mission Statement", value: missionStatement || "—" },
+    { label: "Core Values",       value: coreValues.length ? coreValues.join(", ") : "—" },
+    { label: "Industry",          value: industry || "—" },
+    { label: "Benefits",          value: benefitsSummary || "—" },
+    { label: "Locations",         value: locations.length ? locations.join(", ") : "—" },
+  ];
 
   return (
     <View
@@ -343,28 +369,59 @@ export function AboutUsCard({ pagePad }: { pagePad: number }) {
           borderLeftWidth: 1,
           borderRightWidth: 1,
           borderRadius: 14,
+          gap: 24,
         },
       ]}
     >
+      {/* Section label */}
       <Text
         style={{
           fontFamily: FONTS.LEXEND_LIGHT,
           fontSize: 13,
           letterSpacing: 2,
           color: C.text,
-          marginBottom: 14,
         }}
       >
         ABOUT US
       </Text>
 
-      <Text style={styles.header}>Company Culture</Text>
+      {/* Detail rows */}
+      {rows.map((row) => (
+        <DetailRow
+          key={row.label}
+          label={row.label}
+          value={row.value}
+          textColor={C.text}
+          mutedColor={C.subtle}
+        />
+      ))}
+
+      {/* Open Roles — tappable count */}
+      <View style={{ gap: 4 }}>
+        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 12, color: C.subtle, letterSpacing: 0.5 }}>
+          Open Roles
+        </Text>
+        <Pressable onPress={onOpenRolesModal}>
+          <Text
+            style={{
+              fontFamily: FONTS.LEXEND_LIGHT,
+              fontSize: 14,
+              lineHeight: 21,
+              color: openRoles.length > 0 ? ACCENT : C.text,
+            }}
+          >
+            {openRoles.length > 0
+              ? `${openRoles.length} open ${openRoles.length === 1 ? "role" : "roles"}`
+              : "—"}
+          </Text>
+        </Pressable>
+      </View>
     </View>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// FirstConnectCard  (floating card with horizontal video rail + nav arrows)
+// FirstConnectCard  (horizontal video rail)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function FirstConnectCard({
@@ -417,7 +474,6 @@ export function FirstConnectCard({
           FIRST CONNECT
         </Text>
 
-        {/* Coloured band that holds the rail — uses customBackgroundColor */}
         <View
           style={{
             flex: 1,
@@ -461,22 +517,12 @@ export function FirstConnectCard({
                   }}
                 >
                   <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 16 }}>
-                    <Text
-                      style={{
-                        fontFamily: FONTS.CRIMSON_REGULAR,
-                        fontSize: 18,
-                        lineHeight: 25,
-                        color: C.text,
-                      }}
-                    >
+                    <Text style={{ fontFamily: FONTS.CRIMSON_REGULAR, fontSize: 18, lineHeight: 25, color: C.text }}>
                       {caption}
                     </Text>
                   </View>
-
                   <View style={{ aspectRatio: 0.98, backgroundColor: "#e8ecef" }}>
-                    {!!thumb ? (
-                      <Image source={{ uri: thumb }} style={{ width: "100%", height: "100%" }} />
-                    ) : null}
+                    {!!thumb ? <Image source={{ uri: thumb }} style={{ width: "100%", height: "100%" }} /> : null}
                   </View>
                 </Pressable>
               );
@@ -495,22 +541,13 @@ export function FirstConnectCard({
                   padding: 24,
                 }}
               >
-                <Text
-                  style={{
-                    fontFamily: FONTS.LEXEND_LIGHT,
-                    fontSize: 14,
-                    lineHeight: 21,
-                    color: C.subtle,
-                    textAlign: "center",
-                  }}
-                >
+                <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, lineHeight: 21, color: C.subtle, textAlign: "center" }}>
                   No response videos yet.
                 </Text>
               </View>
             }
           />
 
-          {/* Rail navigation arrows — only visible when there are videos */}
           {videos.length > 0 ? (
             <View
               style={{
@@ -524,30 +561,19 @@ export function FirstConnectCard({
               <Pressable
                 onPress={() => onScrollRail(-1)}
                 style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 999,
-                  borderWidth: 1,
-                  borderColor: "#9eb2bf",
-                  backgroundColor: C.card,
-                  alignItems: "center",
-                  justifyContent: "center",
+                  width: 34, height: 34, borderRadius: 999, borderWidth: 1,
+                  borderColor: "#9eb2bf", backgroundColor: C.card,
+                  alignItems: "center", justifyContent: "center",
                 }}
               >
                 <Feather name="arrow-left" size={14} color={C.subtle} />
               </Pressable>
-
               <Pressable
                 onPress={() => onScrollRail(1)}
                 style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 999,
-                  borderWidth: 1,
-                  borderColor: "#9eb2bf",
-                  backgroundColor: C.card,
-                  alignItems: "center",
-                  justifyContent: "center",
+                  width: 34, height: 34, borderRadius: 999, borderWidth: 1,
+                  borderColor: "#9eb2bf", backgroundColor: C.card,
+                  alignItems: "center", justifyContent: "center",
                 }}
               >
                 <Feather name="arrow-right" size={14} color={C.subtle} />
@@ -561,18 +587,13 @@ export function FirstConnectCard({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// AboutUsSidebar  (absolute/relative panel: CONTACT US + animated accordion)
+// ContactSidebar  — right panel, always visible, no accordion
+// Shows: Contact Us (email, phone, url1, url2) + Employees placeholder
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function AboutUsSidebar({
+export function ContactSidebar({
   isCompact,
   sidebarWidth,
-  sidebarOpen,
-  animatedPanelHeight,
-  animatedExpandedHeight,
-  animatedExpandedOpacity,
-  sidebarRows,
-  openRoles,
   companyEmail,
   companyPhone,
   contactUrl1,
@@ -584,18 +605,10 @@ export function AboutUsSidebar({
   copyEmail,
   copyPhone,
   copyUrl,
-  onToggleSidebar,
-  onOpenRolesModal,
   onLayout,
 }: {
   isCompact: boolean;
   sidebarWidth: number;
-  sidebarOpen: boolean;
-  animatedPanelHeight: Animated.AnimatedInterpolation<number>;
-  animatedExpandedHeight: Animated.AnimatedInterpolation<number>;
-  animatedExpandedOpacity: Animated.AnimatedInterpolation<number>;
-  sidebarRows: { label: string; value: string }[];
-  openRoles: any[];
   companyEmail: string;
   companyPhone: string;
   contactUrl1: string;
@@ -607,8 +620,6 @@ export function AboutUsSidebar({
   copyEmail: () => void;
   copyPhone: () => void;
   copyUrl: (url: string) => void;
-  onToggleSidebar: () => void;
-  onOpenRolesModal: () => void;
   onLayout: (event: any) => void;
 }) {
   const C = useDynColors();
@@ -622,126 +633,87 @@ export function AboutUsSidebar({
         top: isCompact ? undefined : 0,
         bottom: isCompact ? undefined : 0,
         width: isCompact ? "100%" : sidebarWidth,
-        borderLeftWidth: isCompact || !sidebarOpen ? 0 : 1,
+        borderLeftWidth: isCompact ? 0 : 1,
         borderTopWidth: isCompact ? 1 : 0,
         borderColor: C.border,
-        backgroundColor: "transparent",
-        overflow: "visible",
+        backgroundColor: C.isDark ? "rgba(71,75,84,0.97)" : "rgba(251,251,251,0.95)",
       }}
     >
-      <Animated.View
-        style={{
-          height: animatedPanelHeight,
-          backgroundColor: C.isDark ? "rgba(71,75,84,0.97)" : "rgba(251,251,251,0.95)",
-          borderLeftWidth: !sidebarOpen && !isCompact ? 1 : 0,
-          borderRightWidth: !sidebarOpen && !isCompact ? 1 : 0,
-          borderBottomWidth: 0,
-          borderColor: !sidebarOpen && !isCompact ? "rgba(214, 221, 226, 0.95)" : "transparent",
-          overflow: "hidden",
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={{
+          paddingLeft: 35,
+          paddingRight: 22,
+          paddingTop: 28,
+          paddingBottom: 36,
+          gap: 28,
         }}
+        showsVerticalScrollIndicator={false}
       >
-        {/* Always-visible header row: CONTACT US label + contact links */}
-        <Pressable
-          onPress={onToggleSidebar}
+        {/* ── CONTACT US ── */}
+        <Text
           style={{
-            paddingLeft: 35,
-            paddingRight: 22,
-            paddingVertical: 20,
-            borderBottomWidth: sidebarOpen ? 1 : 1, // always 1 — intentional per original
-            borderBottomColor: "rgba(214, 221, 226, 0.9)",
-            backgroundColor: "rgba(255,255,255,0.72)",
-            flexDirection: "row",
-            alignItems: "flex-start",
-            justifyContent: "space-between",
+            fontFamily: FONTS.LEXEND_LIGHT,
+            fontSize: 13,
+            letterSpacing: 2,
+            color: C.text,
+            marginBottom: 4,
           }}
         >
-          <View style={{ flex: 1, gap: 12, paddingRight: 18, paddingTop: 4 }}>
-            <Text
-              style={{
-                fontFamily: FONTS.LEXEND_LIGHT,
-                fontSize: 13,
-                letterSpacing: 2,
-                color: C.text,
-              }}
-            >
-              CONTACT US
-            </Text>
+          CONTACT US
+        </Text>
 
-            <View style={{ paddingLeft: 1, paddingRight: 22, paddingTop: 20, paddingBottom: 28, gap: 20 }}>
-              <View style={{ gap: 20 }}>
-                <SidebarLink label="Email" value={companyEmail} onPress={copyEmail} disabled={!companyEmail} textColor={C.text} mutedColor={C.subtle} />
-                <SidebarLink label="Phone" value={companyPhone} onPress={copyPhone} disabled={!companyPhone} textColor={C.text} mutedColor={C.subtle} />
-                {showUrl1 ? (
-                  <SidebarLink
-                    label={contactUrl1Label}
-                    value={contactUrl1}
-                    onPress={() => copyUrl(contactUrl1)}
-                    disabled={!contactUrl1}
-                    textColor={C.text}
-                    mutedColor={C.subtle}
-                  />
-                ) : null}
-                {showUrl2 ? (
-                  <SidebarLink
-                    label={contactUrl2Label}
-                    value={contactUrl2}
-                    onPress={() => copyUrl(contactUrl2)}
-                    disabled={!contactUrl2}
-                    textColor={C.text}
-                    mutedColor={C.subtle}
-                  />
-                ) : null}
-              </View>
-            </View>
-          </View>
+        <SidebarLink label="Email" value={companyEmail} onPress={copyEmail} disabled={!companyEmail} textColor={C.text} mutedColor={C.subtle} />
+        <SidebarLink label="Phone" value={companyPhone} onPress={copyPhone} disabled={!companyPhone} textColor={C.text} mutedColor={C.subtle} />
 
-          {/* Chevron is commented out in the original — preserved here */}
-          {/* <Feather name={sidebarOpen ? "chevron-up" : "chevron-down"} size={20} color={C.text} /> */}
-        </Pressable>
+        {showUrl1 ? (
+          <SidebarLink
+            label={contactUrl1Label}
+            value={contactUrl1}
+            onPress={() => copyUrl(contactUrl1)}
+            disabled={!contactUrl1}
+            textColor={C.text}
+            mutedColor={C.subtle}
+          />
+        ) : null}
 
-        {/* Animated expanded area: detail rows + Open Roles count link */}
-        <Animated.View
+        {showUrl2 ? (
+          <SidebarLink
+            label={contactUrl2Label}
+            value={contactUrl2}
+            onPress={() => copyUrl(contactUrl2)}
+            disabled={!contactUrl2}
+            textColor={C.text}
+            mutedColor={C.subtle}
+          />
+        ) : null}
+
+        {/* ── Divider ── */}
+        <View style={{ height: 1, backgroundColor: C.border }} />
+
+        {/* ── EMPLOYEES — placeholder for future data ── */}
+        <Text
           style={{
-            height: animatedExpandedHeight,
-            opacity: animatedExpandedOpacity,
+            fontFamily: FONTS.LEXEND_LIGHT,
+            fontSize: 13,
+            letterSpacing: 2,
+            color: C.text,
+            marginBottom: 4,
           }}
-          pointerEvents={sidebarOpen ? "auto" : "none"}
         >
-          <ScrollView
-            style={{ flex: 1 }}
-            contentContainerStyle={{
-              paddingLeft: 35,
-              paddingRight: 22,
-              paddingTop: 22,
-              paddingBottom: 36,
-              gap: 28,
-            }}
-            showsVerticalScrollIndicator
-          >
-            {sidebarRows.map((row) => (
-              <DetailRow key={row.label} row={row} textColor={C.text} mutedColor={C.subtle} />
-            ))}
+          EMPLOYEES
+        </Text>
 
-            {/* Open Roles tappable row */}
-            <View style={{ gap: 8 }}>
-              <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED }}>Open Roles</Text>
-              <Pressable onPress={onOpenRolesModal}>
-                <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, lineHeight: 21, color: TEXT }}>
-                  {openRoles.length > 0
-                    ? `${openRoles.length} open ${openRoles.length === 1 ? "role" : "roles"}`
-                    : "—"}
-                </Text>
-              </Pressable>
-            </View>
-          </ScrollView>
-        </Animated.View>
-      </Animated.View>
+        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, color: C.subtle }}>
+          —
+        </Text>
+      </ScrollView>
     </View>
   );
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// RolesModal  (full-screen overlay listing each open role's details)
+// RolesModal
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function RolesModal({
@@ -756,16 +728,11 @@ export function RolesModal({
   onClose: () => void;
 }) {
   return (
-    /*
-      Open Roles modal: tapping the backdrop or the X closes it.
-      Each role card shows title, work type, location, salary, skills, relocation, postUrl.
-    */
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
       <Pressable
         style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" }}
         onPress={onClose}
       >
-        {/* Inner pressable stops backdrop-tap from propagating when tapping inside the card */}
         <Pressable
           style={{
             backgroundColor: WHITE,
@@ -776,7 +743,7 @@ export function RolesModal({
           }}
           onPress={() => {}}
         >
-          {/* Modal header */}
+          {/* Header */}
           <View
             style={{
               flexDirection: "row",
@@ -800,14 +767,7 @@ export function RolesModal({
             {openRoles.map((role: any) => (
               <View
                 key={role.id}
-                style={{
-                  borderWidth: 1,
-                  borderColor: BORDER,
-                  borderRadius: 14,
-                  padding: 20,
-                  gap: 12,
-                  backgroundColor: BG,
-                }}
+                style={{ borderWidth: 1, borderColor: BORDER, borderRadius: 14, padding: 20, gap: 12, backgroundColor: BG }}
               >
                 <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, fontSize: 15, color: TEXT }}>
                   {role.title || "—"}
