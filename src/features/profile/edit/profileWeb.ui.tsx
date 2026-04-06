@@ -22,6 +22,7 @@ import {
   ScrollView,
   Text,
   View,
+  useWindowDimensions,
 } from "react-native";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -45,10 +46,12 @@ const ACCENT = "#3b7dd8";
 // Navigation item definitions
 // ─────────────────────────────────────────────────────────────────────────────
 
-export const TOP_NAV_ITEMS = [
-  { key: "dashboard", label: "Dashboard", icon: "home",          iconSet: "feather",  route: "/(companyUser)/dashboard" },
-  { key: "profile",   label: "Profile",   icon: "briefcase",     iconSet: "feather",  route: "/(companyUser)/profile"   },
-  { key: "matches",   label: "Matches",   icon: "account-heart", iconSet: "material", route: "/(companyUser)/matches"   },
+const TOP_NAV_ITEMS = [
+  { key: "candidates", label: "Candidates", route: "/(companyUser)/candidates", icon: "briefcase", iconSet: "feather" },
+  { key: "networks", label: "Networks", route: "/(companyUser)/networks", icon: "users", iconSet: "feather" },
+  { key: "explore", label: "Explore", route: "/(companyUser)/explore", icon: "earth", iconSet: "material" },
+  { key: "record", label: "Record", route: "/(companyUser)/record", icon: "video", iconSet: "feather" },
+  { key: "profile", label: "Profile", route: "/(companyUser)/profile", icon: "user", iconSet: "feather" },
 ] as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -331,6 +334,8 @@ export function HeroSection({
 
 export function AboutUsCard({
   pagePad,
+  isCompact,
+  sidebarWidth,
   missionStatement,
   coreValues,
   industry,
@@ -340,6 +345,8 @@ export function AboutUsCard({
   onOpenRolesModal,
 }: {
   pagePad: number;
+  isCompact: boolean;
+  sidebarWidth: number;
   missionStatement: string;
   coreValues: string[];
   industry: string;
@@ -364,7 +371,8 @@ export function AboutUsCard({
         styles.floatingCard,
         {
           marginTop: 20,
-          marginHorizontal: pagePad,
+          marginLeft: pagePad,
+          marginRight: isCompact ? pagePad : sidebarWidth + pagePad,
           borderTopWidth: 1,
           borderLeftWidth: 1,
           borderRightWidth: 1,
@@ -427,6 +435,7 @@ export function AboutUsCard({
 export function FirstConnectCard({
   pagePad,
   isCompact,
+  sidebarWidth,
   railCardWidth,
   profile,
   videos,
@@ -437,6 +446,7 @@ export function FirstConnectCard({
 }: {
   pagePad: number;
   isCompact: boolean;
+  sidebarWidth: number;
   railCardWidth: number;
   profile: any;
   videos: any[];
@@ -453,11 +463,13 @@ export function FirstConnectCard({
         styles.floatingCard,
         {
           marginTop: 16,
-          marginHorizontal: pagePad,
+          marginLeft: pagePad,
+          marginRight: isCompact ? pagePad : sidebarWidth + pagePad,
           borderTopWidth: 1,
           borderLeftWidth: 1,
           borderRightWidth: 1,
           borderRadius: 14,
+          backgroundColor: profile.customBackgroundColor || "rgba(255,255,255,0.72)",
         },
       ]}
     >
@@ -482,7 +494,6 @@ export function FirstConnectCard({
             paddingTop: 20,
             paddingBottom: 18,
             paddingHorizontal: pagePad,
-            backgroundColor: profile.customBackgroundColor || "rgba(255,255,255,0.72)",
           }}
         >
           <FlatList

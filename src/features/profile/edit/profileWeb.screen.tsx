@@ -152,6 +152,8 @@ export default function ProfileWebScreen() {
               {/* ── About Us — always visible, full detail in main body ── */}
               <AboutUsCard
                 pagePad={pagePad}
+                isCompact={isCompact}
+                sidebarWidth={sidebarWidth}
                 missionStatement={missionStatement}
                 coreValues={coreValues}
                 industry={industry}
@@ -165,6 +167,7 @@ export default function ProfileWebScreen() {
               <FirstConnectCard
                 pagePad={pagePad}
                 isCompact={isCompact}
+                sidebarWidth={sidebarWidth}
                 railCardWidth={railCardWidth}
                 profile={profile}
                 videos={videos}
