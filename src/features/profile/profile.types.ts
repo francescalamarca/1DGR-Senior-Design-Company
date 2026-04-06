@@ -58,8 +58,8 @@ export type NameDisplaySettings = {
 };
 
 export type ContactDisplaySettings = {
-  showEmail: boolean;
-  showPhoneNumber: boolean;
+  showcompanyEmail: boolean;
+  showcompanyPhone: boolean;
   showUrl1?: boolean;
   showUrl2?: boolean;
 };
