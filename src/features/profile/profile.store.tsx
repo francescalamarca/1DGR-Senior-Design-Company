@@ -53,8 +53,8 @@ function normalizeContactToggles(
   s?: ContactDisplaySettings,
 ): ContactDisplaySettings {
   return {
-    showEmail: !!s?.showEmail,
-    showPhoneNumber: !!s?.showPhoneNumber,
+    showcompanyEmail: !!s?.showcompanyEmail,
+    showcompanyPhone: !!s?.showcompanyPhone,
     showUrl1: !!s?.showUrl1,
     showUrl2: !!s?.showUrl2,
   };
