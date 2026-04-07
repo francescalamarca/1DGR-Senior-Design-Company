@@ -521,8 +521,8 @@ export default function ProfileScreen() {
       >
         <Animated.ScrollView
           ref={scrollViewRef}
-          style={{ backgroundColor: C.bg }}
-          contentContainerStyle={{ paddingBottom: 0 }}
+          style={{ flex: 1, backgroundColor: C.bg }}
+          contentContainerStyle={{ paddingBottom: 40 }}
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

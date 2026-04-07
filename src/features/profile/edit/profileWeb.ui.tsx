@@ -400,6 +400,51 @@ export function AboutUsCard({
           mutedColor={C.subtle}
         />
       ))}
+    </View>
+  );
+}
+
+export function OpenRolesCard({
+  pagePad,
+  isCompact,
+  sidebarWidth,
+  openRoles,
+  onOpenRolesModal,
+}: {
+  pagePad: number;
+  isCompact: boolean;
+  sidebarWidth: number;
+  openRoles: any[];
+  onOpenRolesModal: () => void;
+}) {
+  const C = useDynColors();
+  return (
+    <View
+      style={[
+        styles.floatingCard,
+        {
+          marginTop: 20,
+          marginLeft: pagePad,
+          marginRight: isCompact ? pagePad : sidebarWidth + pagePad,
+          borderTopWidth: 1,
+          borderLeftWidth: 1,
+          borderRightWidth: 1,
+          borderRadius: 14,
+          gap: 24,
+        },
+      ]}
+    >
+      {/* Section label */}
+      <Text
+        style={{
+          fontFamily: FONTS.LEXEND_LIGHT,
+          fontSize: 13,
+          letterSpacing: 2,
+          color: C.text,
+        }}
+      >
+        OPEN ROLES
+      </Text>
 
       {/* Open Roles — tappable count */}
       <View style={{ gap: 4 }}>
@@ -421,27 +466,8 @@ export function AboutUsCard({
           </Text>
         </Pressable>
       </View>
-    </View>
-  );
-}
 
-export function OpenRolesCard({
-  pagePad,
-  isCompact,
-  sidebarWidth,
-  openRoles,
-  onOpenRolesModal,
-}: {
-  pagePad: number;
-  isCompact: boolean;
-  sidebarWidth: number;
-  openRoles: any[];
-  onOpenRolesModal: () => void;
-}) {
-  const C = useDynColors();
-  return (
-    <>
-    </>
+    </View>
   );
 }
 // ─────────────────────────────────────────────────────────────────────────────
@@ -485,7 +511,6 @@ export function FirstConnectCard({
           borderLeftWidth: 1,
           borderRightWidth: 1,
           borderRadius: 14,
-          backgroundColor: profile.customBackgroundColor || "rgba(255,255,255,0.72)",
         },
       ]}
     >
@@ -623,6 +648,7 @@ export function ContactSidebar({
   sidebarWidth,
   companyEmail,
   companyPhone,
+  profile,
   contactUrl1,
   contactUrl2,
   contactUrl1Label,
@@ -636,6 +662,7 @@ export function ContactSidebar({
 }: {
   isCompact: boolean;
   sidebarWidth: number;
+  profile: any;
   companyEmail: string;
   companyPhone: string;
   contactUrl1: string;
@@ -663,7 +690,8 @@ export function ContactSidebar({
         borderLeftWidth: isCompact ? 0 : 1,
         borderTopWidth: isCompact ? 1 : 0,
         borderColor: C.border,
-        backgroundColor: C.isDark ? "rgba(71,75,84,0.97)" : "rgba(251,251,251,0.95)",
+        // backgroundColor: C.isDark ? "rgba(71,75,84,0.97)" : "rgba(251,251,251,0.95)",
+        backgroundColor: profile.customBackgroundColor || "rgba(255,255,255,0.72)",
       }}
     >
       <ScrollView
@@ -740,7 +768,7 @@ export function ContactSidebar({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// RolesModal
+// RolesModal - this modal is used to show the open roles available, in group card view with all the information that was provided on the profile
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function RolesModal({

@@ -29,6 +29,7 @@ import {
   FirstConnectCard,
   ContactSidebar,
   RolesModal,
+  OpenRolesCard,
 } from "./profileWeb.ui";
 
 export default function ProfileWebScreen() {
@@ -162,6 +163,14 @@ export default function ProfileWebScreen() {
                 onOpenRolesModal={() => setRolesModalOpen(true)}
               />
 
+              <OpenRolesCard
+                pagePad={pagePad}
+                isCompact={isCompact}
+                sidebarWidth={sidebarWidth}
+                openRoles={openRoles}
+                onOpenRolesModal={() => setRolesModalOpen(true)}
+              />
+
               {/* ── First Connect video rail ── */}
               <FirstConnectCard
                 pagePad={pagePad}
@@ -179,6 +188,7 @@ export default function ProfileWebScreen() {
               {/* ── Right sidebar: Contact Us + Employees, always visible ── */}
               <ContactSidebar
                 isCompact={isCompact}
+                profile={profile}
                 sidebarWidth={sidebarWidth}
                 companyEmail={companyEmail}
                 companyPhone={companyPhone}
