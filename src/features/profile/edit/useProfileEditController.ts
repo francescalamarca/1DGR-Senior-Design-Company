@@ -13,7 +13,7 @@ import type { OpenRole } from "@/src/features/profile/profile.types";
 import { INDUSTRIES } from "./profileEdit.constants";
 import { mapDraftToApiPayload } from "./profileEdit.data";
 import { filterCitiesByQuery, mapCitiesFromJson } from "./profileEdit.mappers"; //label is defined in this map function
-import { buildCdnUrlFromKey, downloadImageToCache, pickImageFromLibrary, pickVideoFromLibrary, uploadToS3 } from "./profileEdit.media";
+import { buildCdnUrlFromKey, pickImageFromLibrary, pickVideoFromLibrary, uploadToS3 } from "./profileEdit.media";
 import {type CityRow, type IndustryRow } from "./profileEdit.ui";
 
 
@@ -326,31 +326,11 @@ function updateRole(role: OpenRole) {
     ]);
   }
 
-  async function onSetAvatarFromUrl(url: string) {
+  function onSetAvatarFromUrl(url: string) {
     const trimmed = url.trim();
     if (!trimmed) return;
-
-    if (!accessToken) {
-      Alert.alert("Error", "No access token");
-      return;
-    }
-
-    try {
-      setPickingAvatarImage(true);
-      const localUri = await downloadImageToCache(trimmed);
-      if (!localUri) {
-        Alert.alert("Failed", "Could not load image from that URL.");
-        return;
-      }
-      setAvatarLocalUri(localUri);
-      const remoteKey = await uploadToS3({ localUri, type: "image", accessToken });
-      if (remoteKey) setDraft((p) => ({ ...p, avatarImageUri: remoteKey }));
-    } catch (e) {
-      console.error(e);
-      Alert.alert("Failed", "Could not load image from that URL.");
-    } finally {
-      setPickingAvatarImage(false);
-    }
+    setAvatarLocalUri(trimmed);
+    setDraft((p) => ({ ...p, avatarImageUri: trimmed }));
   }
 
   function scrollToBottomSoon() {
