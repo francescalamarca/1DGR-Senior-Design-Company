@@ -50,6 +50,7 @@ export type DraftProfile = Profile & {
   //booleans that save on the draft to determine whether is prop is shown on profile
   showIndustry?: boolean;
   showAge?: boolean;
+  showHQ?: boolean;
   showWorkType?: boolean;
   showLocations?: boolean;
   showCoreValues?: boolean;
@@ -87,6 +88,7 @@ export function normalizeForCompare(p: DraftProfile) {
     showWorkType: p.showWorkType,
     showLocations: p.showLocations,
     showAge: p.showAge,
+    showHQ: p.showHQ,
     showCoreValues: p.showCoreValues,
     showCulture: p.showCulture,
     showCurrentEmployees: p.showCurrentEmployees,

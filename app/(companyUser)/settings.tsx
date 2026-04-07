@@ -833,7 +833,11 @@ export default function SettingsScreen() {
           setDraftContactUrl2Label(profileContactUrl2Label);
           setEditingAccountInfo(false);
 
-          router.replace("/(companyUser)/profile");
+          if (Platform.OS === "web") {
+            router.replace("/(companyUser)/web-profile" as any);
+          } else {
+            router.navigate("/(companyUser)/profile" as any);
+          }
         }}
         style={styles.headerLeft}
         hitSlop={10}
@@ -850,7 +854,11 @@ export default function SettingsScreen() {
       <Pressable
         onPress={async () => {
           if (!canSaveTop) {
-            router.replace("/(companyUser)/profile");
+            if (Platform.OS === "web") {
+              router.replace("/(companyUser)/web-profile" as any);
+            } else {
+              router.navigate("/(companyUser)/profile" as any);
+            }
             return;
           }
 

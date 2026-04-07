@@ -428,6 +428,69 @@ export function BenefitsSection(props: {
   );
 }
 
+export function HQSection(props: {
+  headquarters: string;
+  showHQ: boolean;
+  onToggleShowHQ: (val: boolean) => void;
+  onChangeHeadquarters: (val: string) => void;
+}) {
+  const ui = useUI();
+  const styles = useEditStyles();
+  const {headquarters, showHQ, onToggleShowHQ, onChangeHeadquarters} = props;
+  const [locationPickerVisible, setLocationPickerVisible] = React.useState(false);
+  const [locationSearch, setLocationSearch] = React.useState("");
+  const { filteredCities } = useProfileEditController();
+
+  return (
+    <>
+    <View style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}>
+      <LLightText style={styles.sectionTitle}> Headquarter Location </LLightText>
+      <Switch
+          value={showHQ ?? true}
+          onValueChange={onToggleShowHQ}
+          trackColor={{ false: ui.hint, true: ui.text }}
+        />
+    </View>
+    <LLightText style={styles.sectionHelper}>
+      Headquarters where the company is based out of.
+    </LLightText>
+
+            <Pressable
+              onPress={() => setLocationPickerVisible(true)}
+              style={[
+                styles.input,
+                {
+                  marginBottom: 14,
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                },
+              ]}
+            >
+              <LLightText style={{ color: headquarters ? ui.text : ui.hint }}>
+                {headquarters || "Select location where headquarters are."}
+              </LLightText>
+            </Pressable>
+             <CityPickerModal
+              visible={locationPickerVisible}
+              title="Headquarters Location"
+              citySearch={locationSearch}
+              setCitySearch={setLocationSearch}
+              data={filteredCities}
+              selectedLabel={headquarters}
+              onSelect={(label) => {
+                onChangeHeadquarters(label);
+                setLocationPickerVisible(false);
+              }}
+              canApply={true}
+              onClose={() => setLocationPickerVisible(false)}
+              onApply={() => setLocationPickerVisible(false)}
+            />
+
+    </>
+  )
+}
+
 //TODO COME BACK TO THIS ADD THE TOGGLES TO SHOW ON PROFILE
 export function IndustryTypeSection(props: {
   companyAgeSubtitle: string;

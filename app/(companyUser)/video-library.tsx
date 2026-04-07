@@ -30,8 +30,10 @@ import {
   View,
 } from "react-native";
 
+
 // ✅ IMPORTANT: Update this import path to match YOUR project
 import KeyboardScreen from "@/src/components/KeyboardScreen";
+import { useProfileEditController } from "@/src/features/profile/edit/useProfileEditController";
 
 /** ======================
  *  Fonts
@@ -752,7 +754,9 @@ useFocusEffect(
         }}
       >
         <Text
-          onPress={() => router.replace((returnTo || "/(companyUser)/profile") as any)}
+          onPress={() => Platform.OS === "web"
+            ? router.replace("/(companyUser)/web-profile" as any)
+            : router.navigate("/(companyUser)/profile" as any)}
           style={{
             fontFamily: FONT_LEXEND_LIGHT,
             fontSize: 16,
