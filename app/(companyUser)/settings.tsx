@@ -21,33 +21,29 @@
  *   (replaces Crimson + DM Mono ONLY in those sections)
  */
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  View,
-  Text,
-  Pressable,
-  ScrollView,
-  Alert,
-  Platform,
-  TextInput,
-  Modal,
-  StyleSheet,
-  Animated,
-  Easing,
-  UIManager,
-} from "react-native";
-import { router, useFocusEffect } from "expo-router";
-import { useActionSheet } from "@expo/react-native-action-sheet";
-import { Feather } from "@expo/vector-icons";
+import { aws_config } from "@/constants/aws-config";
+import KeyboardScreen from "@/src/components/KeyboardScreen";
 import { RequireUserType } from "@/src/components/RequireUserType";
 import { useProfile } from "@/src/features/profile/profile.store";
-import * as Clipboard from "expo-clipboard";
-import type { Profile } from "@/src/features/profile/profile.types";
-import { aws_config } from "@/constants/aws-config";
 import { useSession } from "@/src/state/session";
-import KeyboardScreen from "@/src/components/KeyboardScreen";
-import { BrandColors, BrandFonts } from "@/src/theme/brand";
 import { useThemePreference, type ThemePreference } from "@/src/state/theme-preference";
+import { BrandColors, BrandFonts } from "@/src/theme/brand";
+import { useActionSheet } from "@expo/react-native-action-sheet";
+import { Feather } from "@expo/vector-icons";
+import { router, useFocusEffect } from "expo-router";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  Alert,
+  Animated,
+  Easing,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput, TouchableOpacity, UIManager,
+  View
+} from "react-native";
 
 const FONTS = {
   LEXEND_REGULAR: BrandFonts.lexendRegular,
@@ -671,15 +667,15 @@ export default function SettingsScreen() {
   const [draftSettings, setDraftSettings] = useState(() => ({
     nameDisplaySettings: profile.nameDisplaySettings,
     contactDisplaySettings: profile.contactDisplaySettings ?? {
-      showEmail: false,
-      showPhoneNumber: false,
+      showcompanyEmail: false,
+      showcompanyPhone: false,
       showUrl1: false,
       showUrl2: false,
     },
   }));
 
   const [editingAccountInfo, setEditingAccountInfo] = useState(false);
-  const [draftEmail, setDraftEmail] = useState(profile.companyEmail ?? "");
+  const [draftcompanyEmail, setDraftcompanyEmail] = useState(profile.companyEmail ?? "");
   const [draftPhone, setDraftPhone] = useState(() => formatPhone(profile.companyPhone ?? ""));
   const profileContactUrl1 = String((profile as any).contactUrl1 ?? "");
   const profileContactUrl2 = String((profile as any).contactUrl2 ?? "");
@@ -695,8 +691,8 @@ export default function SettingsScreen() {
       setDraftSettings({
         nameDisplaySettings: profile.nameDisplaySettings,
         contactDisplaySettings: profile.contactDisplaySettings ?? {
-          showEmail: false,
-          showPhoneNumber: false,
+          showcompanyEmail: false,
+          showcompanyPhone: false,
           showUrl1: false,
           showUrl2: false,
         },
@@ -710,11 +706,15 @@ export default function SettingsScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      setDraftcompanyEmail(profile.companyEmail ?? "");
+      setDraftPhone(formatPhone(profile.companyPhone ?? ""));
       setDraftContactUrl1(profileContactUrl1);
       setDraftContactUrl2(profileContactUrl2);
       setDraftContactUrl1Label(profileContactUrl1Label);
       setDraftContactUrl2Label(profileContactUrl2Label);
     }, [
+      profile.companyEmail,
+      profile.companyPhone,
       profileContactUrl1,
       profileContactUrl2,
       profileContactUrl1Label,
@@ -728,12 +728,15 @@ export default function SettingsScreen() {
 
     const c = draftSettings.contactDisplaySettings;
     const d = profile.contactDisplaySettings ?? {
-      showEmail: false,
-      showPhoneNumber: false,
+      showcompanyEmail: false,
+      showcompanyPhone: false,
       showUrl1: false,
       showUrl2: false,
     };
 
+    const companyEmailChanged =
+      (draftcompanyEmail.trim().toLowerCase() || "") !== ((profile.companyEmail ?? "").trim().toLowerCase() || "");
+    const phoneChanged = (draftPhone.trim() || "") !== (formatPhone(profile.companyPhone ?? "").trim() || "");
     const url1Changed =
       (draftContactUrl1.trim() || "") !== (profileContactUrl1.trim() || "");
     const url2Changed =
@@ -746,6 +749,8 @@ export default function SettingsScreen() {
     return (
       JSON.stringify(a) !== JSON.stringify(b) ||
       JSON.stringify(c) !== JSON.stringify(d) ||
+      companyEmailChanged ||
+      phoneChanged ||
       url1Changed ||
       url2Changed ||
       url1LabelChanged ||
@@ -755,6 +760,10 @@ export default function SettingsScreen() {
     draftSettings,
     profile.nameDisplaySettings,
     profile.contactDisplaySettings,
+    profile.companyEmail,
+    profile.companyPhone,
+    draftcompanyEmail,
+    draftPhone,
     draftContactUrl1,
     draftContactUrl2,
     draftContactUrl1Label,
@@ -770,6 +779,8 @@ export default function SettingsScreen() {
   }
 
   function cancelAccountInfo() {
+    setDraftcompanyEmail(profile.companyEmail ?? "");
+    setDraftPhone(formatPhone(profile.companyPhone ?? ""));
     setDraftContactUrl1(profileContactUrl1);
     setDraftContactUrl2(profileContactUrl2);
     setDraftContactUrl1Label(profileContactUrl1Label);
@@ -777,18 +788,22 @@ export default function SettingsScreen() {
     setEditingAccountInfo(false);
   }
 
-  const showEmailPublic = !!draftSettings.contactDisplaySettings.showEmail;
-  const showPhonePublic = !!draftSettings.contactDisplaySettings.showPhoneNumber;
+  function handleDeleteAccount() {
+
+  }
+
+  const showcompanyEmailPublic = !!draftSettings.contactDisplaySettings.showcompanyEmail;
+  const showPhonePublic = !!draftSettings.contactDisplaySettings.showcompanyPhone;
   const showUrl1Public = !!draftSettings.contactDisplaySettings.showUrl1;
   const showUrl2Public = !!draftSettings.contactDisplaySettings.showUrl2;
 
-  function setContactToggles(nextShowEmail: boolean, nextShowPhone: boolean, nextShowUrl1: boolean, nextShowUrl2: boolean) {
+  function setContactToggles(nextShowcompanyEmail: boolean, nextShowPhone: boolean, nextShowUrl1: boolean, nextShowUrl2: boolean) {
     setDraftSettings((d) => ({
       ...d,
       contactDisplaySettings: {
         ...d.contactDisplaySettings,
-        showEmail: nextShowEmail,
-        showPhoneNumber: nextShowPhone,
+        showcompanyEmail: nextShowcompanyEmail,
+        showcompanyPhone: nextShowPhone,
         showUrl1: nextShowUrl1,
         showUrl2: nextShowUrl2,
       },
@@ -803,20 +818,26 @@ export default function SettingsScreen() {
             nameDisplaySettings: profile.nameDisplaySettings,
             contactDisplaySettings:
               profile.contactDisplaySettings ?? {
-                showEmail: false,
-                showPhoneNumber: false,
+                showcompanyEmail: false,
+                showcompanyPhone: false,
                 showUrl1: false,
                 showUrl2: false,
               },
           });
 
+          setDraftcompanyEmail(profile.companyEmail ?? "");
+          setDraftPhone(formatPhone(profile.companyPhone ?? ""));
           setDraftContactUrl1(profileContactUrl1);
           setDraftContactUrl2(profileContactUrl2);
           setDraftContactUrl1Label(profileContactUrl1Label);
           setDraftContactUrl2Label(profileContactUrl2Label);
           setEditingAccountInfo(false);
 
-          router.replace("/(companyUser)/profile");
+          if (Platform.OS === "web") {
+            router.replace("/(companyUser)/web-profile" as any);
+          } else {
+            router.navigate("/(companyUser)/profile" as any);
+          }
         }}
         style={styles.headerLeft}
         hitSlop={10}
@@ -833,7 +854,11 @@ export default function SettingsScreen() {
       <Pressable
         onPress={async () => {
           if (!canSaveTop) {
-            router.replace("/(companyUser)/profile");
+            if (Platform.OS === "web") {
+              router.replace("/(companyUser)/web-profile" as any);
+            } else {
+              router.navigate("/(companyUser)/profile" as any);
+            }
             return;
           }
 
@@ -847,6 +872,8 @@ export default function SettingsScreen() {
                 Authorization: accessToken,
               },
               body: JSON.stringify({
+                companyEmail: draftcompanyEmail.trim().toLowerCase(),
+                companyPhone: draftPhone.trim(),
                 urls: [
                   { title: draftContactUrl1Label, url: draftContactUrl1 },
                   { title: draftContactUrl2Label, url: draftContactUrl2 }
@@ -861,6 +888,8 @@ export default function SettingsScreen() {
               ...p,
               nameDisplaySettings: draftSettings.nameDisplaySettings,
               contactDisplaySettings: draftSettings.contactDisplaySettings,
+              companyEmail: draftcompanyEmail.trim().toLowerCase(),
+              companyPhone: draftPhone.trim(),
               contactUrl1: draftContactUrl1.trim(),
               contactUrl2: draftContactUrl2.trim(),
               contactUrl1Label: draftContactUrl1Label.trim() || "URL 1",
@@ -957,7 +986,38 @@ export default function SettingsScreen() {
                 </View>
               </View>
 
-              {/* 4) URL 1 title row */}
+              {/* 4) companyEmail input row */}
+              <View style={[styles.linkItemWrap, styles.linkItemDivider]}>
+                <InputRowLL
+                  label="companyEmail"
+                  value={draftcompanyEmail}
+                  placeholder="you@companyEmail.com"
+                  onChangeText={setDraftcompanyEmail}
+                  visible={editingAccountInfo}
+                  keyboardType="email-address"
+                  autoCapitalize="none"
+                  textContentType="emailAddress"
+                  autoComplete="email"
+                />
+              </View>
+
+              {/* 5) Phone input row */}
+              <View style={[styles.linkItemWrap, styles.linkItemDivider]}>
+                <InputRowLL
+                  label="Phone number"
+                  value={draftPhone}
+                  placeholder="(555)-555-5555"
+                  onChangeText={(t) => setDraftPhone(formatPhone(t))}
+                  visible={editingAccountInfo}
+                  keyboardType="phone-pad"
+                  autoCapitalize="none"
+                  textContentType="telephoneNumber"
+                  autoComplete="tel"
+                  maxLength={14}
+                />
+              </View>
+
+              {/* 6) URL 1 title row */}
               <View style={[styles.linkItemWrap, styles.linkItemDivider]}>
                 <InputRowLL
                   label="URL 1 title"
@@ -1065,26 +1125,79 @@ export default function SettingsScreen() {
           </Collapsible>
 
           <AccordionHeader
-            title="Support"
-            open={openSection === "support"}
-            onToggle={() => toggleSection("support")}
-            bgColor={dynColors.sectionBg}
-            textColor={dynColors.text}
-          />
+          title="Support"
+          open={openSection === "support"}
+          onToggle={() => toggleSection("support")}
+          bgColor={dynColors.sectionBg}
+          textColor={dynColors.text}
+        />
 
-          {/* support settings, for contacting admin, deleting account, etc */}
-          <Collapsible open={openSection === "support"} openBg openBgColor={dynColors.sectionOpenBg}>
-            <View style={styles.accordionBodyPad}>
-                  <LLText style={styles.bodyDescription}>
-                    {`support settings, for contacting admin, deleting account, etc `}
-                  </LLText>
-                </View>`
-          </Collapsible>
+        {/* support settings: FAQ, chat with admin, report an issue, delete account */}
+        <Collapsible open={openSection === "support"} openBg openBgColor={dynColors.sectionOpenBg}>
+          <View style={styles.accordionBodyPad}>
 
-          </>
+            {/* FAQ */}
+            <TouchableOpacity
+              style={styles.supportRow}
+              onPress={() => router.push("/(companyUser)/faq")}
+            >
+              <LLText style={styles.supportRowText}>FAQ</LLText>
+              <LText style={[styles.accordionChevron, { color: dynColors.text }]}>›</LText>
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
+            {/* Chat with Admin */}
+            <TouchableOpacity
+              style={styles.supportRow}
+              onPress={() => router.push("/(companyUser)/admin-chat")}
+            >
+              <LLText style={styles.supportRowText}>Chat with Admin</LLText>
+              <LText style={[styles.accordionChevron, { color: dynColors.text }]}>›</LText>
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
+            {/* Report an Issue */}
+            <TouchableOpacity
+              style={styles.supportRow}
+              onPress={() => router.push("/(companyUser)/report-issue")}
+            >
+              <LLText style={styles.supportRowText}>Report an Issue</LLText>
+              <LText style={[styles.accordionChevron, { color: dynColors.text }]}>›</LText>
+            </TouchableOpacity>
+
+            <View style={styles.divider} />
+
+            {/* Delete Account */}
+            <TouchableOpacity
+              style={styles.supportRow}
+              onPress={() => {
+                Alert.alert(
+                  "Delete Account",
+                  "Are you sure you want to delete your account? This action cannot be undone.",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Delete",
+                      style: "destructive",
+                      onPress: () => handleDeleteAccount(),
+                    },
+                  ]
+                );
+              }}
+            >
+              <LLText style={[styles.supportRowText, styles.deleteText]}>Delete Account</LLText>
+              
+            </TouchableOpacity>
+
+          </View>
+        </Collapsible>
+
+        </>
         </View>
-      </KeyboardScreen>
-    </>
+        </KeyboardScreen>
+        </>
   );
 }
 
@@ -1418,6 +1531,23 @@ const styles = StyleSheet.create({
   },
   modalBtnPressed: { backgroundColor: COLORS.pressed },
   modalBtnText: { fontWeight: "600" },
+  supportRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 14,
+  },
+  supportRowText: {
+    fontSize: 15,
+  },
+  deleteText: {
+    color: "red",
+  },
+  divider: {
+    height: 1,
+    backgroundColor: COLORS.divider, // swap for your divider color token if different
+    opacity: 0.3,
+  },
 });
 
 /** Segmented control for Light / Dark / System selection */
@@ -1451,5 +1581,5 @@ const themeSwitchStyles = StyleSheet.create({
   },
   btnLabelSelected: {
     color: COLORS.primaryCtaText,
-  },
+  }, 
 });

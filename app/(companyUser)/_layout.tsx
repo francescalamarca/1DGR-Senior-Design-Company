@@ -126,6 +126,10 @@ export default function HomeUserLayout() {
           <Tabs.Screen name="profile-edit" options={{ href: null, tabBarStyle: { display: "none" } }} />
           <Tabs.Screen name="video" options={{ href: null, tabBarStyle: { display: "none" } }} />
           <Tabs.Screen name="recording-studio" options={{ href: null, tabBarStyle: { display: "none" } }} />
+          <Tabs.Screen name="faq" options={{ href: null }} />
+          <Tabs.Screen name="admin-chat" options={{ href: null }} />
+          <Tabs.Screen name="report-issue" options={{ href: null }} />
+          <Tabs.Screen name="delete-account" options={{ href: null }} />
 
           {/* ✅ Hidden camera utility route (NOT the bottom tab camera) */}
           <Tabs.Screen name="camera-ui" options={{ href: null, tabBarStyle: { display: "none" } }} />
@@ -133,6 +137,9 @@ export default function HomeUserLayout() {
           {/* Video system (hidden from bottom tabs) */}
           <Tabs.Screen name="video-library" options={{ href: null, tabBarStyle: { display: "none" } }} />
           <Tabs.Screen name="video-recovery" options={{ href: null, tabBarStyle: { display: "none" } }} />
+
+          {/* Web profile (hidden from bottom tabs) */}
+          <Tabs.Screen name="web-profile" options={{ href: null, tabBarStyle: { display: "none" } }} />
 
           {/* ───────────── Visible bottom tabs ───────────── */}
           <Tabs.Screen name="candidates" options={{ title: "Candidates" }} />

@@ -51,7 +51,9 @@ import {
   RoleFormModal,
   CompanyCultureSection,
   ContactSection,
+  HQSection,
 } from "./profileEdit.ui";
+import { mapDraftToApiPayload } from "./profileEdit.data";
 
 const MODAL_KB_OFFSET_IOS = 12;
 const MODAL_LIST_BOTTOM_PADDING = Platform.OS === "ios" ? 280 : 320;
@@ -189,6 +191,13 @@ export default function ProfileEditScreen() {
 
         <MissionSection mission={draft.missionStatement ?? ""} onChangeMission={(v: string) => setDraft((p) => ({ ...p, missionStatement: v }))} />
 
+        <HQSection
+          headquarters={draft.headquarters ?? ""}
+          showHQ={draft.showHQ ?? true}
+          onToggleShowHQ={(val) => setDraft((p) => ({...p, showHQ: val}))}
+          onChangeHeadquarters={(val) => setDraft((p) => ({...p, headquarters: val}))}
+        />
+
         <CoreValuesSection
           coreValues={draft.coreValues ?? []}
           onPressAdd={openCoreValuesPicker}
@@ -201,7 +210,7 @@ export default function ProfileEditScreen() {
           benefits={draft.benefitsSummary ?? ""}
           onChangeBenefits={(v: string) => setDraft((p) => ({...p, benefitsSummary: v }))}
           showBenefits={draft.showBenefitsSummary ?? true}
-          onToggleShowBenefits={(val) => setDraft((p) => ({...p, showBenefits: val}))}
+          onToggleShowBenefits={(val) => setDraft((p) => ({...p, showBenefitsSummary: val}))}
         />
 
         <CompanyCultureSection
