@@ -54,6 +54,7 @@ export default function ProfileWebScreen() {
     missionStatement,
     headquarters,
     benefitsSummary,
+    businessAge,
     coreValues,
     industry,
     locations,
@@ -155,6 +156,7 @@ export default function ProfileWebScreen() {
                 pagePad={pagePad}
                 isCompact={isCompact}
                 sidebarWidth={sidebarWidth}
+                businessAge={businessAge}
                 coreValues={coreValues}
                 industry={industry}
                 benefitsSummary={benefitsSummary}

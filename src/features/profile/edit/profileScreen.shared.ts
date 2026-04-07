@@ -87,7 +87,7 @@ export function useCompanyProfileScreenData() {
     const didFetchOnceRef = useRef(false);
   
     const displayName = String(profile.companyName ?? "").trim() || "Company";
-    const headquarters = String(profile.headquarters ?? "").trim() || "Headquarters";
+    const headquarters = String(profile.headquarters ?? "").trim();
     const companyEmail = String(profile.companyEmail ?? "").trim();
     const companyPhone = String(profile.companyPhone ?? "").trim();
     const contactUrl1 = String((profile as any).contactUrl1 ?? "").trim();
@@ -96,19 +96,6 @@ export function useCompanyProfileScreenData() {
     const contactUrl2Label = String((profile as any).contactUrl2Label ?? "URL 2").trim() || "URL 2";
     const showUrl1 = !!(profile as any)?.contactDisplaySettings?.showUrl1;
     const showUrl2 = !!(profile as any)?.contactDisplaySettings?.showUrl2;
-    // //booleans that save on the draft to determine whether is prop is shown on profile
-    //   showIndustry: boolean;
-    //   showAge: boolean;
-    //   showHQ: boolean;
-    //   showWorkType: boolean;
-    //   showLocations: boolean;
-    //   showCoreValues: boolean;
-    //   showCulture: boolean;
-    //   showCurrentEmployees: boolean;
-    //   showOpenRoles: boolean;
-    //   showBenefitsSummary: boolean;
-    //   showEmail: boolean;
-    //   showPhone: boolean;
   
     const copyEmail = useCallback(async () => {
       if (!companyEmail) return;
@@ -155,7 +142,7 @@ export function useCompanyProfileScreenData() {
           companyName: user?.company_name || user?.companyName || prev.companyName || "",
           companyEmail: user?.company_email || prev.companyEmail || "",
           companyPhone: user?.company_phone || prev.companyPhone || "",
-          missionStatement: user?.mission_statement || user?.missionStatement || prev.missionStatement || "",
+          missionStatement: user?.missionStatement || prev.missionStatement || "",
           companyCulture: user?.company_culture || user?.companyCulture || prev.companyCulture || "",
           benefitsSummary: user?.benefits_summary || user?.benefitsSummary || prev.benefitsSummary || "",
           coreValues: Array.isArray(user?.core_values) ? user.core_values : (Array.isArray(user?.coreValues) ? user.coreValues : prev.coreValues ?? []),
@@ -166,6 +153,16 @@ export function useCompanyProfileScreenData() {
           businessAge: user?.business_age || user?.businessAge || prev.businessAge || "",
           avatarImageUri: toCloudFrontUrl(user?.avatar_image_url ?? user?.avatar_image_key ?? ""),
           avatarVideoUri: toCloudFrontUrl(user?.avatar_video_url ?? user?.avatar_video_key ?? ""),
+          showIndustry: user?.show_industry ?? prev.showIndustry ?? true,
+          showAge: user?.show_age ?? prev.showAge ?? true,
+          showHQ: user?.show_HQ ?? prev.showHQ ?? true,
+          showLocations: user?.show_locations ?? prev.showLocations ?? true,
+          showCoreValues: user?.show_core_values ?? prev.showCoreValues ?? true,
+          showCulture: user?.show_culture ?? prev.showCulture ?? true,
+          showOpenRoles: user?.show_open_roles ?? prev.showOpenRoles ?? true,
+          showBenefitsSummary: user?.show_benefit_Summary ?? prev.showBenefitsSummary ?? true,
+          showEmail: user?.show_email ?? prev.showEmail ?? true,
+          showPhone: user?.show_phone ?? prev.showPhone ?? true,
           media: (Array.isArray(videoLibrary) ? videoLibrary : [])
             .filter((v: any) => v.slot !== null && v.slot !== undefined)
             .sort((a: any, b: any) => (a.slot ?? 0) - (b.slot ?? 0))
@@ -194,11 +191,22 @@ export function useCompanyProfileScreenData() {
     // Company info sections
     const missionStatement = String(profile.missionStatement ?? "").trim();
     const benefitsSummary = String(profile.benefitsSummary ?? "").trim();
+    const businessAge = String(profile.businessAge ?? "").trim();
     const companyCulture = String(profile.companyCulture ?? "").trim();
     const coreValues: string[] = Array.isArray(profile.coreValues) ? profile.coreValues : [];
     const openRoles: any[] = Array.isArray(profile.openRoles) ? profile.openRoles : [];
     const industry = String(profile.industry ?? "").trim();
     const locations: string[] = Array.isArray(profile.locations) ? profile.locations : [];
+
+    // Visibility toggles (default true when undefined)
+    const showIndustry = (profile as any).showIndustry !== false;
+    const showAge = (profile as any).showAge !== false;
+    const showHQ = (profile as any).showHQ !== false;
+    const showLocations = (profile as any).showLocations !== false;
+    const showCoreValues = (profile as any).showCoreValues !== false;
+    const showCulture = (profile as any).showCulture !== false;
+    const showOpenRoles = (profile as any).showOpenRoles !== false;
+    const showBenefitsSummary = (profile as any).showBenefitsSummary !== false;
   
     const videos = useMemo(() => {
       const list = Array.isArray(profile.media) ? profile.media : [];
@@ -227,6 +235,7 @@ export function useCompanyProfileScreenData() {
       missionStatement,
       benefitsSummary,
       companyCulture,
+      businessAge,
       coreValues,
       openRoles,
       industry,
@@ -241,6 +250,14 @@ export function useCompanyProfileScreenData() {
       contactUrl2Label,
       showUrl1,
       showUrl2,
+      showIndustry,
+      showAge,
+      showHQ,
+      showLocations,
+      showCoreValues,
+      showCulture,
+      showOpenRoles,
+      showBenefitsSummary,
       openVideo,
     };
   }

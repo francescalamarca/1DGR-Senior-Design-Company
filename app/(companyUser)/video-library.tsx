@@ -563,7 +563,11 @@ useFocusEffect(
         setSelectedVideoUrl(null);
         setSelectedSlot(null);
         setSelectedCaption("");
-        router.replace(returnTo as any);
+        if (Platform.OS === "web") {
+          router.replace("/(companyUser)/web-profile" as any);
+        } else {
+          router.navigate("/(companyUser)/profile" as any);
+        }
         return;
       }
 
@@ -603,7 +607,11 @@ useFocusEffect(
         setSelectedVideoUrl(null);
         setSelectedSlot(null);
         setSelectedCaption("");
-        router.replace(returnTo as any);
+        if (Platform.OS === "web") {
+          router.replace("/(companyUser)/web-profile" as any);
+        } else {
+          router.navigate("/(companyUser)/profile" as any);
+        }
       } catch (e: any) {
         setProfile(prevProfile);
         Alert.alert("Couldn't save", e?.message ?? "Unknown error");

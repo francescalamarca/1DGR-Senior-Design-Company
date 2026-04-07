@@ -133,6 +133,7 @@ export function useProfileEditController() {
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   function handleCancel() {
     // Navigate first — always, regardless of token state.
     if (Platform.OS === "web") {
@@ -162,14 +163,6 @@ export function useProfileEditController() {
           ? ""
           : buildCdnUrlFromKey(draft.avatarImageUri ?? "") || avatarLocalUri || (p as any).avatarImageUri,
     }));
-
-    // Backend sync only if we have a token.
-    if (accessToken) {
-      updateUserProfile(apiPayload as any, accessToken)
-        .catch((err) => console.warn("[handleSave] backend sync failed:", err));
-    } else {
-      console.warn("[handleSave] No access token — local save only.");
-    }
   }
 
   function openSingleSelectPicker(args: { title: string; options: string[]; value: string; onSelect: (val: string) => void }) {
@@ -326,31 +319,11 @@ function updateRole(role: OpenRole) {
     ]);
   }
 
-  async function onSetAvatarFromUrl(url: string) {
+  function onSetAvatarFromUrl(url: string) {
     const trimmed = url.trim();
     if (!trimmed) return;
-
-    if (!accessToken) {
-      Alert.alert("Error", "No access token");
-      return;
-    }
-
-    try {
-      setPickingAvatarImage(true);
-      const localUri = await downloadImageToCache(trimmed);
-      if (!localUri) {
-        Alert.alert("Failed", "Could not load image from that URL.");
-        return;
-      }
-      setAvatarLocalUri(localUri);
-      const remoteKey = await uploadToS3({ localUri, type: "image", accessToken });
-      if (remoteKey) setDraft((p) => ({ ...p, avatarImageUri: remoteKey }));
-    } catch (e) {
-      console.error(e);
-      Alert.alert("Failed", "Could not load image from that URL.");
-    } finally {
-      setPickingAvatarImage(false);
-    }
+    setAvatarLocalUri(trimmed);
+    setDraft((p) => ({ ...p, avatarImageUri: trimmed }));
   }
 
   function scrollToBottomSoon() {

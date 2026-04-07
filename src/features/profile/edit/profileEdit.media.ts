@@ -2,7 +2,7 @@
 import { Alert } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as VideoThumbnails from "expo-video-thumbnails";
-import { File, Paths } from "expo-file-system";
+import * as LegacyFS from "expo-file-system/legacy";
 import { aws_config } from "@/constants/aws-config";
 
 type AlertFn = (title: string, msg: string) => void;
@@ -82,9 +82,10 @@ export async function generateThumbnails(videoUri: string) {
  */
 export async function downloadImageToCache(url: string): Promise<string | null> {
   try {
-    const destFile = new File(Paths.cache, `logo_url_${Date.now()}.jpg`);
-    const downloaded = await File.downloadFileAsync(url, destFile);
-    return downloaded.uri;
+    const destUri = `${LegacyFS.cacheDirectory}logo_url_${Date.now()}.jpg`;
+    const result = await LegacyFS.downloadAsync(url, destUri);
+    if (result.status !== 200) return null;
+    return result.uri;
   } catch {
     return null;
   }

@@ -258,7 +258,7 @@ export function HeroSection({
           </Text>
         </Pressable>
 
-        {(!!missionStatement || !!headquarters) && (
+        {!!missionStatement && (
           <Text
             style={{
               fontFamily: FONTS.LEXEND_LIGHT,
@@ -268,7 +268,20 @@ export function HeroSection({
               marginTop: 6,
             }}
           >
-            {missionStatement} - 📍 {headquarters}
+            {missionStatement}
+          </Text>
+        )}
+        {!!headquarters && (
+          <Text
+            style={{
+              fontFamily: FONTS.LEXEND_LIGHT,
+              fontSize: 15,
+              lineHeight: 22,
+              color: C.subtle,
+              marginTop: !!missionStatement ? 2 : 6,
+            }}
+          >
+            📍 {headquarters}
           </Text>
         )}
       </View>
@@ -337,6 +350,7 @@ export function AboutUsCard({
   isCompact,
   sidebarWidth,
   coreValues,
+  businessAge,
   industry,
   benefitsSummary,
   locations,
@@ -346,6 +360,7 @@ export function AboutUsCard({
   pagePad: number;
   isCompact: boolean;
   sidebarWidth: number;
+  businessAge: string;
   coreValues: string[];
   industry: string;
   benefitsSummary: string;
@@ -356,10 +371,11 @@ export function AboutUsCard({
   const C = useDynColors();
 
   const rows = [
-    { label: "Core Values",       value: coreValues.length ? coreValues.join(", ") : "—" },
-    { label: "Industry",          value: industry || "—" },
-    { label: "Benefits",          value: benefitsSummary || "—" },
-    { label: "Locations",         value: locations.length ? locations.join(", ") : "—" },
+    { label: "Core Values",       value: coreValues.length ? coreValues.join(", ") : "" },
+    { label: "Industry",          value: industry || "" },
+    { label: "Business Age",      value: businessAge || ""},
+    { label: "Benefits",          value: benefitsSummary || "" },
+    { label: "Locations",         value: locations.length ? locations.join(", ") : "" },
   ];
 
   return (
