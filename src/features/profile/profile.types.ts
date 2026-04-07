@@ -130,4 +130,18 @@ export type Profile = {
   companyEmail: string;
   companyPhone: string;
 
+  //booleans that save on the draft to determine whether is prop is shown on profile
+  showIndustry: boolean;
+  showAge: boolean;
+  showHQ: boolean;
+  showWorkType: boolean;
+  showLocations: boolean;
+  showCoreValues: boolean;
+  showCulture: boolean;
+  showCurrentEmployees: boolean;
+  showOpenRoles: boolean;
+  showBenefitsSummary: boolean;
+  showEmail: boolean;
+  showPhone: boolean;
+
 };

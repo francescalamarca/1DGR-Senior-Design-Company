@@ -646,7 +646,7 @@ export function VideoLibrarySection(props: {
           onPress={() => router.replace("/(companyUser)/video-library")} //made this so that the back will return to the last found URL
           style={[styles.pill, { marginTop: 10 }]}
         >
-            See Current Video Library
+        <BtnText>See Current Video Library </BtnText>
         </Pressable>
 
       <View style={[styles.inlineCard, { marginTop: 14 }]}>

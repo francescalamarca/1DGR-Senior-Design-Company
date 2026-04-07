@@ -96,6 +96,19 @@ export function useCompanyProfileScreenData() {
     const contactUrl2Label = String((profile as any).contactUrl2Label ?? "URL 2").trim() || "URL 2";
     const showUrl1 = !!(profile as any)?.contactDisplaySettings?.showUrl1;
     const showUrl2 = !!(profile as any)?.contactDisplaySettings?.showUrl2;
+    // //booleans that save on the draft to determine whether is prop is shown on profile
+    //   showIndustry: boolean;
+    //   showAge: boolean;
+    //   showHQ: boolean;
+    //   showWorkType: boolean;
+    //   showLocations: boolean;
+    //   showCoreValues: boolean;
+    //   showCulture: boolean;
+    //   showCurrentEmployees: boolean;
+    //   showOpenRoles: boolean;
+    //   showBenefitsSummary: boolean;
+    //   showEmail: boolean;
+    //   showPhone: boolean;
   
     const copyEmail = useCallback(async () => {
       if (!companyEmail) return;
