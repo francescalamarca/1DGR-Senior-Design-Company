@@ -454,39 +454,37 @@ export function HQSection(props: {
     <LLightText style={styles.sectionHelper}>
       Headquarters where the company is based out of.
     </LLightText>
-
-            <Pressable
-              onPress={() => setLocationPickerVisible(true)}
-              style={[
-                styles.input,
-                {
-                  marginBottom: 14,
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                },
-              ]}
-            >
-              <LLightText style={{ color: headquarters ? ui.text : ui.hint }}>
-                {headquarters || "Select location where headquarters are."}
-              </LLightText>
-            </Pressable>
-             <CityPickerModal
-              visible={locationPickerVisible}
-              title="Headquarters Location"
-              citySearch={locationSearch}
-              setCitySearch={setLocationSearch}
-              data={filteredCities}
-              selectedLabel={headquarters}
-              onSelect={(label) => {
-                onChangeHeadquarters(label);
-                setLocationPickerVisible(false);
-              }}
-              canApply={true}
-              onClose={() => setLocationPickerVisible(false)}
-              onApply={() => setLocationPickerVisible(false)}
-            />
-
+      <Pressable
+        onPress={() => setLocationPickerVisible(true)}
+        style={[
+          styles.input,
+          {
+            marginBottom: 14,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+          },
+        ]}
+      >
+        <LLightText style={{ color: headquarters ? ui.text : ui.hint }}>
+          {headquarters || "Select location where headquarters are."}
+        </LLightText>
+      </Pressable>
+      <CityPickerModal
+        visible={locationPickerVisible}
+        title="Headquarters Location"
+        citySearch={locationSearch}
+        setCitySearch={setLocationSearch}
+        data={filteredCities}
+        selectedLabel={headquarters}
+        onSelect={(label) => {
+          onChangeHeadquarters(label);
+          setLocationPickerVisible(false);
+        }}
+        canApply={true}
+        onClose={() => setLocationPickerVisible(false)}
+        onApply={() => setLocationPickerVisible(false)}
+      />
     </>
   )
 }
