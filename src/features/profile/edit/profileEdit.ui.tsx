@@ -50,6 +50,12 @@ const MODAL_KB_OFFSET_IOS = 12;
 const MODAL_LIST_BOTTOM_PADDING = Platform.OS === "ios" ? 280 : 320;
 
 // ---------- Shared UI helpers ----------
+/*
+onStartShouldSetResponder={() => true} on the wrapper View 
+tells React Native that the inner view wants to handle the touch, 
+preventing it from propagating up to the parent Pressable. 
+Now toggling the Switch won't open the popup.
+*/
 function GroupCard({
   children,
   style,
@@ -79,6 +85,33 @@ function PickerRow({
 }) {
   const ui = useUI();
   const styles = useEditStyles();
+
+  //so basically this says hey, 
+  // when a right slot is present, make it so only the left text area is pressable to avoid overlap
+  if (rightSlot) {
+    return (
+      <View style={[styles.rowPressable, { opacity: disabled ? 0.5 : 1 }]}>
+        <View style={{ flexDirection: "row", alignItems: "center" }}>
+          <Pressable
+            onPress={onPress}
+            disabled={disabled}
+            style={{ flex: 1, paddingRight: 10 }}
+            hitSlop={8}
+          >
+            <LLightText style={styles.rowTitle}>{title}</LLightText>
+            {subtitle ? (
+              <LLightText style={styles.rowSub} numberOfLines={2}>
+                {subtitle}
+              </LLightText>
+            ) : null}
+          </Pressable> {/* pressable ends before the right slot, ending it's section before the toggle is there, all in the same view box */}
+          {rightSlot}
+        </View>
+        {showDivider ? <View style={styles.rowDivider} /> : null}
+      </View>
+    );
+  }
+
   return (
     <Pressable
       onPress={onPress}
@@ -95,13 +128,13 @@ function PickerRow({
             </LLightText>
           ) : null}
         </View>
-        {rightSlot ?? <LLightText style={styles.chevron}>›</LLightText>}
+        <LLightText style={styles.chevron}>›</LLightText>
       </View>
-
       {showDivider ? <View style={styles.rowDivider} /> : null}
     </Pressable>
   );
 }
+
 
 // ---------- Sections ----------
 export function AvatarSection(props: {
