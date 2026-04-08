@@ -21,8 +21,7 @@ import {
   Pressable,
   ScrollView,
   Text,
-  View,
-  useWindowDimensions,
+  View
 } from "react-native";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -30,16 +29,16 @@ import {
 // ─────────────────────────────────────────────────────────────────────────────
 
 const FONTS = {
-  LEXEND_LIGHT:    "Lexend_300Light",
-  LEXEND_REGULAR:  "Lexend_400Regular",
+  LEXEND_LIGHT: "Lexend_300Light",
+  LEXEND_REGULAR: "Lexend_400Regular",
   CRIMSON_REGULAR: "CrimsonText_400Regular",
 } as const;
 
-const WHITE  = "#ffffff";
-const BG     = "#f7f8f9";
+const WHITE = "#ffffff";
+const BG = "#f7f8f9";
 const BORDER = "#dde3e8";
-const TEXT   = "#1a1a1a";
-const MUTED  = "#8a9baa";
+const TEXT = "#1a1a1a";
+const MUTED = "#8a9baa";
 const ACCENT = "#3b7dd8";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -47,11 +46,41 @@ const ACCENT = "#3b7dd8";
 // ─────────────────────────────────────────────────────────────────────────────
 
 const TOP_NAV_ITEMS = [
-  { key: "candidates", label: "Candidates", route: "/(companyUser)/candidates", icon: "briefcase", iconSet: "feather" },
-  { key: "networks", label: "Networks", route: "/(companyUser)/networks", icon: "users", iconSet: "feather" },
-  { key: "explore", label: "Explore", route: "/(companyUser)/explore", icon: "earth", iconSet: "material" },
-  { key: "record", label: "Record", route: "/(companyUser)/record", icon: "video", iconSet: "feather" },
-  { key: "profile", label: "Profile", route: "/(companyUser)/profile", icon: "user", iconSet: "feather" },
+  {
+    key: "candidates",
+    label: "Candidates",
+    route: "/(companyUser)/candidates",
+    icon: "briefcase",
+    iconSet: "feather",
+  },
+  {
+    key: "networks",
+    label: "Networks",
+    route: "/(companyUser)/networks",
+    icon: "users",
+    iconSet: "feather",
+  },
+  {
+    key: "explore",
+    label: "Explore",
+    route: "/(companyUser)/explore",
+    icon: "earth",
+    iconSet: "material",
+  },
+  {
+    key: "record",
+    label: "Record",
+    route: "/(companyUser)/record",
+    icon: "video",
+    iconSet: "feather",
+  },
+  {
+    key: "profile",
+    label: "Profile",
+    route: "/(companyUser)/profile",
+    icon: "user",
+    iconSet: "feather",
+  },
 ] as const;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -72,10 +101,24 @@ function DetailRow({
 }) {
   return (
     <View style={{ gap: 4 }}>
-      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 12, color: mutedColor, letterSpacing: 0.5 }}>
+      <Text
+        style={{
+          fontFamily: FONTS.LEXEND_LIGHT,
+          fontSize: 12,
+          color: mutedColor,
+          letterSpacing: 0.5,
+        }}
+      >
         {label}
       </Text>
-      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, lineHeight: 21, color: textColor }}>
+      <Text
+        style={{
+          fontFamily: FONTS.LEXEND_LIGHT,
+          fontSize: 14,
+          lineHeight: 21,
+          color: textColor,
+        }}
+      >
         {value || "—"}
       </Text>
     </View>
@@ -100,7 +143,14 @@ function SidebarLink({
 }) {
   return (
     <Pressable onPress={onPress} disabled={disabled} style={{ gap: 2 }}>
-      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 12, color: mutedColor, letterSpacing: 0.5 }}>
+      <Text
+        style={{
+          fontFamily: FONTS.LEXEND_LIGHT,
+          fontSize: 12,
+          color: mutedColor,
+          letterSpacing: 0.5,
+        }}
+      >
         {label}
       </Text>
       <Text
@@ -149,19 +199,37 @@ export function TopNav({ pagePad }: { pagePad: number }) {
       >
         {TOP_NAV_ITEMS.map((item) => {
           const active = item.key === "profile";
-          const color  = active ? C.accent : C.subtle;
+          const color = active ? C.accent : C.subtle;
           return (
             <Pressable
               key={item.key}
-              onPress={() => { if (active) return; router.replace(item.route as any); }}
-              style={{ flexDirection: "row", alignItems: "center", gap: 6, opacity: active ? 1 : 0.92 }}
+              onPress={() => {
+                if (active) return;
+                router.replace(item.route as any);
+              }}
+              style={{
+                flexDirection: "row",
+                alignItems: "center",
+                gap: 6,
+                opacity: active ? 1 : 0.92,
+              }}
             >
               {item.iconSet === "material" ? (
-                <MaterialCommunityIcons name={item.icon as any} size={16} color={color} />
+                <MaterialCommunityIcons
+                  name={item.icon as any}
+                  size={16}
+                  color={color}
+                />
               ) : (
                 <Feather name={item.icon as any} size={16} color={color} />
               )}
-              <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, fontSize: 12, color }}>
+              <Text
+                style={{
+                  fontFamily: FONTS.LEXEND_REGULAR,
+                  fontSize: 12,
+                  color,
+                }}
+              >
                 {item.label}
               </Text>
             </Pressable>
@@ -188,6 +256,7 @@ export function HeroSection({
   displayName,
   missionStatement,
   headquarters,
+  showHQ,
   isCompact,
   heroAvatarSize,
   sidebarWidth,
@@ -200,6 +269,7 @@ export function HeroSection({
   displayName: string;
   missionStatement: string;
   headquarters: string;
+  showHQ: boolean;
   isCompact: boolean;
   heroAvatarSize: number;
   sidebarWidth: number;
@@ -271,7 +341,7 @@ export function HeroSection({
             {missionStatement}
           </Text>
         )}
-        {!!headquarters && (
+        {showHQ && !!headquarters && (
           <Text
             style={{
               fontFamily: FONTS.LEXEND_LIGHT,
@@ -297,30 +367,76 @@ export function HeroSection({
         }}
       >
         <Pressable
-          onPress={() => router.push({ pathname: "/(companyUser)/video-library", params: { returnTo: navReturnTo } })}
-          style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+          onPress={() =>
+            router.push({
+              pathname: "/(companyUser)/video-library",
+              params: { returnTo: navReturnTo },
+            })
+          }
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
         >
-          <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>LIBRARY</Text>
+          <Text
+            style={{
+              fontFamily: FONTS.LEXEND_LIGHT,
+              fontSize: 13,
+              letterSpacing: 1.6,
+              color: C.subtle,
+            }}
+          >
+            LIBRARY
+          </Text>
           <Feather name="layers" size={18} color={C.text} />
         </Pressable>
 
         <Pressable
           onPress={() => router.push("/(companyUser)/profile-edit")}
-          style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
         >
-          <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>EDIT</Text>
+          <Text
+            style={{
+              fontFamily: FONTS.LEXEND_LIGHT,
+              fontSize: 13,
+              letterSpacing: 1.6,
+              color: C.subtle,
+            }}
+          >
+            EDIT
+          </Text>
           <Feather name="edit-2" size={18} color={C.text} />
         </Pressable>
 
         <Pressable
           onPress={() => router.push("/(companyUser)/settings")}
-          style={{ flexDirection: "row", alignItems: "center", justifyContent: "space-between" }}
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+          }}
         >
-          <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>SETTINGS</Text>
+          <Text
+            style={{
+              fontFamily: FONTS.LEXEND_LIGHT,
+              fontSize: 13,
+              letterSpacing: 1.6,
+              color: C.subtle,
+            }}
+          >
+            SETTINGS
+          </Text>
           <Feather name="settings" size={18} color={C.text} />
         </Pressable>
 
-        <View style={{ height: 1, backgroundColor: C.border, marginVertical: 2 }} />
+        <View
+          style={{ height: 1, backgroundColor: C.border, marginVertical: 2 }}
+        />
 
         <Pressable
           onPress={onRefresh}
@@ -332,7 +448,16 @@ export function HeroSection({
             opacity: refreshing ? 0.45 : 1,
           }}
         >
-          <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, letterSpacing: 1.6, color: C.subtle }}>REFRESH</Text>
+          <Text
+            style={{
+              fontFamily: FONTS.LEXEND_LIGHT,
+              fontSize: 13,
+              letterSpacing: 1.6,
+              color: C.subtle,
+            }}
+          >
+            REFRESH
+          </Text>
           <Feather name="refresh-cw" size={18} color={C.text} />
         </Pressable>
       </View>
@@ -350,33 +475,51 @@ export function AboutUsCard({
   isCompact,
   sidebarWidth,
   coreValues,
+  showCoreValues,
+  companyCulture,
+  showCulture,
   businessAge,
+  showBusinessAge,
   industry,
+  showIndustry,
   benefitsSummary,
+  showBenefitsSummary,
   locations,
-  openRoles,
-  onOpenRolesModal,
+  showLocations,
 }: {
   pagePad: number;
   isCompact: boolean;
+  showCoreValues: boolean;
+  showCulture: boolean;
+  showBusinessAge: boolean;
+  showIndustry: boolean;
+  showBenefitsSummary: boolean;
+  showLocations: boolean;
+  showOpenRoles: boolean;
   sidebarWidth: number;
   businessAge: string;
+  companyCulture: string;
   coreValues: string[];
   industry: string;
   benefitsSummary: string;
   locations: string[];
-  openRoles: any[];
-  onOpenRolesModal: () => void;
 }) {
   const C = useDynColors();
 
   const rows = [
-    { label: "Core Values",       value: coreValues.length ? coreValues.join(", ") : "" },
-    { label: "Industry",          value: industry || "" },
-    { label: "Business Age",      value: businessAge || ""},
-    { label: "Benefits",          value: benefitsSummary || "" },
-    { label: "Locations",         value: locations.length ? locations.join(", ") : "" },
-  ];
+    showCoreValues && {
+      label: "Core Values",
+      value: coreValues.length ? coreValues.join(", ") : "",
+    },
+    showIndustry && { label: "Industry", value: industry || "" },
+    showBusinessAge && { label: "Business Age", value: businessAge || "" },
+    showBenefitsSummary && { label: "Benefits", value: benefitsSummary || "" },
+    showCulture && { label: "Company Culture", value: companyCulture || ""},
+    showLocations && {
+      label: "Locations",
+      value: locations.length ? locations.join(", ") : "",
+    },
+  ].filter((row): row is { label: string; value: string } => Boolean(row)); //tells ts that after filter, only the object type remains - eliminating the false from the union
 
   return (
     <View
@@ -464,7 +607,14 @@ export function OpenRolesCard({
 
       {/* Open Roles — tappable count */}
       <View style={{ gap: 4 }}>
-        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 12, color: C.subtle, letterSpacing: 0.5 }}>
+        <Text
+          style={{
+            fontFamily: FONTS.LEXEND_LIGHT,
+            fontSize: 12,
+            color: C.subtle,
+            letterSpacing: 0.5,
+          }}
+        >
           Open Roles
         </Text>
         <Pressable onPress={onOpenRolesModal}>
@@ -482,7 +632,6 @@ export function OpenRolesCard({
           </Text>
         </Pressable>
       </View>
-
     </View>
   );
 }
@@ -568,8 +717,8 @@ export function FirstConnectCard({
             }}
             scrollEventThrottle={16}
             renderItem={({ item }: { item: any }) => {
-              const uri     = String(item.videoUri ?? "").trim();
-              const thumb   = String(item.imageUri ?? "").trim();
+              const uri = String(item.videoUri ?? "").trim();
+              const thumb = String(item.imageUri ?? "").trim();
               const caption = String(item.caption ?? "Untitled");
 
               return (
@@ -584,13 +733,34 @@ export function FirstConnectCard({
                     overflow: "hidden",
                   }}
                 >
-                  <View style={{ flex: 1, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 16 }}>
-                    <Text style={{ fontFamily: FONTS.CRIMSON_REGULAR, fontSize: 18, lineHeight: 25, color: C.text }}>
+                  <View
+                    style={{
+                      flex: 1,
+                      paddingHorizontal: 20,
+                      paddingTop: 18,
+                      paddingBottom: 16,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: FONTS.CRIMSON_REGULAR,
+                        fontSize: 18,
+                        lineHeight: 25,
+                        color: C.text,
+                      }}
+                    >
                       {caption}
                     </Text>
                   </View>
-                  <View style={{ aspectRatio: 0.98, backgroundColor: "#e8ecef" }}>
-                    {!!thumb ? <Image source={{ uri: thumb }} style={{ width: "100%", height: "100%" }} /> : null}
+                  <View
+                    style={{ aspectRatio: 0.98, backgroundColor: "#e8ecef" }}
+                  >
+                    {!!thumb ? (
+                      <Image
+                        source={{ uri: thumb }}
+                        style={{ width: "100%", height: "100%" }}
+                      />
+                    ) : null}
                   </View>
                 </Pressable>
               );
@@ -609,7 +779,15 @@ export function FirstConnectCard({
                   padding: 24,
                 }}
               >
-                <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, lineHeight: 21, color: C.subtle, textAlign: "center" }}>
+                <Text
+                  style={{
+                    fontFamily: FONTS.LEXEND_LIGHT,
+                    fontSize: 14,
+                    lineHeight: 21,
+                    color: C.subtle,
+                    textAlign: "center",
+                  }}
+                >
                   No response videos yet.
                 </Text>
               </View>
@@ -629,9 +807,14 @@ export function FirstConnectCard({
               <Pressable
                 onPress={() => onScrollRail(-1)}
                 style={{
-                  width: 34, height: 34, borderRadius: 999, borderWidth: 1,
-                  borderColor: "#9eb2bf", backgroundColor: C.card,
-                  alignItems: "center", justifyContent: "center",
+                  width: 34,
+                  height: 34,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: "#9eb2bf",
+                  backgroundColor: C.card,
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
                 <Feather name="arrow-left" size={14} color={C.subtle} />
@@ -639,9 +822,14 @@ export function FirstConnectCard({
               <Pressable
                 onPress={() => onScrollRail(1)}
                 style={{
-                  width: 34, height: 34, borderRadius: 999, borderWidth: 1,
-                  borderColor: "#9eb2bf", backgroundColor: C.card,
-                  alignItems: "center", justifyContent: "center",
+                  width: 34,
+                  height: 34,
+                  borderRadius: 999,
+                  borderWidth: 1,
+                  borderColor: "#9eb2bf",
+                  backgroundColor: C.card,
+                  alignItems: "center",
+                  justifyContent: "center",
                 }}
               >
                 <Feather name="arrow-right" size={14} color={C.subtle} />
@@ -707,7 +895,8 @@ export function ContactSidebar({
         borderTopWidth: isCompact ? 1 : 0,
         borderColor: C.border,
         // backgroundColor: C.isDark ? "rgba(71,75,84,0.97)" : "rgba(251,251,251,0.95)",
-        backgroundColor: profile.customBackgroundColor || "rgba(255,255,255,0.72)",
+        backgroundColor:
+          profile.customBackgroundColor || "rgba(255,255,255,0.72)",
       }}
     >
       <ScrollView
@@ -734,8 +923,22 @@ export function ContactSidebar({
           CONTACT US
         </Text>
 
-        <SidebarLink label="Email" value={companyEmail} onPress={copyEmail} disabled={!companyEmail} textColor={C.text} mutedColor={C.subtle} />
-        <SidebarLink label="Phone" value={companyPhone} onPress={copyPhone} disabled={!companyPhone} textColor={C.text} mutedColor={C.subtle} />
+        <SidebarLink
+          label="Email"
+          value={companyEmail}
+          onPress={copyEmail}
+          disabled={!companyEmail}
+          textColor={C.text}
+          mutedColor={C.subtle}
+        />
+        <SidebarLink
+          label="Phone"
+          value={companyPhone}
+          onPress={copyPhone}
+          disabled={!companyPhone}
+          textColor={C.text}
+          mutedColor={C.subtle}
+        />
 
         {showUrl1 ? (
           <SidebarLink
@@ -775,7 +978,13 @@ export function ContactSidebar({
           EMPLOYEES
         </Text>
 
-        <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 14, color: C.subtle }}>
+        <Text
+          style={{
+            fontFamily: FONTS.LEXEND_LIGHT,
+            fontSize: 14,
+            color: C.subtle,
+          }}
+        >
           —
         </Text>
       </ScrollView>
@@ -799,9 +1008,19 @@ export function RolesModal({
   onClose: () => void;
 }) {
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
       <Pressable
-        style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "center", alignItems: "center" }}
+        style={{
+          flex: 1,
+          backgroundColor: "rgba(0,0,0,0.4)",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
         onPress={onClose}
       >
         <Pressable
@@ -827,7 +1046,15 @@ export function RolesModal({
               borderBottomColor: BORDER,
             }}
           >
-            <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 16, color: TEXT }}>Open Roles</Text>
+            <Text
+              style={{
+                fontFamily: FONTS.LEXEND_LIGHT,
+                fontSize: 16,
+                color: TEXT,
+              }}
+            >
+              Open Roles
+            </Text>
             <Pressable onPress={onClose} hitSlop={12}>
               <Feather name="x" size={20} color={MUTED} />
             </Pressable>
@@ -838,47 +1065,166 @@ export function RolesModal({
             {openRoles.map((role: any) => (
               <View
                 key={role.id}
-                style={{ borderWidth: 1, borderColor: BORDER, borderRadius: 14, padding: 20, gap: 12, backgroundColor: BG }}
+                style={{
+                  borderWidth: 1,
+                  borderColor: BORDER,
+                  borderRadius: 14,
+                  padding: 20,
+                  gap: 12,
+                  backgroundColor: BG,
+                }}
               >
-                <Text style={{ fontFamily: FONTS.LEXEND_REGULAR, fontSize: 15, color: TEXT }}>
+                <Text
+                  style={{
+                    fontFamily: FONTS.LEXEND_REGULAR,
+                    fontSize: 15,
+                    color: TEXT,
+                  }}
+                >
                   {role.title || "—"}
                 </Text>
 
                 <View style={{ gap: 8 }}>
                   {!!role.workType && (
                     <View style={{ flexDirection: "row", gap: 8 }}>
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Work Type</Text>
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: TEXT, flex: 1 }}>{role.workType}</Text>
+                      <Text
+                        style={{
+                          fontFamily: FONTS.LEXEND_LIGHT,
+                          fontSize: 13,
+                          color: MUTED,
+                          width: 100,
+                        }}
+                      >
+                        Work Type
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: FONTS.LEXEND_LIGHT,
+                          fontSize: 13,
+                          color: TEXT,
+                          flex: 1,
+                        }}
+                      >
+                        {role.workType}
+                      </Text>
                     </View>
                   )}
                   {!!role.location && (
                     <View style={{ flexDirection: "row", gap: 8 }}>
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Location</Text>
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: TEXT, flex: 1 }}>📍{role.location}</Text>
+                      <Text
+                        style={{
+                          fontFamily: FONTS.LEXEND_LIGHT,
+                          fontSize: 13,
+                          color: MUTED,
+                          width: 100,
+                        }}
+                      >
+                        Location
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: FONTS.LEXEND_LIGHT,
+                          fontSize: 13,
+                          color: TEXT,
+                          flex: 1,
+                        }}
+                      >
+                        📍{role.location}
+                      </Text>
                     </View>
                   )}
                   {!!role.salary && (
                     <View style={{ flexDirection: "row", gap: 8 }}>
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Salary</Text>
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: TEXT, flex: 1 }}>{role.salary}</Text>
+                      <Text
+                        style={{
+                          fontFamily: FONTS.LEXEND_LIGHT,
+                          fontSize: 13,
+                          color: MUTED,
+                          width: 100,
+                        }}
+                      >
+                        Salary
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: FONTS.LEXEND_LIGHT,
+                          fontSize: 13,
+                          color: TEXT,
+                          flex: 1,
+                        }}
+                      >
+                        {role.salary}
+                      </Text>
                     </View>
                   )}
                   {role.skills?.length > 0 && (
                     <View style={{ flexDirection: "row", gap: 8 }}>
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Skills</Text>
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: TEXT, flex: 1 }}>{role.skills.join(", ")}</Text>
+                      <Text
+                        style={{
+                          fontFamily: FONTS.LEXEND_LIGHT,
+                          fontSize: 13,
+                          color: MUTED,
+                          width: 100,
+                        }}
+                      >
+                        Skills
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: FONTS.LEXEND_LIGHT,
+                          fontSize: 13,
+                          color: TEXT,
+                          flex: 1,
+                        }}
+                      >
+                        {role.skills.join(", ")}
+                      </Text>
                     </View>
                   )}
                   <View style={{ flexDirection: "row", gap: 8 }}>
-                    <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Relocation</Text>
-                    <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: TEXT, flex: 1 }}>
+                    <Text
+                      style={{
+                        fontFamily: FONTS.LEXEND_LIGHT,
+                        fontSize: 13,
+                        color: MUTED,
+                        width: 100,
+                      }}
+                    >
+                      Relocation
+                    </Text>
+                    <Text
+                      style={{
+                        fontFamily: FONTS.LEXEND_LIGHT,
+                        fontSize: 13,
+                        color: TEXT,
+                        flex: 1,
+                      }}
+                    >
                       {role.isRelocationCovered ? "Covered" : "Not covered"}
                     </Text>
                   </View>
                   {!!role.postUrl && (
                     <View style={{ flexDirection: "row", gap: 8 }}>
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: MUTED, width: 100 }}>Post URL</Text>
-                      <Text style={{ fontFamily: FONTS.LEXEND_LIGHT, fontSize: 13, color: ACCENT, flex: 1 }}>{role.postUrl}</Text>
+                      <Text
+                        style={{
+                          fontFamily: FONTS.LEXEND_LIGHT,
+                          fontSize: 13,
+                          color: MUTED,
+                          width: 100,
+                        }}
+                      >
+                        Post URL
+                      </Text>
+                      <Text
+                        style={{
+                          fontFamily: FONTS.LEXEND_LIGHT,
+                          fontSize: 13,
+                          color: ACCENT,
+                          flex: 1,
+                        }}
+                      >
+                        {role.postUrl}
+                      </Text>
                     </View>
                   )}
                 </View>
