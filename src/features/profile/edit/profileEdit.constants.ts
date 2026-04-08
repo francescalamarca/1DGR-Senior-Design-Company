@@ -50,7 +50,7 @@ export const BACKGROUND_COLOR_OPTIONS = [
 ];
 
 //answers the question of how old the company is and how long it has been running for
-export const COMPANY_AGE_OPTIONS = ["Up to 1", "1-3", "3-5", "5-10", "10+", "50+"];
+export const COMPANY_AGE_OPTIONS = ["Up to 1", "1-3", "3-5", "5-10", "10+", "30+", "40+", "50+"];
 
 export const WORK_TYPE_OPTIONS = ["Part-Time", "Full Time", "Contract", "Seasonal", "Internship"];
 
