@@ -210,7 +210,7 @@ export default function ProfileEditScreen() {
           benefits={draft.benefitsSummary ?? ""}
           onChangeBenefits={(v: string) => setDraft((p) => ({...p, benefitsSummary: v }))}
           showBenefits={draft.showBenefitsSummary ?? true}
-          onToggleShowBenefits={(val) => setDraft((p) => ({...p, showBenefits: val}))}
+          onToggleShowBenefits={(val) => setDraft((p) => ({...p, showBenefitsSummary: val}))}
         />
 
         <CompanyCultureSection

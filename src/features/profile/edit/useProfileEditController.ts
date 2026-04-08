@@ -133,6 +133,7 @@ export function useProfileEditController() {
     });
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
   function handleCancel() {
     // Navigate first — always, regardless of token state.
     if (Platform.OS === "web") {
@@ -162,14 +163,6 @@ export function useProfileEditController() {
           ? ""
           : buildCdnUrlFromKey(draft.avatarImageUri ?? "") || avatarLocalUri || (p as any).avatarImageUri,
     }));
-
-    // Backend sync only if we have a token.
-    if (accessToken) {
-      updateUserProfile(apiPayload as any, accessToken)
-        .catch((err) => console.warn("[handleSave] backend sync failed:", err));
-    } else {
-      console.warn("[handleSave] No access token — local save only.");
-    }
   }
 
   function openSingleSelectPicker(args: { title: string; options: string[]; value: string; onSelect: (val: string) => void }) {

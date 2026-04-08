@@ -136,6 +136,12 @@ export default function ProfileScreen() {
     contactUrl2Label,
     showUrl1,
     showUrl2,
+    showIndustry,
+    showLocations,
+    showCoreValues,
+    showCulture,
+    showOpenRoles,
+    showBenefitsSummary,
     openVideo,
   } = useCompanyProfileScreenData();
 
@@ -691,7 +697,7 @@ export default function ProfileScreen() {
                       <Text style={s.qualValue}>{missionStatement}</Text>
                     </View>
                   )}
-                  {coreValues.length > 0 && (
+                  {showCoreValues && coreValues.length > 0 && (
                     <View style={{ gap: 4 }}>
                       <Text style={s.qualLabel}>Core Values:</Text>
                       <Text style={s.qualValue}>
@@ -699,31 +705,31 @@ export default function ProfileScreen() {
                       </Text>
                     </View>
                   )}
-                  {!!benefitsSummary && (
+                  {showBenefitsSummary && !!benefitsSummary && (
                     <View style={{ gap: 4 }}>
                       <Text style={s.qualLabel}>Benefits:</Text>
                       <Text style={s.qualValue}>{benefitsSummary}</Text>
                     </View>
                   )}
-                  {!!companyCulture && (
+                  {showCulture && !!companyCulture && (
                     <View style={{ gap: 4 }}>
                       <Text style={s.qualLabel}> Company Culture:</Text>
                       <Text style={s.qualValue}>{companyCulture}</Text>
                     </View>
                   )}
-                  {!!industry && (
+                  {showIndustry && !!industry && (
                     <View style={{ gap: 4 }}>
                       <Text style={s.qualLabel}>Industry:</Text>
                       <Text style={s.qualValue}>{industry}</Text>
                     </View>
                   )}
-                  {locations.length > 0 && (
+                  {showLocations && locations.length > 0 && (
                     <View style={{ gap: 4 }}>
                       <Text style={s.qualLabel}>Locations:</Text>
                       <Text style={s.qualValue}>{locations.join("  ·  ")}</Text>
                     </View>
                   )}
-                  {openRoles.length > 0 && (
+                  {showOpenRoles && openRoles.length > 0 && (
                     <View style={{ gap: 8 }}>
                       <Text style={s.qualLabel}>Open Roles:</Text>
                       {openRoles.map((role: any) => (
@@ -761,7 +767,7 @@ export default function ProfileScreen() {
                         <Text style={s.qualValue}>{missionStatement}</Text>
                       </View>
                     )}
-                    {coreValues.length > 0 && (
+                    {showCoreValues && coreValues.length > 0 && (
                       <View style={{ gap: 4 }}>
                         <Text style={s.qualLabel}>Core Values:</Text>
                         <Text style={s.qualValue}>
@@ -769,25 +775,25 @@ export default function ProfileScreen() {
                         </Text>
                       </View>
                     )}
-                    {!!benefitsSummary && (
+                    {showBenefitsSummary && !!benefitsSummary && (
                       <View style={{ gap: 4 }}>
                         <Text style={s.qualLabel}>Benefits:</Text>
                         <Text style={s.qualValue}>{benefitsSummary}</Text>
                       </View>
                     )}
-                    {!!companyCulture && (
+                    {showCulture && !!companyCulture && (
                       <View style={{ gap: 4 }}>
                         <Text style={s.qualLabel}>Company Culture:</Text>
                         <Text style={s.qualValue}>{companyCulture}</Text>
                       </View>
                     )}
-                    {!!industry && (
+                    {showIndustry && !!industry && (
                       <View style={{ gap: 4 }}>
                         <Text style={s.qualLabel}>Industry:</Text>
                         <Text style={s.qualValue}>{industry}</Text>
                       </View>
                     )}
-                    {locations.length > 0 && (
+                    {showLocations && locations.length > 0 && (
                       <View style={{ gap: 4 }}>
                         <Text style={s.qualLabel}>Locations:</Text>
                         <Text style={s.qualValue}>
@@ -795,7 +801,7 @@ export default function ProfileScreen() {
                         </Text>
                       </View>
                     )}
-                    {openRoles.length > 0 && (
+                    {showOpenRoles && openRoles.length > 0 && (
                       <View style={{ gap: 8 }}>
                         <Text style={s.qualLabel}>Open Roles:</Text>
                         {openRoles.map((role: any) => (

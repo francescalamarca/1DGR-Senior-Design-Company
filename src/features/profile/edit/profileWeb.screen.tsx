@@ -54,9 +54,19 @@ export default function ProfileWebScreen() {
     missionStatement,
     headquarters,
     benefitsSummary,
+    companyCulture,
+    businessAge,
     coreValues,
     industry,
     locations,
+    showAge,
+    showBenefitsSummary,
+    showCoreValues,
+    showCulture,
+    showHQ,
+    showIndustry,
+    showLocations,
+    showOpenRoles,
     videos,
     companyEmail,
     companyPhone,
@@ -140,6 +150,7 @@ export default function ProfileWebScreen() {
                   displayName={displayName}
                   missionStatement={missionStatement}
                   headquarters={headquarters}
+                  showHQ={showHQ}
                   isCompact={isCompact}
                   heroAvatarSize={heroAvatarSize}
                   sidebarWidth={sidebarWidth}
@@ -155,12 +166,19 @@ export default function ProfileWebScreen() {
                 pagePad={pagePad}
                 isCompact={isCompact}
                 sidebarWidth={sidebarWidth}
+                showCoreValues={showCoreValues}
+                showCulture={showCulture}
+                showBusinessAge={showAge}
+                showIndustry={showIndustry}
+                showBenefitsSummary={showBenefitsSummary}
+                showLocations={showLocations}
+                showOpenRoles={showOpenRoles}
+                businessAge={businessAge}
                 coreValues={coreValues}
                 industry={industry}
+                companyCulture={companyCulture}
                 benefitsSummary={benefitsSummary}
                 locations={locations}
-                openRoles={openRoles}
-                onOpenRolesModal={() => setRolesModalOpen(true)}
               />
 
               <OpenRolesCard
